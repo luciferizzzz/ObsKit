@@ -73,6 +73,7 @@ Home → Rust
 
 - Both notes must exist in the vault.
 - Folders and `.md` suffixes are normalized automatically (`Notes/Rust.md` → `Rust`).
+- A note cannot be related to itself.
 - Existing line endings (LF / CRLF) are preserved.
 - The link is written as `- [[Related]]` under a `## Related` heading.
 
@@ -151,7 +152,7 @@ Related
 - [[Go]]
 
 Backlinks
-- Notes/Index.md
+- Index
 
 Outgoing Links
 - [[Rust]]
@@ -163,7 +164,7 @@ Related: 2 · Backlinks: 1 · Outgoing: 2
 
 **Notes**
 
-- Errors with `Note not found.` if the note does not exist.
+- Errors with `Note not found: <note>` if the note does not exist.
 - Outgoing links are deduplicated by normalized target.
 
 ---
@@ -223,6 +224,7 @@ Plus `normalizeTarget()`, `normalizeLink()`, `parseHeadings()`, and `getSectionC
 
 - `formatRelations()` — full relationship display for `obs relations`.
 - `formatAddResult()` / `formatRemoveResult()` — success/idempotent messages.
+- `formatSelfReferenceResult()` — warns when a note would be related to itself.
 - `dedupeLinks()` / `formatLinkList()` — shared list helpers.
 
 ### `index.js`

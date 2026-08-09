@@ -881,6 +881,7 @@ Home → Rust
 
 - Both notes must exist in the vault.
 - Folders and `.md` suffixes are normalized automatically.
+- A note cannot be related to itself.
 - Line endings (LF / CRLF) are preserved.
 - See [RELATIONSHIPS.md](RELATIONSHIPS.md) for the full relationship guide.
 
@@ -957,7 +958,7 @@ Related
 - [[Rust]]
 
 Backlinks
-- Notes/Index.md
+- Index
 
 Outgoing Links
 - [[Rust]]
@@ -968,7 +969,7 @@ Related: 1 · Backlinks: 1 · Outgoing: 1
 
 **Notes**
 
-- Errors with `Note not found.` if the note does not exist.
+- Errors with `Note not found: <note>` if the note does not exist.
 
 ---
 

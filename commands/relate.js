@@ -10,7 +10,8 @@ function relate(note, related) {
 
     const { findNoteFile } = relationship.scanner;
     const { addRelatedToFile } = relationship.editor;
-    const { formatAddResult } = relationship.formatter;
+    const { isSelfReference } = relationship.validator;
+    const { formatAddResult, formatSelfReferenceResult } = relationship.formatter;
 
     const noteFile = findNoteFile(files, note);
     if (!noteFile) {
@@ -26,6 +27,11 @@ function relate(note, related) {
 
     const noteName = path.basename(noteFile, ".md");
     const relatedName = path.basename(relatedFile, ".md");
+
+    if (isSelfReference(noteName, relatedName)) {
+        console.log(formatSelfReferenceResult(noteName));
+        return;
+    }
 
     const result = addRelatedToFile(noteFile, relatedName);
 

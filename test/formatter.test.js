@@ -7,6 +7,7 @@ const {
     formatRelations,
     formatAddResult,
     formatRemoveResult,
+    formatSelfReferenceResult,
 } = require("../utils/relationship/formatter");
 
 test("dedupeLinks: removes duplicates by normalized target", () => {
@@ -50,4 +51,9 @@ test("formatAddResult: added vs already related", () => {
 test("formatRemoveResult: removed vs not related", () => {
     assert.match(formatRemoveResult("Home", "Rust", true), /Related removed\./);
     assert.match(formatRemoveResult("Home", "Rust", false), /Not related\./);
+});
+
+test("formatSelfReferenceResult: warns against self-relation", () => {
+    assert.match(formatSelfReferenceResult("Home"), /Cannot relate a note to itself\./);
+    assert.match(formatSelfReferenceResult("Home"), /Home → Home/);
 });

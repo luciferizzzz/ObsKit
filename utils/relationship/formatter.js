@@ -75,10 +75,15 @@ function formatRemoveResult(note, related, removed) {
         : `\nℹ️  Not related.\n${note} → ${related}`;
 }
 
+function formatSelfReferenceResult(note) {
+    return `\n⚠️  Cannot relate a note to itself.\n${note} → ${note}`;
+}
+
 module.exports = {
     dedupeLinks,
     formatLinkList,
     formatRelations,
     formatAddResult,
     formatRemoveResult,
+    formatSelfReferenceResult,
 };

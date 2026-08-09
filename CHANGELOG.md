@@ -26,7 +26,7 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - `obs relations` — show related, backlinks, and outgoing links of a note.
 - Reusable relationship module (`utils/relationship/`) with parser, validator, scanner, editor, and formatter.
 - Unit test suite for the relationship module (`npm test`).
-- `obs update` now imports the previous daily note's `## Tomorrow` checklist items into today's note under `## Update` (idempotent, preserves checklist state and Markdown formatting).
+- `obs ai update` now imports the previous daily note's `## Tomorrow` checklist items into today's note under `## Update` (idempotent, preserves checklist state and Markdown formatting).
 - Reusable daily workflow module (`utils/dailyWorkflow.js`) with date resolution, daily-note discovery, `## Tomorrow` extraction, checklist parsing/dedup, and `## Update` upsert.
 - Unit test suite for the daily workflow module (`npm test`).
 

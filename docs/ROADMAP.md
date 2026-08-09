@@ -180,8 +180,11 @@ Core note management.
 
 Focus: interactive terminal experience, relationship management, and better navigation.
 
-- **Relationship Management** — `obs relate`, `obs unrelate`, `obs relations`
-  - Reusable relationship module (`utils/relationship/`) as the foundation for graph, AI links, and knowledge exploration
+- ✅ **Relationship Management** — `obs relate`, `obs unrelate`, `obs relations`
+  - ✅ Reusable relationship module (`utils/relationship/`) as the foundation for graph, AI links, and knowledge exploration
+  - ✅ Related-section management with duplicate prevention, alias/heading parsing, and CRLF-preserving Markdown writes
+- ✅ **Daily Workflow** — `obs ai update` imports the previous daily note's `## Tomorrow` checklist items into today's `## Update` section
+  - ✅ Reusable daily workflow module (`utils/dailyWorkflow.js`) with date resolution, section extraction, checklist parsing/dedup, and idempotent upsert
 - **Interactive Mode** — launch a full terminal interface (`obs` with a menu)
 - **Better Navigation** — keyboard-driven browsing of notes and folders
 - **Colored Output** — color-coded terminal output

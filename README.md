@@ -325,7 +325,7 @@ LICENSE
 
 ## 🚧 v1.5
 
-- Relationship Management
+- ✅ Relationship Management
 - Interactive Terminal UI
 - Better Navigation
 - Shell Autocomplete

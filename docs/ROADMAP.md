@@ -185,6 +185,9 @@ Focus: interactive terminal experience, relationship management, and better navi
   - ✅ Related-section management with duplicate prevention, alias/heading parsing, and CRLF-preserving Markdown writes
 - ✅ **Daily Workflow** — `obs ai update` imports the previous daily note's `## Tomorrow` checklist items into today's `## Update` section
   - ✅ Reusable daily workflow module (`utils/dailyWorkflow.js`) with date resolution, section extraction, checklist parsing/dedup, and idempotent upsert
+- ✅ **Search Foundation** — reusable filename search (`utils/search.js`) that powers `obs find` and is the base for future content search, ranking, filters, and fuzzy search (fuzzy search itself remains planned)
+- ✅ **AI Persona Foundation** — reusable persona definitions (`utils/persona.js`) with `-p, --persona <name>` support across all `obs ai` workflows
+- ✅ **People Interaction Workflow** — `obs ai people <name>` structures and appends new interactions to an existing People note's `## Catatan Interaksi` section (preview + confirmation, duplicate prevention, CRLF-safe writes)
 - **Interactive Mode** — launch a full terminal interface (`obs` with a menu)
 - **Better Navigation** — keyboard-driven browsing of notes and folders
 - **Colored Output** — color-coded terminal output

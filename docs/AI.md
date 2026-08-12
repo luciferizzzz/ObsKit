@@ -12,11 +12,13 @@ This document explains the AI system of **ObsKit** (OBS = Organized Knowledge Sy
 - [Supported providers](#-supported-providers)
 - [AI configuration](#-ai-configuration)
 - [`obs config ai`](#-obs-config-ai)
+- [Personas](#-personas)
 - [AI workflows](#-ai-workflows)
 - [AI commands](#-ai-commands)
 - [Daily journal](#-daily-journal)
 - [Tomorrow planning](#-tomorrow-planning)
 - [Weekly planning](#-weekly-planning)
+- [People interactions](#-people-interactions)
 - [AI file writing](#-ai-file-writing)
 - [AI note generation](#-ai-note-generation)
 - [Environment variables](#-environment-variables)
@@ -141,6 +143,53 @@ Verify with `obs config show` — the API key is masked (`********abcd`).
 
 ---
 
+## 🎭 Personas
+
+Personas are reusable AI "characters" that control how the assistant writes. A persona defines the system instructions, response style, and optional workflow guidance for the AI. The default persona reproduces the original ObsKit behavior exactly, so existing commands keep working unchanged.
+
+### Built-in persona
+
+| Persona | id | Description |
+|---------|-----|-------------|
+| **Default** | `default` | Bahasa Indonesia santai, langsung ke intinya (the original ObsKit system prompt). |
+
+### Selecting a persona
+
+Every `obs ai` workflow accepts the `-p, --persona <name>` option. Match is case-insensitive by `id` or `name`.
+
+```bash
+obs ai "Explain closures" -p default
+obs ai people "John Doe" --persona Default
+```
+
+Running `obs ai` without `--persona` always uses the **Default** persona.
+
+### Adding a persona
+
+Personas are defined as plain data in `utils/persona.js` (or registered at runtime via `registerPersona`). Each persona needs:
+
+- `id` — unique slug
+- `name` — display name
+- `system` — system instructions sent before every prompt
+
+Optional fields: `description` (short summary) and `instructions` (workflow-specific guidance).
+
+```js
+// utils/persona.js — PERSONAS array
+{
+  id: "concise",
+  name: "Concise",
+  description: "Short, bullet-focused answers.",
+  system: "Answer in short bullet points only. No introductions."
+}
+```
+
+Adding a persona never requires rewriting an AI command — commands resolve the persona through `resolvePersona(name)`.
+
+> Persona logic lives in `utils/persona.js`, fully separate from the AI provider client in `utils/ai.js`.
+
+---
+
 ## 🔀 AI workflows
 
 A complete planning workflow is supported:
@@ -202,6 +251,11 @@ obs ai "Explain JavaScript closures"
 | `--daily` | Append to today's daily note | — |
 | `--ask` | Interactive question mode | — |
 | `--template <name>` | Use a template | — |
+| `-p, --persona <name>` | AI persona to use | `default` |
+
+**Notes**
+
+- The command dispatches to dedicated workflows for `tomorrow`, `update`, `weekly`, and `people`.
 
 ---
 
@@ -323,6 +377,64 @@ obs ai weekly
 ```
 
 **Location:** `Planning/Weekly/Week-<n>.md`
+
+---
+
+## 👤 People interactions
+
+### `obs ai people <name>`
+
+Updates an existing **People** note with a new interaction, using the AI to structure the entry.
+
+```bash
+obs ai people "John Doe"
+```
+
+**Workflow**
+
+1. Locates the People note for `<name>` anywhere in the vault (case-insensitive).
+2. Reads the note content.
+3. Asks for the latest interaction / context.
+4. Sends the note context + interaction to the AI (with the selected persona).
+5. Converts the AI output into `- ` bullet points for the `## Catatan Interaksi` section.
+6. Shows a **preview** of the change.
+7. Writes only after explicit confirmation.
+
+**Example**
+
+```bash
+obs ai people "John Doe"
+```
+
+```text
+? 📝 Interaksi terakhir dengan John Doe? Discussed the website project, John will help with the frontend next week
+
+🧠 Lagi diproses sama AI...
+
+📄 Preview perubahan untuk John Doe.md:
+
+## Catatan Interaksi
+
++ - Discussed the website project.
++ - John Doe agreed to help with the frontend next week.
++ - Follow-up: send the website design.
+
+? Tulis perubahan ini ke note? yes
+
+✅ Interaksi ditambahkan ke People note!
+📁 D:\Vault\People\John Doe.md
+```
+
+**Behavior**
+
+- Works with the existing **People template** structure — bullets are appended under `## Catatan Interaksi` (the section is created if missing).
+- Existing content and other sections (`Profil`, `Kontak`, `Pertemuan`, …) are never modified.
+- Interaction history stays **chronological** (new entries are appended, never overwritten).
+- Duplicate bullets (case-insensitive) are skipped.
+- Markdown formatting and **CRLF line endings** are preserved.
+- Nothing is written without confirmation.
+- If no `<name>` argument is given, the name is requested interactively.
+- Missing People note → `People note tidak ditemukan: <name>`.
 
 ---
 

@@ -29,6 +29,13 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - `obs ai update` now imports the previous daily note's `## Tomorrow` checklist items into today's note under `## Update` (idempotent, preserves checklist state and Markdown formatting).
 - Reusable daily workflow module (`utils/dailyWorkflow.js`) with date resolution, daily-note discovery, `## Tomorrow` extraction, checklist parsing/dedup, and `## Update` upsert.
 - Unit test suite for the daily workflow module (`npm test`).
+- Search foundation (`utils/search.js`) — reusable filename search that powers `obs find` and provides the base for future content search, ranking, filters, and fuzzy search. `obs find` behavior is preserved.
+- Unit test suite for the search foundation (`npm test`).
+- AI persona foundation (`utils/persona.js`) — reusable persona definitions with `resolvePersona()`, `findPersona()`, `registerPersona()`, and `buildPersonaPrompt()`. All `obs ai` commands accept `-p, --persona <name>`; the Default persona preserves existing behavior.
+- Unit test suite for the AI persona foundation (`npm test`).
+- `obs ai people <name>` — updates an existing People note's `## Catatan Interaksi` section with AI-structured interaction bullets (preview + confirmation, duplicate prevention, Markdown and CRLF preservation).
+- Reusable People-note module (`utils/people.js`) with note discovery, interaction parsing, dedup, and section append.
+- Unit test suite for the People workflow (`npm test`).
 
 ### Planned
 

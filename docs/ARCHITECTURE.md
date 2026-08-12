@@ -99,6 +99,7 @@ The `ai` command dispatches on its first argument:
 obs ai tomorrow  ──► aiTomorrow()
 obs ai update    ──► aiUpdate()
 obs ai weekly    ──► aiWeekly()
+obs ai people    ──► aiPeople(name)      (name optional — asked interactively)
 obs ai <prompt>  ──► aiWrite(prompt, options)
 ```
 
@@ -139,12 +140,15 @@ createFile(<vault path>\Notes\Learning Rust.md, content)   // mkdir -p + write
 | `utils/config.js` | `getConfig()` / `saveConfig()` — read/write `config.json` |
 | `utils/file.js` | `createFile()` — recursive folder creation, refuses overwrite |
 | `utils/scanner.js` | `scanMarkdownFiles()` — recursive `.md` scanner |
+| `utils/search.js` | `searchFiles()` / `searchNotes()` — reusable filename search foundation (case-insensitive substring, result objects with `name` / `path` / `relativePath`, optional dir exclusions and extension filters) |
 | `utils/noteIndex.js` | `buildNoteIndex()` — `Set` of note names for link analysis |
 | `utils/wikilinks.js` | `extractWikiLinks()` — wiki-link parser |
 | `utils/markdown.js` | Template parser, AI blocks, template data |
 | `utils/dailyWorkflow.js` | Daily-note date/path helpers, `## Tomorrow` extraction, checklist parsing/dedup, `## Update` upsert |
 | `utils/sanitizeFilename.js` | `sanitizeFilename()` / `mdFileName()` — safe filenames |
 | `utils/ai.js` | Unified AI client (Ollama + OpenAI-compatible) |
+| `utils/persona.js` | Reusable AI persona registry — `resolvePersona()`, `findPersona()`, `registerPersona()`, `buildPersonaPrompt()` (see [AI.md](AI.md)) |
+| `utils/people.js` | People-note handling for `obs ai people` — note discovery, interaction parsing, dedup, and section append (CRLF-aware) |
 | `utils/relationship/` | Relationship module — parser, validator, scanner, editor, formatter (see [RELATIONSHIPS.md](RELATIONSHIPS.md)) |
 
 ---
@@ -198,6 +202,8 @@ Command-specific filters are applied on top of the scanner output:
 - `obs list` filters hidden paths (`.obsidian`, `.git`).
 - `obs tree` ignores `.obsidian`, `.git`, `node_modules`.
 - `obs stats` counts folders and per-folder note counts.
+
+**Search foundation** — `utils/search.js` powers `obs find` and is the reusable base for future search features (content search, ranking, optional filters, fuzzy search). It walks the vault, matches filenames case-insensitively, and returns result objects with `name`, absolute `path`, and vault-relative `relativePath`. Options support extension filters (`searchNotes`) and directory exclusion. Default behavior matches the original `obs find` exactly (all file types, no hidden-dir exclusion).
 
 ---
 
@@ -253,12 +259,17 @@ See [RELATIONSHIPS.md](RELATIONSHIPS.md) for the full relationship module refere
 `utils/ai.js` is the single interface between commands and the LLM.
 
 ```text
-commands/ai.js ──► utils/ai.js generate(prompt)
+commands/ai.js ──► utils/persona.js resolvePersona(name) ──► persona.system
+                    │
+                    ▼
+                  utils/ai.js generate(prompt)
                         │
                         ├── provider === "ollama" ──► POST {url}/api/generate     (stream)
                         │
                         └── provider === "openai" ──► POST {baseUrl}/chat/completions (stream)
 ```
+
+Every AI command resolves a persona first (`resolvePersona(options.persona)`, defaulting to the **Default** persona) and uses `persona.system` as the system prompt. Persona logic is completely separate from the provider client — adding a persona never touches `utils/ai.js`.
 
 **Pipeline for `obs ai --ask --daily`**
 
@@ -337,7 +348,8 @@ obskit/
 │   └── attachments.js
 ├── utils/                   # shared helpers
 │   ├── ai.js  config.js  file.js  markdown.js
-│   ├── noteIndex.js  sanitizeFilename.js  scanner.js  vault.js  wikilinks.js
+│   ├── noteIndex.js  persona.js  sanitizeFilename.js  scanner.js  search.js  vault.js  wikilinks.js
+│   ├── people.js
 │   └── relationship/        # relationship module (parser, validator, scanner, editor, formatter, index)
 ├── templates/               # note templates
 ├── test/                    # unit tests (node:test)

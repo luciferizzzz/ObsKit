@@ -1043,6 +1043,7 @@ obs ai <prompt> [options]
 | `--daily` | Append to today's daily note | — |
 | `--ask` | Interactive question mode | — |
 | `--template <name>` | Use a template | — |
+| `-p, --persona <name>` | AI persona to use | `default` |
 
 **Example**
 
@@ -1059,7 +1060,8 @@ obs ai "Explain JavaScript closures"
 
 **Notes**
 
-- The command dispatches to dedicated workflows for `tomorrow`, `update`, and `weekly`.
+- The command dispatches to dedicated workflows for `tomorrow`, `update`, `weekly`, and `people`.
+- Personas control the AI response style (see [AI.md](AI.md) → Personas).
 
 ## `obs ai --daily`
 
@@ -1133,6 +1135,46 @@ Interactive weekly-planning session → `Planning/Weekly/Week-<n>.md`.
 ```bash
 obs ai weekly
 ```
+
+## `obs ai people <name>`
+
+Update an existing **People** note with a new AI-structured interaction.
+
+**Description**
+
+Locates the People note for `<name>`, asks for the latest interaction, has the AI structure it as bullets, previews the change, and appends it to the `## Catatan Interaksi` section only after confirmation.
+
+**Syntax**
+
+```
+obs ai people <name> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<name>` | Person name (optional — asked interactively if omitted) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `-p, --persona <name>` | AI persona to use |
+
+**Example**
+
+```bash
+obs ai people "John Doe"
+```
+
+**Notes**
+
+- Appends bullet points under `## Catatan Interaksi` (created if missing).
+- Preserves existing sections, Markdown, and CRLF line endings.
+- Skips duplicate interactions (case-insensitive).
+- Writes only after explicit confirmation.
+- Missing People note → `People note tidak ditemukan: <name>`.
 
 ---
 

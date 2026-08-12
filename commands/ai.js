@@ -1,23 +1,23 @@
 const path = require("path");
 const fs = require("fs");
-const { input } = require("@inquirer/prompts");
+const { input, confirm } = require("@inquirer/prompts");
 const { generate } = require("../utils/ai");
+const { resolvePersona } = require("../utils/persona");
 const { createFile } = require("../utils/file");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
 const { getVaultPath } = require("../utils/vault");
+const { scanMarkdownFiles } = require("../utils/scanner");
 const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData } = require("../utils/markdown");
 const { loadTomorrowTasks, importTomorrowTasks } = require("../utils/dailyWorkflow");
-
-const SYSTEM_PROMPT = `Tulis catatan markdown buat Obsidian.
-
-Aturan wajib:
-- Bahasa Indonesia santai, ngobrol kayak temen
-- JANGAN pakai kata "kamu", "anda", "kalian" - langsung ke intinya aja
-- JANGAN pembukaan kayak "Tentu", "Oke", "Baik" - langsung mulai isinya
-- Heading pakai ## dan ###
-- Gunakan bullet points, bold, code blocks kalau perlu
-- Jangan pakai frontmatter atau YAML
-- Isinya harus bermanfaat dan jelas`;
+const { updateMarkdown } = require("../utils/relationship/editor");
+const {
+    findPeopleNote,
+    readPeopleNote,
+    parseInteractionOutput,
+    appendInteraction,
+    buildInteractionPrompt,
+    INTERACTIONS_HEADING,
+} = require("../utils/people");
 
 async function askUser() {
     const answers = {};
@@ -55,8 +55,8 @@ async function askUser() {
     return answers;
 }
 
-function buildPromptFromAnswers(answers) {
-    return `${SYSTEM_PROMPT}
+function buildPromptFromAnswers(answers, persona) {
+    return `${persona.system}
 
 Buat 6 bagian untuk daily note hari ini dengan heading:
 ## Target Hari Ini
@@ -224,7 +224,7 @@ function fillDailyTemplate(template, sections) {
     return result;
 }
 
-async function fillTemplateWithAI(template, prompt, options) {
+async function fillTemplateWithAI(template, prompt, options, persona) {
     const aiBlocks = extractAIBlocks(template);
 
     if (aiBlocks.length === 0) {
@@ -239,7 +239,7 @@ async function fillTemplateWithAI(template, prompt, options) {
         const block = aiBlocks[i];
         console.log(`  [${i + 1}/${aiBlocks.length}] ${block.instruction}`);
 
-        const blockPrompt = `${SYSTEM_PROMPT}
+        const blockPrompt = `${persona.system}
 
 ${block.instruction}
 
@@ -260,13 +260,15 @@ Berikan jawaban langsung, tanpa pembukaan.`;
 }
 
 async function aiWrite(prompt, options) {
+    const persona = resolvePersona(options.persona);
+
     let finalPrompt;
 
     if (options.ask) {
         const answers = await askUser();
-        finalPrompt = buildPromptFromAnswers(answers);
+        finalPrompt = buildPromptFromAnswers(answers, persona);
     } else {
-        finalPrompt = `${SYSTEM_PROMPT}\n\nBuatkan catatan tentang: ${prompt}`;
+        finalPrompt = `${persona.system}\n\nBuatkan catatan tentang: ${prompt}`;
     }
 
     console.log("\n🧠 Lagi diproses sama AI...\n");
@@ -353,7 +355,7 @@ async function aiWrite(prompt, options) {
             let template = fs.readFileSync(templatePath, "utf8");
             template = parseTemplate(template, getTemplateData({ title, folder }));
 
-            const filledTemplate = await fillTemplateWithAI(template, prompt, options);
+            const filledTemplate = await fillTemplateWithAI(template, prompt, options, persona);
 
             if (filledTemplate) {
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
@@ -415,8 +417,8 @@ async function askTomorrow() {
     return answers;
 }
 
-function buildTomorrowPrompt(answers) {
-    return `${SYSTEM_PROMPT}
+function buildTomorrowPrompt(answers, persona) {
+    return `${persona.system}
 
 Buat rencana terstruktur untuk besok dengan heading:
 # Tomorrow Plan
@@ -443,9 +445,10 @@ Jangan lupain: ${answers.ingat}
 Tiap bagian langsung isinya aja, bahasa santai, bullet points.`;
 }
 
-async function aiTomorrow() {
+async function aiTomorrow(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askTomorrow();
-    const prompt = buildTomorrowPrompt(answers);
+    const prompt = buildTomorrowPrompt(answers, persona);
 
     console.log("\n🧠 Lagi diproses sama AI...\n");
 
@@ -497,13 +500,13 @@ async function askUpdate() {
     return answers;
 }
 
-function buildUpdatePrompt(answers, tomorrowTasks = []) {
+function buildUpdatePrompt(answers, tomorrowTasks = [], persona) {
     const tomorrowContext =
         Array.isArray(tomorrowTasks) && tomorrowTasks.length > 0
             ? `\nRencana dari note kemarin (bagian ## Tomorrow):\n${tomorrowTasks.join("\n")}`
             : "";
 
-    return `${SYSTEM_PROMPT}
+    return `${persona.system}
 
 Update daily note hari ini. Isi 6 bagian dengan heading:
 ## Target Hari Ini
@@ -524,7 +527,8 @@ ${tomorrowContext}
 Tiap bagian langsung isinya aja, bahasa santai, 2-3 kalimat.`;
 }
 
-async function aiUpdate() {
+async function aiUpdate(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askUpdate();
 
     console.log("\n🧠 Lagi diproses sama AI...\n");
@@ -537,7 +541,7 @@ async function aiUpdate() {
 
         const tomorrowTasks = loadTomorrowTasks(vault, date);
 
-        const content = await generate(buildUpdatePrompt(answers, tomorrowTasks));
+        const content = await generate(buildUpdatePrompt(answers, tomorrowTasks, persona));
         const sections = parseSections(content);
 
         if (fs.existsSync(filePath)) {
@@ -611,8 +615,8 @@ async function askWeekly() {
     return answers;
 }
 
-function buildWeeklyPrompt(answers) {
-    return `${SYSTEM_PROMPT}
+function buildWeeklyPrompt(answers, persona) {
+    return `${persona.system}
 
 Buat rencana mingguan terstruktur dengan heading:
 # Weekly Plan
@@ -654,9 +658,10 @@ Habit: ${answers.habit}
 Tiap bagian langsung isinya aja, bahasa santai, bullet points.`;
 }
 
-async function aiWeekly() {
+async function aiWeekly(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askWeekly();
-    const prompt = buildWeeklyPrompt(answers);
+    const prompt = buildWeeklyPrompt(answers, persona);
 
     console.log("\n🧠 Lagi diproses sama AI...\n");
 
@@ -675,4 +680,82 @@ async function aiWeekly() {
     }
 }
 
-module.exports = { aiWrite, aiTomorrow, aiUpdate, aiWeekly };
+async function aiPeople(personName, options) {
+    const persona = resolvePersona(options && options.persona);
+
+    try {
+        const vault = getVaultPath();
+
+        let name = String(personName || "").trim();
+        if (!name) {
+            name = (await input({
+                message: "👤 Nama orang? (contoh: John Doe)",
+            })).trim();
+            if (!name) {
+                console.log("❌ Nama tidak boleh kosong.");
+                return;
+            }
+        }
+
+        const files = scanMarkdownFiles(vault);
+        const file = findPeopleNote(files, name);
+
+        if (!file) {
+            console.log(`People note tidak ditemukan: ${name}`);
+            return;
+        }
+
+        const content = readPeopleNote(file);
+
+        const interaction = (await input({
+            message: `📝 Interaksi terakhir dengan ${name}?`,
+        })).trim();
+
+        if (!interaction) {
+            console.log("❌ Interaksi tidak boleh kosong.");
+            return;
+        }
+
+        const prompt = buildInteractionPrompt({ name, content, interaction, persona });
+
+        console.log("\n🧠 Lagi diproses sama AI...\n");
+        const output = await generate(prompt);
+
+        const bullets = parseInteractionOutput(output);
+        if (bullets.length === 0) {
+            console.log("❌ AI tidak menghasilkan interaksi.");
+            return;
+        }
+
+        const { content: updated, changed, added, skipped } = appendInteraction(content, bullets);
+
+        if (!changed) {
+            console.log("⚠️ Tidak ada interaksi baru (semua duplikat).");
+            return;
+        }
+
+        console.log(`\n📄 Preview perubahan untuk ${path.basename(file)}:\n`);
+        console.log(`## ${INTERACTIONS_HEADING}\n`);
+        added.forEach((bullet) => console.log(`+ ${bullet}`));
+        if (skipped > 0) {
+            console.log(`\n(${skipped} interaksi duplikat di-skip)`);
+        }
+
+        const confirmed = await confirm({
+            message: "Tulis perubahan ini ke note?",
+        });
+
+        if (!confirmed) {
+            console.log("Batal - tidak ada perubahan.");
+            return;
+        }
+
+        updateMarkdown(file, updated);
+        console.log("\n✅ Interaksi ditambahkan ke People note!");
+        console.log("📁 " + file);
+    } catch (err) {
+        handleAiError(err);
+    }
+}
+
+module.exports = { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople };

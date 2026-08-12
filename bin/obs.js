@@ -46,7 +46,7 @@ const tags = require("../commands/tags");
 
 const configCmd = require("../commands/config");
 
-const { aiWrite, aiTomorrow, aiUpdate, aiWeekly } = require("../commands/ai");
+const { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople } = require("../commands/ai");
 
 const dashboard = require("../commands/dashboard");
 
@@ -184,7 +184,7 @@ program
   .action(configCmd);
 
 program
-  .command("ai [prompt]")
+  .command("ai [prompt] [name]")
   .description("Bikin catatan pake AI (Ollama lokal atau OpenAI API key)")
   .option("-t, --title <title>", "Judul catatan", "AI Note")
   .option("-f, --folder <folder>", "Folder di vault", "AI")
@@ -192,15 +192,19 @@ program
   .option("--daily", "Catat ke daily note hari ini")
   .option("--ask", "Interactive mode - AI tanya kamu dulu")
   .option("--template <name>", "Gunakan template untuk catatan AI")
-  .action((prompt, options) => {
+  .option("-p, --persona <name>", "Persona AI yang dipakai")
+  .action((prompt, name, options) => {
     if (prompt === "tomorrow") {
-      return aiTomorrow();
+      return aiTomorrow(options);
     }
     if (prompt === "update") {
-      return aiUpdate();
+      return aiUpdate(options);
     }
     if (prompt === "weekly") {
-      return aiWeekly();
+      return aiWeekly(options);
+    }
+    if (prompt === "people") {
+      return aiPeople(name, options);
     }
     return aiWrite(prompt, options);
   });

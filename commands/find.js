@@ -1,5 +1,6 @@
 const { getVaultPath } = require("../utils/vault");
 const { searchFiles } = require("../utils/search");
+const { info } = require("../utils/feedback");
 
 function find(keyword) {
     const vault = getVaultPath();
@@ -7,7 +8,7 @@ function find(keyword) {
     const { results } = searchFiles(vault, keyword);
 
     if (results.length === 0) {
-        console.log("Tidak ada note yang ditemukan.");
+        info("Tidak ada note yang ditemukan.");
         return;
     }
 

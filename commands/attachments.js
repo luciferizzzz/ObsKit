@@ -1,10 +1,11 @@
 const { inspectAttachments, formatSize } = require("../checks/attachments");
+const { info } = require("../utils/feedback");
 
 function attachments() {
     const data = inspectAttachments();
 
     if (data.total === 0) {
-        console.log("\nNo attachments found in vault.");
+        info("No attachments found in vault.");
         return;
     }
 

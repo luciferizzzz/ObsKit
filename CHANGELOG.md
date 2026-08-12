@@ -36,6 +36,15 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - `obs ai people <name>` — updates an existing People note's `## Catatan Interaksi` section with AI-structured interaction bullets (preview + confirmation, duplicate prevention, Markdown and CRLF preservation).
 - Reusable People-note module (`utils/people.js`) with note discovery, interaction parsing, dedup, and section append.
 - Unit test suite for the People workflow (`npm test`).
+- Reusable CLI feedback layer (`utils/feedback.js`) — `success()`, `info()`, `warning()`, `error()` using ObsKit-style symbols (✅ ℹ️ ⚠️ ❌) with chalk colors when in a real terminal.
+- Unit test suite for the CLI feedback layer (`npm test`).
+
+### Improved
+
+- Consistent command feedback across the CLI: successes show `✅`, informational/no-result messages show `ℹ️`, warnings/already-existing/no-op states show `⚠️`, and errors/missing resources show `❌`.
+- `obs relate` / `obs unrelate` / `obs relations` / `obs backlinks` / `obs rename` / `obs move` now report missing notes as errors (`Note not found: <note>`).
+- `obs new`, `obs today`, `obs rename`, `obs move`, `obs init`, `obs open`, `obs config`, `obs report`, and `obs ai` now use consistent success feedback.
+- Relationship, AI, and People commands preserve their existing result formatting.
 
 ### Planned
 

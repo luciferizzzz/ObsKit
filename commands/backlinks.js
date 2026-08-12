@@ -4,6 +4,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { extractWikiLinks } = require("../utils/wikilinks");
+const { error, info } = require("../utils/feedback");
 
 function backlinks(note) {
     const vault = getVaultPath();
@@ -14,7 +15,7 @@ function backlinks(note) {
     // 2. Check if the requested note exists as a file in the vault
     const targetFile = path.join(vault, note + ".md");
     if (!fs.existsSync(targetFile)) {
-        console.log("Note not found.");
+        error(`Note not found: ${note}`);
         return;
     }
 
@@ -46,7 +47,7 @@ function backlinks(note) {
 
     // 6. Print results
     if (referencing.length === 0) {
-        console.log("No backlinks found.");
+        info("No backlinks found.");
         return;
     }
 

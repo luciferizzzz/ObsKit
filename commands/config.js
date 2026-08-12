@@ -3,6 +3,7 @@ const path = require("path");
 const { input, select, password } = require("@inquirer/prompts");
 
 const configPath = path.join(__dirname, "..", "config.json");
+const { error, info, success } = require("../utils/feedback");
 
 function loadConfig() {
     if (!fs.existsSync(configPath)) {
@@ -77,7 +78,7 @@ async function setupAI(cfg) {
 
     saveConfig(cfg);
 
-    console.log("✅ Konfigurasi AI berhasil disimpan.");
+    success("Konfigurasi AI berhasil disimpan.");
 }
 
 async function config(subcommand) {
@@ -85,8 +86,8 @@ async function config(subcommand) {
     let cfg = loadConfig();
 
     if (!cfg) {
-        console.log("No configuration found.");
-        console.log("Run `obs init` first.");
+        error("No configuration found.");
+        info("Run `obs init` first.");
         return;
     }
 
@@ -111,7 +112,7 @@ async function config(subcommand) {
             })).trim();
 
             if (!vault || !fs.existsSync(vault)) {
-                console.log("Invalid path.");
+                error("Invalid path.");
                 return;
             }
 
@@ -119,7 +120,7 @@ async function config(subcommand) {
 
             saveConfig(cfg);
 
-            console.log("Vault updated.");
+            success("Vault updated.");
             return;
 
         case "ai":
@@ -132,7 +133,7 @@ async function config(subcommand) {
                 vault: ""
             });
 
-            console.log("Configuration reset.");
+            success("Configuration reset.");
             return;
 
         default:

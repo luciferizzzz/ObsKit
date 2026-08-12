@@ -3,13 +3,14 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { info } = require("../utils/feedback");
 
 function recent(limit) {
     const vault = getVaultPath();
     const files = scanMarkdownFiles(vault);
 
     if (files.length === 0) {
-        console.log("Tidak ada note dalam vault.");
+        info("Tidak ada note dalam vault.");
         return;
     }
 

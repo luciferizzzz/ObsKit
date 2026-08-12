@@ -2,6 +2,7 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { info } = require("../utils/feedback");
 
 function list() {
     const vault = getVaultPath();
@@ -22,7 +23,7 @@ function list() {
         .sort((a, b) => a.localeCompare(b));
 
     if (sorted.length === 0) {
-        console.log("No notes found in the vault.");
+        info("No notes found in the vault.");
         return;
     }
 

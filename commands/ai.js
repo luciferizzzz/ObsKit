@@ -7,6 +7,7 @@ const { createFile } = require("../utils/file");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { error, success, warning } = require("../utils/feedback");
 const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData } = require("../utils/markdown");
 const { loadTomorrowTasks, importTomorrowTasks } = require("../utils/dailyWorkflow");
 const { updateMarkdown } = require("../utils/relationship/editor");
@@ -98,13 +99,13 @@ function getISOWeek(d) {
 function handleAiError(err) {
     const msg = err.message || "Unknown error";
     if (msg.includes("connect ke Ollama") || msg.includes("ECONNREFUSED")) {
-        console.log("❌ Ollama belum jalan. Jalankan `ollama serve` dulu.");
+        error("Ollama belum jalan. Jalankan `ollama serve` dulu.");
     } else if (msg.includes("API key")) {
-        console.log("❌ " + msg);
+        error(msg);
     } else if (msg.includes("timeout")) {
-        console.log("❌ Response timeout. Coba prompt yang lebih pendek.");
+        error("Response timeout. Coba prompt yang lebih pendek.");
     } else {
-        console.log("❌ " + msg);
+        error(msg);
     }
 }
 
@@ -312,17 +313,17 @@ async function aiWrite(prompt, options) {
                         updated = insertUnderCatatan(existing, content);
                     }
                     fs.writeFileSync(filePath, updated);
-                    console.log("✅ Daily note diupdate!");
+                    success("Daily note diupdate!");
                 } else {
                     createFile(filePath, filled);
-                    console.log("✅ Daily note baru dibuat!");
+                    success("Daily note baru dibuat!");
                 }
             } else {
                 if (fs.existsSync(filePath)) {
                     const existing = fs.readFileSync(filePath, "utf8");
                     const updated = insertUnderCatatan(existing, content);
                     fs.writeFileSync(filePath, updated);
-                    console.log("✅ Catatan ditambahin ke daily note hari ini!");
+                    success("Catatan ditambahin ke daily note hari ini!");
                 } else {
                     const templatePath = path.join(
                         __dirname, "..", "templates", "daily.md"
@@ -336,7 +337,7 @@ async function aiWrite(prompt, options) {
                     }
                     const finalContent = insertUnderCatatan(header, content);
                     createFile(filePath, finalContent);
-                    console.log("✅ Daily note baru dibuat!");
+                    success("Daily note baru dibuat!");
                 }
             }
         } else if (options.template) {
@@ -345,7 +346,7 @@ async function aiWrite(prompt, options) {
             );
 
             if (!fs.existsSync(templatePath)) {
-                console.log("❌ Template tidak ditemukan: " + options.template);
+                error(`Template tidak ditemukan: ${options.template}`);
                 return;
             }
 
@@ -360,12 +361,12 @@ async function aiWrite(prompt, options) {
             if (filledTemplate) {
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
                 createFile(filePath, filledTemplate);
-                console.log("✅ Catatan dari template berhasil dibuat!");
+                success("Catatan dari template berhasil dibuat!");
             } else {
                 const content = await generate(finalPrompt);
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
                 createFile(filePath, content);
-                console.log("✅ Catatan berhasil dibuat!");
+                success("Catatan berhasil dibuat!");
             }
         } else if (options.file) {
             const content = await generate(finalPrompt);
@@ -373,14 +374,14 @@ async function aiWrite(prompt, options) {
                 ? options.file
                 : path.join(vault, options.file);
             createFile(filePath, content);
-            console.log("✅ Catatan berhasil dibuat!");
+            success("Catatan berhasil dibuat!");
         } else {
             const content = await generate(finalPrompt);
             const title = sanitizeFilename(options.title || "AI Note");
             const folder = options.folder || "AI";
             filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
             createFile(filePath, content);
-            console.log("✅ Catatan berhasil dibuat!");
+            success("Catatan berhasil dibuat!");
         }
 
         console.log("📁 " + filePath);
@@ -461,7 +462,7 @@ async function aiTomorrow(options) {
         const content = await generate(prompt);
         const filePath = path.join(vault, "Planning", "Tomorrow", `${date}.md`);
         createFile(filePath, content);
-        console.log("✅ Rencana besok berhasil dibuat!");
+        success("Rencana besok berhasil dibuat!");
         console.log("📁 " + filePath);
     } catch (err) {
         handleAiError(err);
@@ -552,7 +553,7 @@ async function aiUpdate(options) {
             }
             updated = importTomorrowTasks(updated, tomorrowTasks);
             fs.writeFileSync(filePath, updated);
-            console.log("✅ Daily note diupdate sama AI!");
+            success("Daily note diupdate sama AI!");
         } else {
             const templatePath = path.join(
                 __dirname, "..", "templates", "daily.md"
@@ -570,7 +571,7 @@ async function aiUpdate(options) {
             }
             filled = importTomorrowTasks(filled, tomorrowTasks);
             createFile(filePath, filled);
-            console.log("✅ Daily note baru dibuat dan diisi AI!");
+            success("Daily note baru dibuat dan diisi AI!");
         }
 
         if (tomorrowTasks.length > 0) {
@@ -673,7 +674,7 @@ async function aiWeekly(options) {
         const content = await generate(prompt);
         const filePath = path.join(vault, "Planning", "Weekly", `Week-${week}.md`);
         createFile(filePath, content);
-        console.log("✅ Rencana mingguan berhasil dibuat!");
+        success("Rencana mingguan berhasil dibuat!");
         console.log("📁 " + filePath);
     } catch (err) {
         handleAiError(err);
@@ -692,7 +693,7 @@ async function aiPeople(personName, options) {
                 message: "👤 Nama orang? (contoh: John Doe)",
             })).trim();
             if (!name) {
-                console.log("❌ Nama tidak boleh kosong.");
+                error("Nama tidak boleh kosong.");
                 return;
             }
         }
@@ -701,7 +702,7 @@ async function aiPeople(personName, options) {
         const file = findPeopleNote(files, name);
 
         if (!file) {
-            console.log(`People note tidak ditemukan: ${name}`);
+            error(`People note tidak ditemukan: ${name}`);
             return;
         }
 
@@ -712,7 +713,7 @@ async function aiPeople(personName, options) {
         })).trim();
 
         if (!interaction) {
-            console.log("❌ Interaksi tidak boleh kosong.");
+            error("Interaksi tidak boleh kosong.");
             return;
         }
 
@@ -723,14 +724,14 @@ async function aiPeople(personName, options) {
 
         const bullets = parseInteractionOutput(output);
         if (bullets.length === 0) {
-            console.log("❌ AI tidak menghasilkan interaksi.");
+            error("AI tidak menghasilkan interaksi.");
             return;
         }
 
         const { content: updated, changed, added, skipped } = appendInteraction(content, bullets);
 
         if (!changed) {
-            console.log("⚠️ Tidak ada interaksi baru (semua duplikat).");
+            warning("Tidak ada interaksi baru (semua duplikat).");
             return;
         }
 
@@ -751,7 +752,7 @@ async function aiPeople(personName, options) {
         }
 
         updateMarkdown(file, updated);
-        console.log("\n✅ Interaksi ditambahkan ke People note!");
+        success("Interaksi ditambahkan ke People note!");
         console.log("📁 " + file);
     } catch (err) {
         handleAiError(err);

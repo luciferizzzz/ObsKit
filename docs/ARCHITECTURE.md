@@ -26,7 +26,7 @@ This document explains how ObsKit (OBS = Organized Knowledge System) works inter
 
 ## 🏛️ Overall architecture
 
-ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](https://github.com/tj/commander.js) for argument parsing and `@inquirer/prompts` for interactive input.
+ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](https://github.com/tj/commander.js) for argument parsing, `@inquirer/prompts` for interactive input, and `chalk` for colored CLI feedback.
 
 ```
 ┌────────────────────┐
@@ -46,7 +46,7 @@ ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](h
 └────────────────────┘
 ```
 
-The **only** dependencies are `commander` and `@inquirer/prompts` — everything else is the standard library.
+The dependencies are `commander`, `@inquirer/prompts`, and `chalk` — everything else is the standard library.
 
 ---
 
@@ -139,6 +139,7 @@ createFile(<vault path>\Notes\Learning Rust.md, content)   // mkdir -p + write
 | `utils/vault.js` | `getVaultPath()` — resolve and trim the vault path |
 | `utils/config.js` | `getConfig()` / `saveConfig()` — read/write `config.json` |
 | `utils/file.js` | `createFile()` — recursive folder creation, refuses overwrite |
+| `utils/feedback.js` | Reusable CLI feedback layer — `success()`, `info()`, `warning()`, `error()` with ObsKit-style symbols (✅ ℹ️ ⚠️ ❌) and chalk colors |
 | `utils/scanner.js` | `scanMarkdownFiles()` — recursive `.md` scanner |
 | `utils/search.js` | `searchFiles()` / `searchNotes()` — reusable filename search foundation (case-insensitive substring, result objects with `name` / `path` / `relativePath`, optional dir exclusions and extension filters) |
 | `utils/noteIndex.js` | `buildNoteIndex()` — `Set` of note names for link analysis |
@@ -347,7 +348,7 @@ obskit/
 │   ├── todos.js
 │   └── attachments.js
 ├── utils/                   # shared helpers
-│   ├── ai.js  config.js  file.js  markdown.js
+│   ├── ai.js  config.js  feedback.js  file.js  markdown.js
 │   ├── noteIndex.js  persona.js  sanitizeFilename.js  scanner.js  search.js  vault.js  wikilinks.js
 │   ├── people.js
 │   └── relationship/        # relationship module (parser, validator, scanner, editor, formatter, index)

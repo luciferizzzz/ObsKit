@@ -214,8 +214,8 @@ Not in v1.x. The CLI reads a single `vault` from `config.json`. Planned:
 | `ENOENT: no such file or directory` | Wrong path / typo | Verify path, `obs config set` |
 | `No configuration found. Run obs init first.` | Missing config | `obs init` |
 | AI timeout | Response > 5 min | Smaller model, shorter prompt |
-| `Nama note sudah digunakan.` | Name collision | Choose another name |
-| `Note tidak ditemukan.` | Typo or wrong folder | Check folder + name |
+| `Note already exists: <name>.` | Name collision | Choose another name |
+| `Note not found: <name>.` | Typo or wrong folder | Check folder + name |
 | `Provider AI tidak dikenal` | Bad `ai.provider` | Re-run `obs config ai` |
 | `API error: 401` | Invalid key | Re-run `obs config ai` |
 | `API error: 404` | Wrong model slug | Use exact slug / model name |

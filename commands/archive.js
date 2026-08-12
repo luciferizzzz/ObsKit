@@ -4,6 +4,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { input, confirm } = require("@inquirer/prompts");
+const { error, info } = require("../utils/feedback");
 
 function formatDate(date) {
     return (
@@ -26,7 +27,7 @@ async function archive() {
     const days = parseInt(daysInput, 10);
 
     if (isNaN(days) || days <= 0) {
-        console.log("Invalid number of days.");
+        error("Invalid number of days.");
         return;
     }
 
@@ -45,7 +46,7 @@ async function archive() {
     }
 
     if (toArchive.length === 0) {
-        console.log(`No notes older than ${days} days found.`);
+        info(`No notes older than ${days} days found.`);
         return;
     }
 

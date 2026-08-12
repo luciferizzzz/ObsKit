@@ -3,6 +3,7 @@ const path = require("path");
 
 const collectVaultReport = require("../checks/vaultReport");
 const { getVaultPath } = require("../utils/vault");
+const { info } = require("../utils/feedback");
 
 function formatDate(date) {
     return (
@@ -24,7 +25,7 @@ function dashboard() {
     const vault = getVaultPath();
 
     if (data.noteCount === 0) {
-        console.log("Vault kosong. Tidak ada note ditemukan.");
+        info("Vault kosong. Tidak ada note ditemukan.");
         return;
     }
 

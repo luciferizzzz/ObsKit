@@ -5,6 +5,7 @@ const { parseTemplate, getTemplateData } = require("../utils/markdown");
 const { createFile } = require("../utils/file");
 const { getVaultPath } = require("../utils/vault");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
+const { error, success } = require("../utils/feedback");
 
 function newNote(folder, title, options) {
     const vault = getVaultPath();
@@ -21,7 +22,7 @@ function newNote(folder, title, options) {
         );
 
         if (!fs.existsSync(templatePath)) {
-            console.log("❌ Template tidak ditemukan.");
+            error("Template tidak ditemukan.");
             return;
         }
 
@@ -39,10 +40,10 @@ function newNote(folder, title, options) {
     try {
         createFile(filePath, content);
 
-        console.log("✅ Note berhasil dibuat!");
+        success("Note berhasil dibuat!");
         console.log(filePath);
     } catch (err) {
-        console.log("❌ " + err.message);
+        error(err.message);
     }
 }
 

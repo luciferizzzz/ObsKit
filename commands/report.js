@@ -3,6 +3,7 @@ const path = require("path");
 
 const collectVaultReport = require("../checks/vaultReport");
 const { formatSize } = require("../checks/vaultReport");
+const { info, success } = require("../utils/feedback");
 
 function formatDate(date) {
     return (
@@ -242,7 +243,7 @@ function report(options = {}) {
     const data = collectVaultReport();
 
     if (data.noteCount === 0) {
-        console.log("Vault kosong. Tidak ada note ditemukan.");
+        info("Vault kosong. Tidak ada note ditemukan.");
         return;
     }
 
@@ -301,7 +302,9 @@ function report(options = {}) {
         results.push(filepath);
     }
 
-    console.log("\n✅ Report exported:\n");
+    console.log("\n");
+    success("Report exported:");
+    console.log("\n");
     results.forEach((filepath) => {
         console.log(`  ${filepath}`);
     });

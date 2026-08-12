@@ -22,6 +22,17 @@ The complete CLI reference for **ObsKit** (`obs`, OBS = Organized Knowledge Syst
 - `[argument]` — optional argument
 - `-o, --option` — command option
 
+**CLI Feedback**
+
+ObsKit uses a small set of consistent symbols for command feedback (colors are shown only in a real terminal):
+
+| Symbol | Meaning |
+|--------|---------|
+| `✅` | Operation succeeded |
+| `ℹ️` | Informational / no results |
+| `⚠️` | Warning / already exists / nothing to update |
+| `❌` | Error / requested resource not found |
+
 ---
 
 ## 🌐 Global
@@ -70,7 +81,7 @@ obs init
 
 ```text
 ? Lokasi Obsidian Vault D:\Vault
-Vault berhasil disimpan.
+✅ Vault berhasil disimpan.
 ```
 
 **Notes**
@@ -193,7 +204,7 @@ obs today
 Tanggal : 2026-08-06
 Path : D:\Vault\Daily Notes\2026-08-06.md
 Exists : false
-Daily note berhasil dibuat!
+✅ Daily note berhasil dibuat!
 ```
 
 **Notes**
@@ -274,7 +285,7 @@ obs rename Code "Old Note" "New Note"
 ```
 
 ```text
-Note berhasil diubah.
+✅ Note berhasil diubah.
 Code/New Note.md
 ```
 
@@ -315,7 +326,7 @@ obs move Code "JavaScript" Projects
 ```
 
 ```text
-Note berhasil dipindahkan.
+✅ Note berhasil dipindahkan.
 Code → Projects
 ```
 
@@ -727,7 +738,7 @@ Total Backlinks: 1
 
 **Notes**
 
-- Errors with `Note not found.` if the note does not exist.
+- Errors with `Note not found: <note>` if the note does not exist.
 
 ---
 

@@ -6,6 +6,7 @@ const { scanMarkdownFiles } = require("../utils/scanner");
 const { buildNoteIndex } = require("../utils/noteIndex");
 const { extractWikiLinks } = require("../utils/wikilinks");
 const { confirm } = require("@inquirer/prompts");
+const { error } = require("../utils/feedback");
 
 function formatSize(bytes) {
     if (bytes < 1024) return `${bytes} B`;
@@ -143,7 +144,7 @@ async function cleanup() {
             fs.unlinkSync(file);
             deleted++;
         } catch (err) {
-            console.error(`Error deleting ${file}: ${err.message}`);
+            error(`Error deleting ${file}: ${err.message}`);
         }
     }
 

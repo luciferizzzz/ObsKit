@@ -3,13 +3,14 @@ const { exec } = require("child_process");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { info } = require("../utils/feedback");
 
 function random(options) {
     const vault = getVaultPath();
     const files = scanMarkdownFiles(vault);
 
     if (files.length === 0) {
-        console.log("Vault contains no notes.");
+        info("Vault contains no notes.");
         return;
     }
 

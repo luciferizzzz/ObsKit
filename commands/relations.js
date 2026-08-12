@@ -3,6 +3,7 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { error } = require("../utils/feedback");
 const relationship = require("../utils/relationship");
 
 function relations(note) {
@@ -16,7 +17,7 @@ function relations(note) {
 
     const noteFile = findNoteFile(files, note);
     if (!noteFile) {
-        console.log(`Note not found: ${note}`);
+        error(`Note not found: ${note}`);
         return;
     }
 

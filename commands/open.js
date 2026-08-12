@@ -3,6 +3,7 @@ const path = require("path");
 const { exec } = require("child_process");
 
 const { getVaultPath } = require("../utils/vault");
+const { error, success } = require("../utils/feedback");
 
 function open(keyword) {
     const vault = getVaultPath();
@@ -29,7 +30,7 @@ function open(keyword) {
     }
 
     if (results.length === 0) {
-        console.log("❌ Note tidak ditemukan.");
+        error("Note tidak ditemukan.");
         return;
     }
 
@@ -45,7 +46,7 @@ function open(keyword) {
 
     exec(`start "" "${results[0]}"`);
 
-    console.log("✅ Membuka note...");
+    success("Membuka note...");
 }
 
 module.exports = open;

@@ -15,7 +15,7 @@ function run(args) {
 test("cli: --version prints the package version", () => {
     const { status, stdout } = run(["--version"]);
     assert.equal(status, 0);
-    assert.equal(stdout.trim(), "1.4.6");
+    assert.equal(stdout.trim(), "1.5.0");
 });
 
 test("cli: --help shows usage and quick examples", () => {

@@ -6,7 +6,7 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
-## [Unreleased]
+## [1.5.0] - 2026-08-13
 
 ### Changed
 

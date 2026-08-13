@@ -3,7 +3,11 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
-const { buildNoteIndex } = require("../utils/noteIndex");
+const {
+    buildNoteIndex,
+    buildNormalizedNoteIndex,
+    buildFilePathMap,
+} = require("../utils/noteIndex");
 const { extractWikiLinks } = require("../utils/wikilinks");
 const c = require("../utils/colors");
 
@@ -15,6 +19,8 @@ function orphan() {
 
     // 2. Build an index of all note names (basename without .md)
     const allNotes = buildNoteIndex(files);
+    const normalizedNotes = buildNormalizedNoteIndex(files);
+    const fileByNote = buildFilePathMap(files);
 
     // 3. Collect every note name that is referenced by at least one wiki link
     const referenced = new Set();
@@ -27,12 +33,9 @@ function orphan() {
             // Strip heading fragment (#Heading) before comparing
             const clean = link.split("#")[0].trim().toLowerCase();
 
-            // Find the matching note name in our index (case-insensitive)
-            for (const note of allNotes) {
-                if (note.toLowerCase() === clean) {
-                    referenced.add(note);
-                    break;
-                }
+            // Set lookup is O(1) instead of scanning the whole index per link
+            if (normalizedNotes.has(clean)) {
+                referenced.add(clean);
             }
         }
     }
@@ -41,11 +44,9 @@ function orphan() {
     const orphans = [];
 
     for (const note of allNotes) {
-        if (!referenced.has(note)) {
-            // Find the full path for this note
-            const file = files.find(
-                (f) => path.basename(f, ".md") === note
-            );
+        if (!referenced.has(note.toLowerCase())) {
+            // Map lookup is O(1) instead of scanning the file list per note
+            const file = fileByNote.get(note);
 
             if (file) {
                 const rel = path

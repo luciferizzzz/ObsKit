@@ -4,7 +4,11 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { extractWikiLinks } = require("../utils/wikilinks");
-const { buildNoteIndex } = require("../utils/noteIndex");
+const {
+    buildNoteIndex,
+    buildNormalizedNoteIndex,
+    buildFilePathMap,
+} = require("../utils/noteIndex");
 const c = require("../utils/colors");
 
 function graph() {
@@ -15,6 +19,8 @@ function graph() {
 
     // 2. Build an index of all note names (basename without .md)
     const allNotes = buildNoteIndex(files);
+    const normalizedNotes = buildNormalizedNoteIndex(files);
+    const fileByNote = buildFilePathMap(files);
 
     // 3. Track incoming and outgoing links per note
     const incoming = {};
@@ -33,20 +39,13 @@ function graph() {
         for (const link of links) {
             const clean = link.split("#")[0].trim().toLowerCase();
 
-            // Check if the link is broken
-            let found = false;
-            for (const note of allNotes) {
-                if (note.toLowerCase() === clean) {
-                    if (!incoming[note]) {
-                        incoming[note] = 0;
-                    }
-                    incoming[note]++;
-                    found = true;
-                    break;
+            // Set lookup is O(1) instead of scanning the whole index per link
+            if (normalizedNotes.has(clean)) {
+                if (!incoming[clean]) {
+                    incoming[clean] = 0;
                 }
-            }
-
-            if (!found) {
+                incoming[clean]++;
+            } else {
                 brokenCount++;
             }
         }
@@ -55,10 +54,9 @@ function graph() {
     // 4. Calculate orphan notes (notes with no incoming links)
     const orphanNotes = [];
     for (const note of allNotes) {
-        if (!incoming[note]) {
-            const file = files.find(
-                (f) => path.basename(f, ".md") === note
-            );
+        if (!incoming[note.toLowerCase()]) {
+            // Map lookup is O(1) instead of scanning the file list per note
+            const file = fileByNote.get(note);
             if (file) {
                 orphanNotes.push(
                     path.relative(vault, file).split(path.sep).join("/")

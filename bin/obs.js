@@ -125,7 +125,12 @@ program
 program
   .command("find <keywords>")
   .description("Cari note")
-  .action(find);
+  .option("--fuzzy", "Fuzzy search (tahan typo) pada nama file")
+  .option("--content", "Cari di dalam isi note (bukan nama file)")
+  .option("--folder <path>", "Batasi pencarian ke folder tertentu")
+  .option("--type <ext>", "Batasi ke ekstensi file (contoh: md, txt)")
+  .option("--pick", "Pilih hasil secara interaktif")
+  .action((keywords, options) => find(keywords, options));
 
 program
   .command("rename <folder> <oldName> <newName>")

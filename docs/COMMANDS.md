@@ -219,12 +219,12 @@ Search notes by filename keyword.
 
 **Description**
 
-Case-insensitive substring search over all note filenames.
+Case-insensitive substring search over all note filenames, ranked by relevance (exact match → prefix → substring). Supports fuzzy, content, folder, extension, and interactive pick modes.
 
 **Syntax**
 
 ```
-obs find <keywords>
+obs find <keywords> [options]
 ```
 
 **Arguments**
@@ -233,7 +233,15 @@ obs find <keywords>
 |----------|-------------|
 | `<keywords>` | Text to match against note filenames |
 
-**Options** — none
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `--fuzzy` | Typo-tolerant fuzzy matching on filenames |
+| `--content` | Search inside note contents instead of filenames |
+| `--folder <path>` | Restrict search to a specific folder (absolute or vault-relative) |
+| `--type <ext>` | Restrict to a file extension (e.g. `md`, `txt`) |
+| `--pick` | Select a result interactively with the keyboard |
 
 **Example**
 
@@ -248,9 +256,20 @@ Ditemukan 2 note
 📄 Rust/Cargo.md
 ```
 
+```bash
+obs find "lrning rust" --fuzzy
+```
+
+```bash
+obs find cargo --content --folder Notes
+```
+
 **Notes**
 
-- Matches filenames only (not file contents).
+- Default mode matches filenames only (not file contents).
+- `--content` searches note contents and shows the matching line and snippet.
+- Results are ranked so exact and prefix matches appear first.
+
 
 ---
 

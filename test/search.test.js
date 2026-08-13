@@ -10,6 +10,12 @@ const {
     walkFiles,
     searchFiles,
     searchNotes,
+    fuzzyScore,
+    fuzzyMatches,
+    fuzzySearchFiles,
+    fuzzySearchNotes,
+    rankResults,
+    searchByContent,
 } = require("../utils/search");
 
 function makeVault() {
@@ -125,4 +131,112 @@ test("searchFiles: missing root returns no results", () => {
         "rust"
     );
     assert.deepEqual(results, []);
+});
+
+function makeContentVault() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "obs-content-"));
+    fs.mkdirSync(path.join(root, "Notes"), { recursive: true });
+    fs.writeFileSync(
+        path.join(root, "Notes", "Alpha.md"),
+        "# Alpha\n\nRust and cargo are awesome.\n"
+    );
+    fs.writeFileSync(
+        path.join(root, "Notes", "Beta.md"),
+        "# Beta\n\nNo mention here.\n"
+    );
+    fs.mkdirSync(path.join(root, ".obsidian"), { recursive: true });
+    fs.writeFileSync(path.join(root, ".obsidian", "workspace.json"), '{"rust": true}');
+    fs.writeFileSync(path.join(root, "Log.txt"), "rust in txt\n");
+    return root;
+}
+
+test("fuzzyMatches: matches subsequence (typo-tolerant)", () => {
+    assert.equal(fuzzyMatches("lern rust", "Learning Rust.md"), true);
+    assert.equal(fuzzyMatches("rust", "Learning Rust.md"), true);
+    assert.equal(fuzzyMatches("rust", "Cargo.md"), false);
+    assert.equal(fuzzyMatches("", "Cargo.md"), false);
+});
+
+test("fuzzyScore: exact beats prefix beats substring beats subsequence", () => {
+    const exact = fuzzyScore("rust.md", "Rust.md");
+    const prefix = fuzzyScore("rust", "Rust Notes.md");
+    const sub = fuzzyScore("rust", "Learning Rust.md");
+    const fuzzy = fuzzyScore("rst", "Learning Rust.md");
+    assert.ok(exact > prefix);
+    assert.ok(prefix > sub);
+    assert.ok(sub > fuzzy);
+    assert.equal(fuzzyScore("xyz", "Rust.md"), null);
+});
+
+test("fuzzySearchFiles: finds typo-tolerant matches", () => {
+    const root = makeVault();
+    const { results } = fuzzySearchFiles(root, "lrning rust");
+    const paths = results.map((r) => r.relativePath);
+    assert.ok(paths.includes("Learning Rust.md"));
+    assert.ok(results.every((r) => r.score >= 0));
+});
+
+test("fuzzySearchFiles: sorts by score descending", () => {
+    const root = makeVault();
+    const { results } = fuzzySearchFiles(root, "rust");
+    assert.equal(results[0].name, "Rust.md");
+    const scores = results.map((r) => r.score);
+    assert.ok(scores.every((s, i) => i === 0 || scores[i - 1] >= s));
+});
+
+test("fuzzySearchNotes: only matches markdown files", () => {
+    const root = makeVault();
+    const { results } = fuzzySearchNotes(root, "notes");
+    assert.equal(results.length, 0);
+
+    const { results: md } = fuzzySearchNotes(root, "rust");
+    assert.equal(md.length, 2);
+});
+
+test("rankResults: orders exact, prefix, then substring", () => {
+    const root = makeVault();
+    const { results } = searchFiles(root, "rust");
+    const ranked = rankResults(results, "rust");
+    assert.equal(ranked[0].name, "Rust.md");
+    assert.equal(ranked[1].name, "Learning Rust.md");
+    assert.ok(ranked[0].score > ranked[1].score);
+});
+
+test("searchByContent: finds matching content in notes", () => {
+    const root = makeContentVault();
+    const { results } = searchByContent(root, "cargo");
+    assert.equal(results.length, 1);
+    assert.equal(results[0].relativePath, path.join("Notes", "Alpha.md"));
+    assert.equal(results[0].line, 3);
+    assert.ok(results[0].snippet.includes("cargo"));
+    assert.ok(results[0].matches >= 1);
+});
+
+test("searchByContent: skips hidden directories by default", () => {
+    const root = makeContentVault();
+    const { results } = searchByContent(root, "rust");
+    const paths = results.map((r) => r.relativePath);
+    assert.ok(paths.includes(path.join("Notes", "Alpha.md")));
+    assert.ok(!paths.some((p) => p.includes(".obsidian")));
+});
+
+test("searchByContent: only markdown by default", () => {
+    const root = makeContentVault();
+    const { results } = searchByContent(root, "rust");
+    const paths = results.map((r) => r.relativePath);
+    assert.ok(paths.includes(path.join("Notes", "Alpha.md")));
+    assert.ok(!paths.includes("Log.txt"));
+});
+
+test("searchByContent: empty query returns no results", () => {
+    const root = makeContentVault();
+    const { results } = searchByContent(root, "  ");
+    assert.deepEqual(results, []);
+});
+
+test("searchByContent: supports extension filter", () => {
+    const root = makeContentVault();
+    const { results } = searchByContent(root, "rust", { extensions: [".txt"] });
+    assert.equal(results.length, 1);
+    assert.equal(results[0].name, "Log.txt");
 });

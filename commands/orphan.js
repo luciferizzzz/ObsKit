@@ -5,6 +5,7 @@ const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { buildNoteIndex } = require("../utils/noteIndex");
 const { extractWikiLinks } = require("../utils/wikilinks");
+const c = require("../utils/colors");
 
 function orphan() {
     const vault = getVaultPath();
@@ -65,14 +66,14 @@ function orphan() {
         return;
     }
 
-    console.log("\uD83C\uDF31 Orphan Notes\n");
+    console.log(`\n${c.heading("🌱 Orphan Notes")}\n`);
 
     orphans.forEach((file) => {
-        console.log(file);
+        console.log(c.note(file));
     });
 
-    console.log(`\n------------------------`);
-    console.log(`Total Orphan Notes: ${orphans.length}`);
+    console.log(`\n${c.divider("------------------------")}`);
+    console.log(`${c.title("Total Orphan Notes")}: ${c.value(orphans.length)}`);
 }
 
 module.exports = orphan;

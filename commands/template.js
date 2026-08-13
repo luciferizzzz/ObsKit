@@ -1,18 +1,21 @@
 const fs = require("fs");
 const path = require("path");
 
+const { error } = require("../utils/feedback");
+const c = require("../utils/colors");
+
 function templateList() {
     const templateDir = path.join(__dirname, "..", "templates");
     const files = fs.readdirSync(templateDir);
 
-    console.log("\n📄 Available Templates:\n");
+    console.log(`\n${c.heading("📄 Available Templates")}:\n`);
 
     const templateNames = [];
     for (const file of files) {
         if (file.endsWith(".md")) {
             const name = file.replace(".md", "");
             templateNames.push(name);
-            console.log(`  ${name}`);
+            console.log(`  ${c.note(name)}`);
         }
     }
 
@@ -30,14 +33,14 @@ function templatePreview(name) {
     );
 
     if (!fs.existsSync(templatePath)) {
-        console.log("❌ Template tidak ditemukan.");
+        error("Template tidak ditemukan.");
         return null;
     }
 
     const content = fs.readFileSync(templatePath, "utf8");
 
     console.log("\n");
-    console.log(`📄 Preview: ${name}\n`);
+    console.log(`${c.heading(`📄 Preview: ${name}`)}\n`);
     console.log(content);
     console.log("\n");
 
@@ -53,7 +56,7 @@ function templateAction(options) {
         return templatePreview(options.preview);
     }
 
-    console.log("\n❓ Silakan gunakan --list atau --preview <nama_template>\n");
+    console.log(`\n${c.dim("❓ Silakan gunakan --list atau --preview <nama_template>")}\n`);
 }
 
 module.exports = templateAction;

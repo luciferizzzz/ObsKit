@@ -4,6 +4,7 @@ const path = require("path");
 const collectVaultReport = require("../checks/vaultReport");
 const { getVaultPath } = require("../utils/vault");
 const { info } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function formatDate(date) {
     return (
@@ -31,20 +32,20 @@ function dashboard() {
 
     const now = new Date();
 
-    console.log("\n📊 Dashboard\n");
+    console.log(`\n${c.heading("📊 Dashboard")}\n`);
     console.log(`🗓  ${now.toLocaleDateString("id-ID", {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric",
     })}`);
-    console.log(`📂 ${vault}\n`);
+    console.log(`📂 ${c.path(vault)}\n`);
 
     // Today's activity
-    console.log("📝 Notes Modified Today\n");
+    console.log(`${c.heading("📝 Notes Modified Today")}\n`);
 
     if (data.notesToday.length === 0) {
-        console.log("  Belum ada note yang dimodifikasi hari ini.");
+        console.log(c.dim("  Belum ada note yang dimodifikasi hari ini."));
     } else {
         data.notesToday
             .map((file) => ({
@@ -53,7 +54,7 @@ function dashboard() {
             }))
             .sort((a, b) => b.mtime - a.mtime)
             .forEach((entry) => {
-                console.log(`  • ${entry.path} (${formatTime(entry.mtime)})`);
+                console.log(`  • ${c.note(entry.path)} ${c.dim(`(${formatTime(entry.mtime)})`)}`);
             });
     }
 
@@ -64,7 +65,7 @@ function dashboard() {
         1
     );
 
-    console.log("\n📈 Last 7 Days\n");
+    console.log(`\n${c.heading("📈 Last 7 Days")}\n`);
 
     for (const [key, count] of days) {
         const [, month, day] = key.split("-");
@@ -73,31 +74,31 @@ function dashboard() {
         );
         const label = `${month}-${day}`;
 
-        console.log(`  ${label}  ${count.toString().padStart(2)}  ${bar}`);
+        console.log(`  ${c.dim(label)}  ${c.value(count.toString().padStart(2))}  ${c.value(bar)}`);
     }
 
     // Key metrics
-    console.log("\n⚡ Key Metrics\n");
+    console.log(`\n${c.heading("⚡ Key Metrics")}\n`);
 
-    console.log(`  Notes       : ${data.noteCount}`);
-    console.log(`  Folders     : ${data.folderCount}`);
-    console.log(`  Wiki Links  : ${data.totalLinks}`);
-    console.log(`  Broken Links: ${data.brokenCount}`);
-    console.log(`  Orphans     : ${data.orphanCount}`);
-    console.log(`  Tags        : ${data.tags.length}`);
+    console.log(`  Notes       : ${c.value(data.noteCount)}`);
+    console.log(`  Folders     : ${c.value(data.folderCount)}`);
+    console.log(`  Wiki Links  : ${c.value(data.totalLinks)}`);
+    console.log(`  Broken Links: ${c.value(data.brokenCount)}`);
+    console.log(`  Orphans     : ${c.value(data.orphanCount)}`);
+    console.log(`  Tags        : ${c.value(data.tags.length)}`);
 
     // Recent notes
     const shown = data.recent.slice(0, 5);
 
-    console.log("\n🕒 Recent Notes\n");
+    console.log(`\n${c.heading("🕒 Recent Notes")}\n`);
 
     shown.forEach((entry, index) => {
-        console.log(`  ${index + 1}. ${entry.path}`);
-        console.log(`     ${formatDate(entry.mtime)} ${formatTime(entry.mtime)}`);
+        console.log(`  ${index + 1}. ${c.note(entry.path)}`);
+        console.log(`     ${c.dim(`${formatDate(entry.mtime)} ${formatTime(entry.mtime)}`)}`);
     });
 
-    console.log("\n────────────────────────");
-    console.log(`Dashboard terakhir diperbarui: ${formatTime(now)}`);
+    console.log(`\n${c.divider("────────────────────────")}`);
+    console.log(`${c.dim(`Dashboard terakhir diperbarui: ${formatTime(now)}`)}`);
 }
 
 module.exports = dashboard;

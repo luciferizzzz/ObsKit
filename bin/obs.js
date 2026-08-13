@@ -73,7 +73,27 @@ const relations = require("../commands/relations");
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.4.6");
+  .version("1.4.6")
+  .showSuggestionAfterError()
+  .showHelpAfterError()
+  .configureOutput({
+    writeErr: (str) => {
+      process.stderr.write(chalk.red(str.replace(/^error: /, "❌ ")));
+    },
+  })
+  .addHelpText(
+    "after",
+    `
+Contoh cepat:
+  obs today                          Buat daily note
+  obs new <folder> <title>           Buat note baru
+  obs ai "<topik>"                   Buat catatan dengan AI
+  obs find <kata>                    Cari note
+  obs doctor                         Cek kesehatan vault
+  obs relate <note> <related>        Hubungkan dua note
+
+Jalankan \`obs <perintah> --help\` untuk detail perintah.`
+  );
 
 program
   .command("hello")
@@ -271,6 +291,14 @@ program
   .action(relations);
 
 program.parseAsync(process.argv).catch((err) => {
+    if (err && err.code === "commander.helpDisplayed") {
+        return;
+    }
+    if (err && err.code && err.code.startsWith("commander.")) {
+        console.error(chalk.red(`\n❌ ${err.message}`));
+        console.error(chalk.dim("  Jalankan `obs --help` untuk melihat daftar perintah."));
+        process.exit(1);
+    }
     console.error(chalk.red(`\n❌ ${err.message}`));
     process.exit(1);
 });

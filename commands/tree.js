@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
+const { error } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 // Folders to ignore (hidden and build directories)
 const IGNORED = [".obsidian", ".git", "node_modules"];
@@ -20,18 +22,18 @@ function tree() {
     let totalNotes = 0;
 
     if (!fs.existsSync(vault)) {
-        console.log("❌ Vault tidak ditemukan.");
+        error("Vault tidak ditemukan.");
         return;
     }
 
-    console.log("\n🌳 Vault Tree\n");
-    console.log(path.basename(vault));
+    console.log(`\n${c.heading("🌳 Vault Tree")}\n`);
+    console.log(c.path(path.basename(vault)));
 
     printTree(vault, "");
 
-    console.log("\n────────────────────────");
-    console.log(`Folders : ${totalFolders}`);
-    console.log(`Notes   : ${totalNotes}`);
+    console.log(`\n${c.divider("────────────────────────")}`);
+    console.log(`${c.title("Folders")} : ${c.value(totalFolders)}`);
+    console.log(`${c.title("Notes")}   : ${c.value(totalNotes)}`);
 
     /**
      * Recursively reads a directory and prints its contents as a tree.
@@ -74,7 +76,7 @@ function tree() {
             const connector = isLast ? TREE.LAST : TREE.BRANCH;
             const nextPrefix = isLast ? TREE.SPACE : TREE.PIPE;
 
-            console.log(`${prefix}${connector}${entry.name}`);
+            console.log(`${prefix}${connector}${entry.isDirectory() ? c.folder(entry.name) : c.note(entry.name)}`);
 
             if (entry.isDirectory()) {
                 totalFolders++;

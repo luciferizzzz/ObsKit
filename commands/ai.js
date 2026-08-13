@@ -8,6 +8,8 @@ const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { error, success, warning } = require("../utils/feedback");
+const { Spinner } = require("../utils/spinner");
+const c = require("../utils/colors");
 const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData } = require("../utils/markdown");
 const { loadTomorrowTasks, importTomorrowTasks } = require("../utils/dailyWorkflow");
 const { updateMarkdown } = require("../utils/relationship/editor");
@@ -106,6 +108,21 @@ function handleAiError(err) {
         error("Response timeout. Coba prompt yang lebih pendek.");
     } else {
         error(msg);
+    }
+}
+
+async function generateWithSpinner(prompt, message = "AI sedang memproses...") {
+    const spinner = new Spinner({ text: message });
+    const quiet = !spinner.enabled;
+    if (quiet) console.log(`\n🧠 ${message}...\n`);
+    spinner.start();
+    try {
+        const content = await generate(prompt);
+        spinner.stop();
+        return content;
+    } catch (err) {
+        spinner.stop();
+        throw err;
     }
 }
 
@@ -272,8 +289,6 @@ async function aiWrite(prompt, options) {
         finalPrompt = `${persona.system}\n\nBuatkan catatan tentang: ${prompt}`;
     }
 
-    console.log("\n🧠 Lagi diproses sama AI...\n");
-
     try {
         const vault = getVaultPath();
         let filePath;
@@ -286,7 +301,7 @@ async function aiWrite(prompt, options) {
                 `${String(now.getDate()).padStart(2, "0")}`;
             filePath = path.join(vault, "Daily Notes", `${date}.md`);
 
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
 
             if (options.ask) {
                 const templatePath = path.join(
@@ -363,20 +378,20 @@ async function aiWrite(prompt, options) {
                 createFile(filePath, filledTemplate);
                 success("Catatan dari template berhasil dibuat!");
             } else {
-                const content = await generate(finalPrompt);
+                const content = await generateWithSpinner(finalPrompt);
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
                 createFile(filePath, content);
                 success("Catatan berhasil dibuat!");
             }
         } else if (options.file) {
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
             filePath = path.isAbsolute(options.file)
                 ? options.file
                 : path.join(vault, options.file);
             createFile(filePath, content);
             success("Catatan berhasil dibuat!");
         } else {
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
             const title = sanitizeFilename(options.title || "AI Note");
             const folder = options.folder || "AI";
             filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
@@ -384,7 +399,7 @@ async function aiWrite(prompt, options) {
             success("Catatan berhasil dibuat!");
         }
 
-        console.log("📁 " + filePath);
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -451,19 +466,17 @@ async function aiTomorrow(options) {
     const answers = await askTomorrow();
     const prompt = buildTomorrowPrompt(answers, persona);
 
-    console.log("\n🧠 Lagi diproses sama AI...\n");
-
     try {
         const vault = getVaultPath();
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const date = formatDate(tomorrow);
 
-        const content = await generate(prompt);
+        const content = await generateWithSpinner(prompt);
         const filePath = path.join(vault, "Planning", "Tomorrow", `${date}.md`);
         createFile(filePath, content);
         success("Rencana besok berhasil dibuat!");
-        console.log("📁 " + filePath);
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -532,8 +545,6 @@ async function aiUpdate(options) {
     const persona = resolvePersona(options && options.persona);
     const answers = await askUpdate();
 
-    console.log("\n🧠 Lagi diproses sama AI...\n");
-
     try {
         const vault = getVaultPath();
         const now = new Date();
@@ -542,7 +553,7 @@ async function aiUpdate(options) {
 
         const tomorrowTasks = loadTomorrowTasks(vault, date);
 
-        const content = await generate(buildUpdatePrompt(answers, tomorrowTasks, persona));
+        const content = await generateWithSpinner(buildUpdatePrompt(answers, tomorrowTasks, persona));
         const sections = parseSections(content);
 
         if (fs.existsSync(filePath)) {
@@ -578,7 +589,7 @@ async function aiUpdate(options) {
             console.log(`📥 ${tomorrowTasks.length} task dari ## Tomorrow (note kemarin) ditambahkan ke ## Update.`);
         }
 
-        console.log("📁 " + filePath);
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -664,18 +675,16 @@ async function aiWeekly(options) {
     const answers = await askWeekly();
     const prompt = buildWeeklyPrompt(answers, persona);
 
-    console.log("\n🧠 Lagi diproses sama AI...\n");
-
     try {
         const vault = getVaultPath();
         const now = new Date();
         const week = getISOWeek(now);
 
-        const content = await generate(prompt);
+        const content = await generateWithSpinner(prompt);
         const filePath = path.join(vault, "Planning", "Weekly", `Week-${week}.md`);
         createFile(filePath, content);
         success("Rencana mingguan berhasil dibuat!");
-        console.log("📁 " + filePath);
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -719,8 +728,7 @@ async function aiPeople(personName, options) {
 
         const prompt = buildInteractionPrompt({ name, content, interaction, persona });
 
-        console.log("\n🧠 Lagi diproses sama AI...\n");
-        const output = await generate(prompt);
+        const output = await generateWithSpinner(prompt);
 
         const bullets = parseInteractionOutput(output);
         if (bullets.length === 0) {
@@ -735,7 +743,7 @@ async function aiPeople(personName, options) {
             return;
         }
 
-        console.log(`\n📄 Preview perubahan untuk ${path.basename(file)}:\n`);
+        console.log(`\n📄 Preview perubahan untuk ${c.note(path.basename(file))}:\n`);
         console.log(`## ${INTERACTIONS_HEADING}\n`);
         added.forEach((bullet) => console.log(`+ ${bullet}`));
         if (skipped > 0) {
@@ -753,7 +761,7 @@ async function aiPeople(personName, options) {
 
         updateMarkdown(file, updated);
         success("Interaksi ditambahkan ke People note!");
-        console.log("📁 " + file);
+        console.log(`📁 ${c.path(file)}`);
     } catch (err) {
         handleAiError(err);
     }

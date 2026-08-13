@@ -4,6 +4,7 @@ const { input, select, password } = require("@inquirer/prompts");
 
 const configPath = path.join(__dirname, "..", "config.json");
 const { error, info, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function loadConfig() {
     if (!fs.existsSync(configPath)) {
@@ -138,14 +139,14 @@ async function config(subcommand) {
 
         default:
 
-            console.log("Current Configuration");
-            console.log("----------------------");
-            console.log("Vault   :", cfg.vault || "(not configured)");
+            console.log(`${c.heading("Current Configuration")}`);
+            console.log(c.divider("----------------------"));
+            console.log(`Vault   : ${c.path(cfg.vault || "(not configured)")}`);
 
             if (cfg.ai?.provider === "openai") {
-                console.log("AI      : OpenAI (API key) —", cfg.ai.openai?.model || "gpt-4o-mini");
+                console.log(`AI      : OpenAI (API key) — ${c.value(cfg.ai.openai?.model || "gpt-4o-mini")}`);
             } else {
-                console.log("AI      : Ollama —", cfg.ai?.ollama?.model || "qwen2.5-coder:7b");
+                console.log(`AI      : Ollama — ${c.value(cfg.ai?.ollama?.model || "qwen2.5-coder:7b")}`);
             }
     }
 

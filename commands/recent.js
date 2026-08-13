@@ -4,6 +4,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { info } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function recent(limit) {
     const vault = getVaultPath();
@@ -26,7 +27,7 @@ function recent(limit) {
     const max = parseInt(limit) || 10;
     const shown = entries.slice(0, max);
 
-    console.log("\n🕒 Recent Notes\n");
+    console.log(`\n${c.heading("🕒 Recent Notes")}\n`);
 
     shown.forEach((entry, index) => {
         const date = entry.mtime;
@@ -37,12 +38,12 @@ function recent(limit) {
             `${String(date.getHours()).padStart(2, "0")}:` +
             `${String(date.getMinutes()).padStart(2, "0")}`;
 
-        console.log(`${index + 1}. ${entry.path}`);
-        console.log(`   Modified: ${formatted}\n`);
+        console.log(`${index + 1}. ${c.note(entry.path)}`);
+        console.log(`   ${c.dim(`Modified: ${formatted}`)}\n`);
     });
 
-    console.log("────────────────────────");
-    console.log(`Showing ${shown.length} of ${entries.length} notes.`);
+    console.log(c.divider("────────────────────────"));
+    console.log(`Showing ${c.value(shown.length)} of ${c.value(entries.length)} notes.`);
 }
 
 module.exports = recent;

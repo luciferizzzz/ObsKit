@@ -4,6 +4,7 @@ const { exec } = require("child_process");
 
 const { getVaultPath } = require("../utils/vault");
 const { error, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function open(keyword) {
     const vault = getVaultPath();
@@ -35,10 +36,10 @@ function open(keyword) {
     }
 
     if (results.length > 1) {
-        console.log("Ditemukan beberapa note:");
+        console.log(c.title("Ditemukan beberapa note:"));
 
         results.forEach((file, index) => {
-            console.log(`${index + 1}. ${path.relative(vault, file)}`);
+            console.log(`${index + 1}. ${c.note(path.relative(vault, file))}`);
         });
 
         return;

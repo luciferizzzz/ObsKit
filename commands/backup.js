@@ -3,6 +3,8 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { input, confirm } = require("@inquirer/prompts");
+const { createProgress } = require("../utils/progress");
+const c = require("../utils/colors");
 
 function formatDate(date) {
     return (
@@ -24,7 +26,7 @@ function formatSize(bytes) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function copyDir(src, dest) {
+function copyDir(src, dest, onFile) {
     fs.mkdirSync(dest, { recursive: true });
 
     const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -34,9 +36,10 @@ function copyDir(src, dest) {
         const destPath = path.join(dest, entry.name);
 
         if (entry.isDirectory()) {
-            copyDir(srcPath, destPath);
+            copyDir(srcPath, destPath, onFile);
         } else {
             fs.copyFileSync(srcPath, destPath);
+            if (onFile) onFile(destPath);
         }
     }
 }
@@ -44,8 +47,8 @@ function copyDir(src, dest) {
 async function backup() {
     const vault = getVaultPath();
 
-    console.log("\n📦 Vault Backup\n");
-    console.log(`Source: ${vault}`);
+    console.log(`\n${c.heading("📦 Vault Backup")}\n`);
+    console.log(`Source: ${c.path(vault)}`);
 
     const defaultBackupDir = path.join(path.dirname(vault), "vault-backups");
 
@@ -63,7 +66,7 @@ async function backup() {
     const backupName = `${vaultName}-${timestamp}`;
     const backupPath = path.join(backupDir, backupName);
 
-    console.log(`\nDestination: ${backupPath}`);
+    console.log(`\nDestination: ${c.path(backupPath)}`);
 
     const proceed = await confirm({
         message: "Start backup?",
@@ -71,23 +74,32 @@ async function backup() {
     });
 
     if (!proceed) {
-        console.log("Backup cancelled.");
+        console.log(c.dim("Backup cancelled."));
         return;
     }
 
-    console.log("\nCopying files...");
+    const totalFiles = getFileCount(vault);
+    const progress = createProgress({ total: totalFiles });
+    let copied = 0;
 
     const startTime = Date.now();
-    copyDir(vault, backupPath);
+    copyDir(vault, backupPath, (destPath) => {
+        copied++;
+        const rel = path.relative(backupPath, destPath);
+        progress.setText(rel);
+        progress.tick();
+    });
+    progress.stop();
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
     const totalSize = getDirSize(backupPath);
     const fileCount = getFileCount(backupPath);
 
     console.log(`\n✅ Backup completed in ${duration}s`);
-    console.log(`Files copied: ${fileCount}`);
-    console.log(`Total size: ${formatSize(totalSize)}`);
-    console.log(`Location: ${backupPath}`);
+    console.log(`Files copied: ${c.value(fileCount)}`);
+    console.log(`Total size: ${c.value(formatSize(totalSize))}`);
+    console.log(`Location: ${c.path(backupPath)}`);
 }
 
 function getDirSize(dir) {

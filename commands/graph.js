@@ -5,6 +5,7 @@ const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { extractWikiLinks } = require("../utils/wikilinks");
 const { buildNoteIndex } = require("../utils/noteIndex");
+const c = require("../utils/colors");
 
 function graph() {
     const vault = getVaultPath();
@@ -75,36 +76,36 @@ function graph() {
         .sort((a, b) => b[1] - a[1]);
 
     // 7. Display summary
-    console.log("\n📊 Vault Graph\n");
+    console.log(`\n${c.heading("📊 Vault Graph")}\n`);
 
-    console.log(`Notes          : ${noteCount}`);
-    console.log(`Wiki Links     : ${totalLinks}`);
-    console.log(`Broken Links   : ${brokenCount}`);
-    console.log(`Orphan Notes   : ${orphanNotes.length}`);
-    console.log(`Average Links  : ${avgLinks}`);
+    console.log(`${c.title("Notes")}          : ${c.value(noteCount)}`);
+    console.log(`${c.title("Wiki Links")}     : ${c.value(totalLinks)}`);
+    console.log(`${c.title("Broken Links")}   : ${c.value(brokenCount)}`);
+    console.log(`${c.title("Orphan Notes")}   : ${c.value(orphanNotes.length)}`);
+    console.log(`${c.title("Average Links")}  : ${c.value(avgLinks)}`);
 
     // 8. Display most linked notes (top 5)
     const mostLinked = sortedNotes.slice(0, 5);
     if (mostLinked.length > 0) {
-        console.log("\nMost Linked Notes\n");
+        console.log(`\n${c.heading("Most Linked Notes")}\n`);
         mostLinked.forEach(([note, count], i) => {
-            console.log(`${i + 1}. ${note} (${count})`);
+            console.log(`${i + 1}. ${c.note(note)} ${c.dim(`(${count})`)}`);
         });
     }
 
     // 9. Display least linked notes (bottom 5)
     const leastLinked = sortedNotes.slice(-5).reverse();
     if (leastLinked.length > 0) {
-        console.log("\nLeast Linked Notes\n");
+        console.log(`\n${c.heading("Least Linked Notes")}\n`);
         leastLinked.forEach(([note, count], i) => {
-            console.log(`${i + 1}. ${note} (${count})`);
+            console.log(`${i + 1}. ${c.note(note)} ${c.dim(`(${count})`)}`);
         });
     }
 
     // 10. Display broken links if any
     if (brokenCount > 0) {
-        console.log("\n------------------------");
-        console.log(`Total Broken Links: ${brokenCount}`);
+        console.log(`\n${c.divider("------------------------")}`);
+        console.log(`${c.title("Total Broken Links")}: ${c.value(brokenCount)}`);
     }
 }
 

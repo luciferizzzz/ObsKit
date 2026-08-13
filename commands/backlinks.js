@@ -5,6 +5,7 @@ const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { extractWikiLinks } = require("../utils/wikilinks");
 const { error, info } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function backlinks(note) {
     const vault = getVaultPath();
@@ -51,14 +52,14 @@ function backlinks(note) {
         return;
     }
 
-    console.log("Backlinks\n");
+    console.log(`${c.heading("Backlinks")}\n`);
 
     referencing.forEach((file) => {
-        console.log(file);
+        console.log(c.note(file));
     });
 
-    console.log(`\n-----------------------`);
-    console.log(`Total Backlinks: ${referencing.length}`);
+    console.log(`\n${c.divider("-----------------------")}`);
+    console.log(`${c.title("Total Backlinks")}: ${c.value(referencing.length)}`);
 }
 
 module.exports = backlinks;

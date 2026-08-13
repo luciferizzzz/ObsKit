@@ -4,6 +4,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { mdFileName } = require("../utils/sanitizeFilename");
 const { error, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function move(sourceFolder, title, targetFolder) {
     const vault = getVaultPath();
@@ -32,7 +33,7 @@ function move(sourceFolder, title, targetFolder) {
     fs.renameSync(source, destination);
 
     success("Note berhasil dipindahkan.");
-    console.log(`${sourceFolder} → ${targetFolder}`);
+    console.log(`${c.folder(sourceFolder)} → ${c.folder(targetFolder)}`);
 }
 
 module.exports = move;

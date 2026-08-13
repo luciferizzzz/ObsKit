@@ -1,13 +1,15 @@
 const path = require("path");
 
 const checkDeadLinks = require("../checks/deadlinks");
+const { success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function deadlinks() {
 
     const result = checkDeadLinks();
 
     if (result.broken.length === 0) {
-        console.log("✅ Tidak ada broken links.");
+        success("Tidak ada broken links.");
         return;
     }
 
@@ -22,24 +24,24 @@ function deadlinks() {
         grouped[item.file].push(item.link);
     }
 
-    console.log("\n❌ Broken Links\n");
+    console.log(`\n${c.heading("❌ Broken Links")}\n`);
 
     for (const file in grouped) {
 
-        console.log(`📄 ${path.relative(result.vault, file)}`);
+        console.log(`📄 ${c.note(path.relative(result.vault, file))}`);
 
         grouped[file].forEach(link => {
-            console.log(`   → [[${link}]]`);
+            console.log(`   → ${c.dim(`[[${link}]]`)}`);
         });
 
         console.log();
     }
 
-    console.log("────────────────────────");
+    console.log(c.divider("────────────────────────"));
 
-    console.log(`Notes Scanned : ${result.files.length}`);
-    console.log(`Links Checked : ${result.totalLinks}`);
-    console.log(`Broken Links  : ${result.broken.length}`);
+    console.log(`${c.title("Notes Scanned")} : ${c.value(result.files.length)}`);
+    console.log(`${c.title("Links Checked")} : ${c.value(result.totalLinks)}`);
+    console.log(`${c.title("Broken Links")}  : ${c.value(result.broken.length)}`);
 }
 
 module.exports = deadlinks;

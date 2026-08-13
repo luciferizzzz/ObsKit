@@ -5,6 +5,7 @@ const { getVaultPath } = require("../utils/vault");
 const { createFile } = require("../utils/file");
 const { parseTemplate, getTemplateData } = require("../utils/markdown");
 const { warning, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function today() {
     const vault = getVaultPath();
@@ -22,9 +23,9 @@ function today() {
         `${date}.md`
     );
 
-    console.log("Tanggal :", date);
-    console.log("Path :", filePath);
-    console.log("Exists :", fs.existsSync(filePath));
+    console.log("Tanggal :", c.value(date));
+    console.log("Path :", c.path(filePath));
+    console.log("Exists :", c.value(fs.existsSync(filePath)));
 
     if (fs.existsSync(filePath)) {
         warning("Daily note hari ini sudah ada.");

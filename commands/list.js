@@ -3,6 +3,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { info } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function list() {
     const vault = getVaultPath();
@@ -27,14 +28,14 @@ function list() {
         return;
     }
 
-    console.log("\n📚 Notes\n");
+    console.log(`\n${c.heading("📚 Notes")}\n`);
 
     sorted.forEach((note) => {
-        console.log(note);
+        console.log(c.note(note));
     });
 
-    console.log("\n-----------------------");
-    console.log(`Total Notes: ${sorted.length}`);
+    console.log(`\n${c.divider("-----------------------")}`);
+    console.log(`${c.title("Total Notes")}: ${c.value(sorted.length)}`);
 }
 
 module.exports = list;

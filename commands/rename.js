@@ -4,6 +4,7 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault")
 const { mdFileName } = require("../utils/sanitizeFilename");
 const { error, warning, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function rename(folder, oldName, newName) {
     const vault = getVaultPath();
@@ -37,7 +38,7 @@ function rename(folder, oldName, newName) {
     fs.renameSync(oldPath, newPath);
 
     success("Note berhasil diubah.");
-    console.log(path.relative(vault, newPath));
+    console.log(c.note(path.relative(vault, newPath)));
 }
 
 module.exports = rename

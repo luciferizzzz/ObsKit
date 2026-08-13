@@ -6,6 +6,7 @@ const { createFile } = require("../utils/file");
 const { getVaultPath } = require("../utils/vault");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
 const { error, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function newNote(folder, title, options) {
     const vault = getVaultPath();
@@ -41,7 +42,7 @@ function newNote(folder, title, options) {
         createFile(filePath, content);
 
         success("Note berhasil dibuat!");
-        console.log(filePath);
+        console.log(c.path(filePath));
     } catch (err) {
         error(err.message);
     }

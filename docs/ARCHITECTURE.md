@@ -136,13 +136,16 @@ createFile(<vault path>\Notes\Learning Rust.md, content)   // mkdir -p + write
 
 | Module | Purpose |
 |--------|---------|
-| `utils/vault.js` | `getVaultPath()` — resolve and trim the vault path |
+| `utils/vault.js` | `getVaultPath()` — resolve and trim the vault path (config first, `OBSKIT_VAULT` env var overrides) |
 | `utils/config.js` | `getConfig()` / `saveConfig()` — read/write `config.json` |
 | `utils/file.js` | `createFile()` — recursive folder creation, refuses overwrite |
 | `utils/feedback.js` | Reusable CLI feedback layer — `success()`, `info()`, `warning()`, `error()` with ObsKit-style symbols (✅ ℹ️ ⚠️ ❌) and chalk colors |
+| `utils/colors.js` | Color helpers for headings, values, paths, folders, tags, dividers — auto-disabled when not a TTY |
+| `utils/spinner.js` | Loading spinner (used by `obs ai` while generating) |
+| `utils/progress.js` | Progress bar (used by `obs backup`, `obs archive`, `obs cleanup`) |
 | `utils/scanner.js` | `scanMarkdownFiles()` — recursive `.md` scanner |
-| `utils/search.js` | `searchFiles()` / `searchNotes()` — reusable filename search foundation (case-insensitive substring, result objects with `name` / `path` / `relativePath`, optional dir exclusions and extension filters) |
-| `utils/noteIndex.js` | `buildNoteIndex()` — `Set` of note names for link analysis |
+| `utils/search.js` | Search foundation — `searchFiles()` / `searchNotes()` (substring), `fuzzySearchFiles()` / `fuzzySearchNotes()` (typo-tolerant, scored), `searchByContent()` (content + snippets), `rankResults()` (exact → prefix → substring). Result objects carry `name` / `path` / `relativePath` (plus `score` / `line` / `snippet` where relevant); supports extension filters and directory exclusion |
+| `utils/noteIndex.js` | `buildNoteIndex()` / `buildNormalizedNoteIndex()` / `buildFilePathMap()` — `Set`/`Map` indexes for O(1) link analysis |
 | `utils/wikilinks.js` | `extractWikiLinks()` — wiki-link parser |
 | `utils/markdown.js` | Template parser, AI blocks, template data |
 | `utils/dailyWorkflow.js` | Daily-note date/path helpers, `## Tomorrow` extraction, checklist parsing/dedup, `## Update` upsert |
@@ -186,15 +189,16 @@ Todo extraction and attachment inventory, used by `commands/todo.js` and `comman
 
 ## 💾 Vault access
 
-The vault is accessed through `utils/vault.js` and `utils/file.js`:
+The vault is accessed through `utils/vault.js` and `utils/file.js`. `getVaultPath()` reads `config.json` first; the `OBSKIT_VAULT` environment variable overrides it (useful for scripting and tests):
 
 ```text
 config.json ──► getVaultPath() ──► vault path (throws if not configured)
-                    │
-                    ▼
+    ▲            (OBSKIT_VAULT env overrides)
+    │
+    ▼
 utils/scanner.js scanMarkdownFiles() ──► [ ...full paths to .md files ]
-                    │
-                    ▼
+    │
+    ▼
 utils/file.js createFile()  ──► recursive mkdir + write (never overwrites)
 ```
 
@@ -204,7 +208,14 @@ Command-specific filters are applied on top of the scanner output:
 - `obs tree` ignores `.obsidian`, `.git`, `node_modules`.
 - `obs stats` counts folders and per-folder note counts.
 
-**Search foundation** — `utils/search.js` powers `obs find` and is the reusable base for future search features (content search, ranking, optional filters, fuzzy search). It walks the vault, matches filenames case-insensitively, and returns result objects with `name`, absolute `path`, and vault-relative `relativePath`. Options support extension filters (`searchNotes`) and directory exclusion. Default behavior matches the original `obs find` exactly (all file types, no hidden-dir exclusion).
+**Search foundation** — `utils/search.js` powers `obs find` and is the reusable base for search features. It walks the vault, matches filenames case-insensitively, and returns result objects with `name`, absolute `path`, and vault-relative `relativePath`. On top of the base substring search it provides:
+- `fuzzyScore()` / `fuzzyMatches()` — typo-tolerant subsequence matching with scoring (exact > prefix > substring > fuzzy).
+- `fuzzySearchFiles()` / `fuzzySearchNotes()` — scored, sorted fuzzy search.
+- `searchByContent()` — searches note contents, returns matching line + snippet (defaults to `.md`, skips hidden folders, caps file size).
+- `rankResults()` — orders results by relevance.
+- Options support extension filters, directory exclusion, and folder-scoped roots. Default behavior matches the original `obs find` exactly (all file types, no hidden-dir exclusion).
+
+**Shell completion** — `commands/completion.js` generates bash/zsh/fish/PowerShell completion scripts (`obs completion <shell>`). The scripts call the hidden `obs __complete <line>` command, which returns candidate commands, `obs ai` subcommands, and note names from the vault.
 
 ---
 
@@ -334,6 +345,7 @@ obskit/
 ├── commands/                # one module per command
 │   ├── ai.js                # AI writer + productivity commands
 │   ├── config.js            # config subcommands
+│   ├── completion.js        # shell completion script generator
 │   ├── init.js              # vault setup
 │   ├── new.js / today.js / find.js / rename.js / move.js / open.js
 │   ├── list.js / tree.js / recent.js / random.js / stats.js
@@ -348,8 +360,9 @@ obskit/
 │   ├── todos.js
 │   └── attachments.js
 ├── utils/                   # shared helpers
-│   ├── ai.js  config.js  feedback.js  file.js  markdown.js
-│   ├── noteIndex.js  persona.js  sanitizeFilename.js  scanner.js  search.js  vault.js  wikilinks.js
+│   ├── ai.js  colors.js  config.js  feedback.js  file.js  markdown.js
+│   ├── noteIndex.js  persona.js  progress.js  sanitizeFilename.js  scanner.js
+│   ├── search.js  spinner.js  vault.js  wikilinks.js
 │   ├── people.js
 │   └── relationship/        # relationship module (parser, validator, scanner, editor, formatter, index)
 ├── templates/               # note templates

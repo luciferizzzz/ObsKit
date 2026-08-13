@@ -326,10 +326,11 @@ LICENSE
 ## 🚧 v1.5
 
 - ✅ Relationship Management
+- ✅ Search Experience — fuzzy search, content search, ranking, filters, interactive pick
+- ✅ Colored Output
+- ✅ Shell Autocomplete (`obs completion <shell>`)
 - Interactive Terminal UI
 - Better Navigation
-- Shell Autocomplete
-- Fuzzy Search
 
 ---
 

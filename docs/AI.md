@@ -409,7 +409,7 @@ obs ai people "John Doe"
 ```text
 ? 📝 Interaksi terakhir dengan John Doe? Discussed the website project, John will help with the frontend next week
 
-🧠 Lagi diproses sama AI...
+🧠 AI sedang memproses...
 
 📄 Preview perubahan untuk John Doe.md:
 

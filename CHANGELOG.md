@@ -38,6 +38,17 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - Unit test suite for the People workflow (`npm test`).
 - Reusable CLI feedback layer (`utils/feedback.js`) — `success()`, `info()`, `warning()`, `error()` using ObsKit-style symbols (✅ ℹ️ ⚠️ ❌) with chalk colors when in a real terminal.
 - Unit test suite for the CLI feedback layer (`npm test`).
+- Colored output (`utils/colors.js`) across all commands and the relationship formatter — headings, values, paths, folders, tags, and dividers are color-coded (auto-disabled when not a TTY).
+- Loading spinner (`utils/spinner.js`) while `obs ai` is generating, and progress bars (`utils/progress.js`) during `obs backup`, `obs archive`, and `obs cleanup`.
+- `obs find --fuzzy` — typo-tolerant fuzzy search via `fuzzyScore()` / `fuzzyMatches()` / `fuzzySearchFiles()` / `fuzzySearchNotes()` in `utils/search.js`.
+- `obs find --content <query>` — search inside note contents with matching line + snippet (`searchByContent()`).
+- `obs find --folder <path>` and `obs find --type <ext>` — scope search to a folder or file extension.
+- `obs find --pick` — interactive result selection.
+- Result ranking (`rankResults()`): exact matches first, then prefix, substring, and fuzzy.
+- `obs completion <shell>` — generate bash/zsh/fish/PowerShell completion scripts for commands, `obs ai` subcommands, and note names (backed by the hidden `obs __complete <line>`).
+- `OBSKIT_VAULT` environment variable — overrides the configured vault path (useful for scripting and tests).
+- `utils/noteIndex.js` — `buildNormalizedNoteIndex()` and `buildFilePathMap()` for O(1) link and path lookups.
+- Command-level integration tests (`test/find.test.js`, `test/commands.test.js`) and CLI smoke tests (`test/cli.test.js`).
 
 ### Improved
 
@@ -45,13 +56,17 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - `obs relate` / `obs unrelate` / `obs relations` / `obs backlinks` / `obs rename` / `obs move` now report missing notes as errors (`Note not found: <note>`).
 - `obs new`, `obs today`, `obs rename`, `obs move`, `obs init`, `obs open`, `obs config`, `obs report`, and `obs ai` now use consistent success feedback.
 - Relationship, AI, and People commands preserve their existing result formatting.
+- Errors now show suggestions (`Did you mean …?`) for typos, the help text after missing-argument errors, and are printed in red (`❌`) via commander `configureOutput`.
+- `obs --help` now includes a quick-example cheat sheet.
+- `checks/deadlinks.js` resolves links case-insensitively and ignores heading fragments (`[[Page#Heading]]`), fixing false "broken link" reports.
+- Performance: `obs graph` and `obs orphan` now use `Set`/`Map` indexes instead of O(n²) nested lookups (benchmarked ~40% faster on 400 files / 4000 links).
 
 ### Planned
 
-- Interactive Terminal UI improvements
-- Better navigation
-- Fuzzy search
-- Shell autocomplete
+- Interactive Terminal UI (full menu-driven mode)
+- Better keyboard-driven navigation
+- Relationship suggestions (shared links/tags)
+- Watch mode
 
 ---
 

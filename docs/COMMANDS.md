@@ -1082,7 +1082,7 @@ obs ai "Explain JavaScript closures"
 ```
 
 ```text
-🧠 Lagi diproses sama AI...
+🧠 AI sedang memproses...
 
 ✅ Catatan berhasil dibuat!
 📁 D:\Vault\AI\AI Note.md
@@ -1267,3 +1267,42 @@ obs template --preview project
 ```
 
 See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for the full template reference.
+
+## `obs completion <shell>`
+
+Generate a shell completion script that completes `obs` commands, `obs ai` subcommands, and note names.
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<shell>` | One of: `bash`, `zsh`, `fish`, `powershell` |
+
+**Example**
+
+```bash
+obs completion bash        # print the bash completion script
+obs completion powershell  # print the PowerShell completion script
+```
+
+**Enabling**
+
+```bash
+# bash
+source <(obs completion bash)
+
+# zsh
+obs completion zsh > /tmp/_obs && compdef _obs_complete < /tmp/_obs
+
+# fish
+obs completion fish | source
+
+# PowerShell
+. (obs completion powershell | Out-String | Invoke-Expression)
+```
+
+**Notes**
+
+- The scripts register completion for `obs`, `obsh`, and `obsidian-helper`.
+- Completion offers subcommand names first, then note names from the configured vault (hidden folders like `.obsidian` are skipped).
+

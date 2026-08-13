@@ -178,22 +178,33 @@ Core note management.
 
 ## v1.5 — Interactive Experience
 
-Focus: interactive terminal experience and better navigation.
+Focus: interactive terminal experience, relationship management, and better navigation.
 
+- ✅ **Relationship Management** — `obs relate`, `obs unrelate`, `obs relations`
+  - ✅ Reusable relationship module (`utils/relationship/`) as the foundation for graph, AI links, and knowledge exploration
+  - ✅ Related-section management with duplicate prevention, alias/heading parsing, and CRLF-preserving Markdown writes
+- ✅ **Daily Workflow** — `obs ai update` imports the previous daily note's `## Tomorrow` checklist items into today's `## Update` section
+  - ✅ Reusable daily workflow module (`utils/dailyWorkflow.js`) with date resolution, section extraction, checklist parsing/dedup, and idempotent upsert
+- ✅ **Search Foundation** — reusable filename search (`utils/search.js`) that powers `obs find` and is the base for content search, ranking, filters, and fuzzy search
+- ✅ **Fuzzy Search** — typo-tolerant note search via `obs find --fuzzy` (`fuzzyScore()` / `fuzzySearchFiles()` in `utils/search.js`)
+- ✅ **Search by Content** — search inside note contents via `obs find --content` (`searchByContent()` in `utils/search.js`)
+- ✅ **Search Ranking & Filters** — relevance ranking (exact → prefix → substring), `--folder` and `--type` filters, and interactive `--pick` selection
+- ✅ **AI Persona Foundation** — reusable persona definitions (`utils/persona.js`) with `-p, --persona <name>` support across all `obs ai` workflows
+- ✅ **People Interaction Workflow** — `obs ai people <name>` structures and appends new interactions to an existing People note's `## Catatan Interaksi` section (preview + confirmation, duplicate prevention, CRLF-safe writes)
+- ✅ **Colored Output** — color-coded terminal output across all commands (`utils/colors.js`, feedback layer)
+- ✅ **Loading Spinner & Progress** — spinner for AI processing (`utils/spinner.js`) and progress bars for backup/archive/cleanup (`utils/progress.js`)
+- ✅ **Better Error Messages** — commander suggestions (`Did you mean …?`), help-after-error, and actionable hints
+- ✅ **Improved Help Pages** — quick-example cheat sheet on `obs --help`
+- ✅ **Shell Autocomplete** — `obs completion <shell>` generates bash/zsh/fish/PowerShell completion for commands, `obs ai` subcommands, and note names
 - **Interactive Mode** — launch a full terminal interface (`obs` with a menu)
-- **Better Navigation** — keyboard-driven browsing of notes and folders
-- **Colored Output** — color-coded terminal output
-- **Shell Autocomplete** — complete `obs` commands and note names
-- **Fuzzy Search** — typo-tolerant note search
 
-## v1.6 — Relationships & Intelligence
+## v1.6 — Intelligence
 
 Focus: deeper knowledge management.
 
-- **Relationship Commands** — discover related notes by shared links and tags
+- **Relationship Suggestions** — discover related notes by shared links and tags
 - **Graph Improvements** — richer relationship analysis and suggestions
 - **Watch Mode** — monitor vault changes automatically
-- **Search by Content** — search inside note contents, not just filenames
 
 ## v1.7 — Multi-Vault Foundation
 

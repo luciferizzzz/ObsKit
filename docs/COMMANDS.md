@@ -2,7 +2,7 @@
 
 The complete CLI reference for **ObsKit** (`obs`, OBS = Organized Knowledge System). Every command includes its description, syntax, arguments, options, examples, and notes.
 
-> **Related docs:** [AI.md](AI.md) · [CONFIGURATION.md](CONFIGURATION.md) · [README.md](../README.md)
+> **Related docs:** [AI.md](AI.md) · [CONFIGURATION.md](CONFIGURATION.md) · [RELATIONSHIPS.md](RELATIONSHIPS.md) · [README.md](../README.md)
 
 ---
 
@@ -22,6 +22,17 @@ The complete CLI reference for **ObsKit** (`obs`, OBS = Organized Knowledge Syst
 - `[argument]` — optional argument
 - `-o, --option` — command option
 
+**CLI Feedback**
+
+ObsKit uses a small set of consistent symbols for command feedback (colors are shown only in a real terminal):
+
+| Symbol | Meaning |
+|--------|---------|
+| `✅` | Operation succeeded |
+| `ℹ️` | Informational / no results |
+| `⚠️` | Warning / already exists / nothing to update |
+| `❌` | Error / requested resource not found |
+
 ---
 
 ## 🌐 Global
@@ -37,7 +48,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.4.6
+obs --version   # → 1.5.0
 ```
 
 ---
@@ -70,7 +81,7 @@ obs init
 
 ```text
 ? Lokasi Obsidian Vault D:\Vault
-Vault berhasil disimpan.
+✅ Vault berhasil disimpan.
 ```
 
 **Notes**
@@ -193,7 +204,7 @@ obs today
 Tanggal : 2026-08-06
 Path : D:\Vault\Daily Notes\2026-08-06.md
 Exists : false
-Daily note berhasil dibuat!
+✅ Daily note berhasil dibuat!
 ```
 
 **Notes**
@@ -208,12 +219,12 @@ Search notes by filename keyword.
 
 **Description**
 
-Case-insensitive substring search over all note filenames.
+Case-insensitive substring search over all note filenames, ranked by relevance (exact match → prefix → substring). Supports fuzzy, content, folder, extension, and interactive pick modes.
 
 **Syntax**
 
 ```
-obs find <keywords>
+obs find <keywords> [options]
 ```
 
 **Arguments**
@@ -222,7 +233,15 @@ obs find <keywords>
 |----------|-------------|
 | `<keywords>` | Text to match against note filenames |
 
-**Options** — none
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `--fuzzy` | Typo-tolerant fuzzy matching on filenames |
+| `--content` | Search inside note contents instead of filenames |
+| `--folder <path>` | Restrict search to a specific folder (absolute or vault-relative) |
+| `--type <ext>` | Restrict to a file extension (e.g. `md`, `txt`) |
+| `--pick` | Select a result interactively with the keyboard |
 
 **Example**
 
@@ -237,9 +256,20 @@ Ditemukan 2 note
 📄 Rust/Cargo.md
 ```
 
+```bash
+obs find "lrning rust" --fuzzy
+```
+
+```bash
+obs find cargo --content --folder Notes
+```
+
 **Notes**
 
-- Matches filenames only (not file contents).
+- Default mode matches filenames only (not file contents).
+- `--content` searches note contents and shows the matching line and snippet.
+- Results are ranked so exact and prefix matches appear first.
+
 
 ---
 
@@ -274,7 +304,7 @@ obs rename Code "Old Note" "New Note"
 ```
 
 ```text
-Note berhasil diubah.
+✅ Note berhasil diubah.
 Code/New Note.md
 ```
 
@@ -315,7 +345,7 @@ obs move Code "JavaScript" Projects
 ```
 
 ```text
-Note berhasil dipindahkan.
+✅ Note berhasil dipindahkan.
 Code → Projects
 ```
 
@@ -727,7 +757,7 @@ Total Backlinks: 1
 
 **Notes**
 
-- Errors with `Note not found.` if the note does not exist.
+- Errors with `Note not found: <note>` if the note does not exist.
 
 ---
 
@@ -843,6 +873,136 @@ Unique Tags : 3
 
 ---
 
+## `obs relate`
+
+Add an explicit relationship between two notes.
+
+**Description**
+
+Adds a `- [[related]]` bullet to the `## Related` section of `<note>`, creating the section when missing. Never duplicates an existing link.
+
+**Syntax**
+
+```
+obs relate <note> <related>
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note receiving the relationship (without `.md`) |
+| `<related>` | Related note (without `.md`) |
+
+**Options** — none
+
+**Example**
+
+```bash
+obs relate Home Rust
+```
+
+```text
+✅ Related added.
+Home → Rust
+```
+
+**Notes**
+
+- Both notes must exist in the vault.
+- Folders and `.md` suffixes are normalized automatically.
+- A note cannot be related to itself.
+- Line endings (LF / CRLF) are preserved.
+- See [RELATIONSHIPS.md](RELATIONSHIPS.md) for the full relationship guide.
+
+---
+
+## `obs unrelate`
+
+Remove an explicit relationship between two notes.
+
+**Description**
+
+Removes the `- [[related]]` bullet from the `## Related` section of `<note>`. Only lines inside the Related section are touched.
+
+**Syntax**
+
+```
+obs unrelate <note> <related>
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note losing the relationship (without `.md`) |
+| `<related>` | Related note (without `.md`) |
+
+**Options** — none
+
+**Example**
+
+```bash
+obs unrelate Home Rust
+```
+
+```text
+✅ Related removed.
+Home → Rust
+```
+
+---
+
+## `obs relations`
+
+Show all relationships of a note.
+
+**Description**
+
+Lists the explicit **Related** links, **Backlinks**, and **Outgoing** links of a note.
+
+**Syntax**
+
+```
+obs relations <note>
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note to inspect (without `.md`) |
+
+**Options** — none
+
+**Example**
+
+```bash
+obs relations Home
+```
+
+```text
+🔗 Relations for "Home"
+
+Related
+- [[Rust]]
+
+Backlinks
+- Index
+
+Outgoing Links
+- [[Rust]]
+
+------------------------
+Related: 1 · Backlinks: 1 · Outgoing: 1
+```
+
+**Notes**
+
+- Errors with `Note not found: <note>` if the note does not exist.
+
+---
+
 ## `obs doctor`
 
 Analyze vault health.
@@ -913,6 +1073,7 @@ obs ai <prompt> [options]
 | `--daily` | Append to today's daily note | — |
 | `--ask` | Interactive question mode | — |
 | `--template <name>` | Use a template | — |
+| `-p, --persona <name>` | AI persona to use | `default` |
 
 **Example**
 
@@ -921,7 +1082,7 @@ obs ai "Explain JavaScript closures"
 ```
 
 ```text
-🧠 Lagi diproses sama AI...
+🧠 AI sedang memproses...
 
 ✅ Catatan berhasil dibuat!
 📁 D:\Vault\AI\AI Note.md
@@ -929,7 +1090,8 @@ obs ai "Explain JavaScript closures"
 
 **Notes**
 
-- The command dispatches to dedicated workflows for `tomorrow`, `update`, and `weekly`.
+- The command dispatches to dedicated workflows for `tomorrow`, `update`, `weekly`, and `people`.
+- Personas control the AI response style (see [AI.md](AI.md) → Personas).
 
 ## `obs ai --daily`
 
@@ -959,9 +1121,42 @@ obs ai tomorrow
 
 Smart daily note update (section by section, preserves content).
 
+Automatically imports the previous daily note's `## Tomorrow` checklist items into today's daily note under `## Update`.
+
 ```bash
 obs ai update
 ```
+
+**Tomorrow import**
+
+Before updating, `obs ai update` looks for `Daily Notes/<previous-date>.md` and reads its `## Tomorrow` section:
+
+```markdown
+## Tomorrow
+
+- [ ] Finish relationship tests
+- [ ] Update documentation
+- [ ] Test Windows compatibility
+```
+
+The checklist items are carried over into today's daily note:
+
+```markdown
+## Update
+
+- [ ] Finish relationship tests
+- [ ] Update documentation
+- [ ] Test Windows compatibility
+```
+
+**Behavior**
+
+- Only `- [ ]` / `- [x]` checklist items are imported — paragraphs, other bullets, and sections after `## Tomorrow` are ignored.
+- Checklist state is preserved (`[ ]` stays open, `[x]` stays checked).
+- The import is idempotent — running `obs ai update` again never duplicates tasks.
+- The tasks are also passed to the AI as context for today's generated content.
+- If the previous note is missing, has no `## Tomorrow` section, or the section is empty, `obs ai update` behaves exactly as before (no `## Update` section is created).
+- CRLF line endings are preserved.
 
 ## `obs ai weekly`
 
@@ -970,6 +1165,46 @@ Interactive weekly-planning session → `Planning/Weekly/Week-<n>.md`.
 ```bash
 obs ai weekly
 ```
+
+## `obs ai people <name>`
+
+Update an existing **People** note with a new AI-structured interaction.
+
+**Description**
+
+Locates the People note for `<name>`, asks for the latest interaction, has the AI structure it as bullets, previews the change, and appends it to the `## Catatan Interaksi` section only after confirmation.
+
+**Syntax**
+
+```
+obs ai people <name> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<name>` | Person name (optional — asked interactively if omitted) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `-p, --persona <name>` | AI persona to use |
+
+**Example**
+
+```bash
+obs ai people "John Doe"
+```
+
+**Notes**
+
+- Appends bullet points under `## Catatan Interaksi` (created if missing).
+- Preserves existing sections, Markdown, and CRLF line endings.
+- Skips duplicate interactions (case-insensitive).
+- Writes only after explicit confirmation.
+- Missing People note → `People note tidak ditemukan: <name>`.
 
 ---
 
@@ -1032,3 +1267,42 @@ obs template --preview project
 ```
 
 See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for the full template reference.
+
+## `obs completion <shell>`
+
+Generate a shell completion script that completes `obs` commands, `obs ai` subcommands, and note names.
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<shell>` | One of: `bash`, `zsh`, `fish`, `powershell` |
+
+**Example**
+
+```bash
+obs completion bash        # print the bash completion script
+obs completion powershell  # print the PowerShell completion script
+```
+
+**Enabling**
+
+```bash
+# bash
+source <(obs completion bash)
+
+# zsh
+obs completion zsh > /tmp/_obs && compdef _obs_complete < /tmp/_obs
+
+# fish
+obs completion fish | source
+
+# PowerShell
+. (obs completion powershell | Out-String | Invoke-Expression)
+```
+
+**Notes**
+
+- The scripts register completion for `obs`, `obsh`, and `obsidian-helper`.
+- Completion offers subcommand names first, then note names from the configured vault (hidden folders like `.obsidian` are skipped).
+

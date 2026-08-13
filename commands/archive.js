@@ -4,6 +4,9 @@ const path = require("path");
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
 const { input, confirm } = require("@inquirer/prompts");
+const { error, info } = require("../utils/feedback");
+const { createProgress } = require("../utils/progress");
+const c = require("../utils/colors");
 
 function formatDate(date) {
     return (
@@ -16,7 +19,7 @@ function formatDate(date) {
 async function archive() {
     const vault = getVaultPath();
 
-    console.log("\n📦 Archive Notes\n");
+    console.log(`\n${c.heading("📦 Archive Notes")}\n`);
 
     const daysInput = await input({
         message: "Archive notes older than how many days? (default: 30)",
@@ -26,7 +29,7 @@ async function archive() {
     const days = parseInt(daysInput, 10);
 
     if (isNaN(days) || days <= 0) {
-        console.log("Invalid number of days.");
+        error("Invalid number of days.");
         return;
     }
 
@@ -45,17 +48,17 @@ async function archive() {
     }
 
     if (toArchive.length === 0) {
-        console.log(`No notes older than ${days} days found.`);
+        info(`No notes older than ${days} days found.`);
         return;
     }
 
-    console.log(`\nNotes older than ${days} days: ${toArchive.length}\n`);
+    console.log(`\nNotes older than ${days} days: ${c.value(toArchive.length)}\n`);
 
     toArchive.forEach((file) => {
         const rel = path.relative(vault, file).split(path.sep).join("/");
         const stat = fs.statSync(file);
         const mtime = formatDate(stat.mtime);
-        console.log(`  ${rel}  (modified: ${mtime})`);
+        console.log(`  ${c.path(rel)}  ${c.dim(`(modified: ${mtime})`)}`);
     });
 
     const proceed = await confirm({
@@ -64,7 +67,7 @@ async function archive() {
     });
 
     if (!proceed) {
-        console.log("Archive cancelled.");
+        console.log(c.dim("Archive cancelled."));
         return;
     }
 
@@ -73,6 +76,8 @@ async function archive() {
 
     let moved = 0;
     let failed = 0;
+
+    const progress = createProgress({ total: toArchive.length });
 
     for (const file of toArchive) {
         const rel = path.relative(vault, file);
@@ -86,12 +91,16 @@ async function archive() {
             console.error(`Failed to move ${rel}: ${err.message}`);
             failed++;
         }
+
+        progress.setText(rel);
+        progress.tick();
     }
+    progress.stop();
 
     console.log(`\n✅ Archive complete`);
-    console.log(`Moved: ${moved}`);
+    console.log(`Moved: ${c.value(moved)}`);
     if (failed > 0) {
-        console.log(`Failed: ${failed}`);
+        console.log(`Failed: ${c.value(failed)}`);
     }
 }
 

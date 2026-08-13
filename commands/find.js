@@ -2,44 +2,88 @@ const fs = require("fs");
 const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
-const { search } = require("@inquirer/prompts");
+const {
+    searchFiles,
+    searchByContent,
+    fuzzySearchFiles,
+    rankResults,
+} = require("../utils/search");
+const { error, info } = require("../utils/feedback");
+const { select } = require("@inquirer/prompts");
+const c = require("../utils/colors");
 
-function find(keyword) {
+function normalizeExt(ext) {
+    let e = String(ext || "").trim().toLowerCase();
+    if (!e) return null;
+    if (!e.startsWith(".")) e = `.${e}`;
+    return e;
+}
+
+async function find(keyword, options = {}) {
     const vault = getVaultPath();
 
-    const results = [];
+    let root = vault;
 
-    search(vault);
+    if (options.folder) {
+        root = path.isAbsolute(options.folder)
+            ? options.folder
+            : path.join(vault, options.folder);
 
-    function search(dir) {
-        const files = fs.readdirSync(dir, {
-            withFileTypes: true,
-        });
-
-        for (const file of files) {
-            const fullPath = path.join(dir, file.name);
-
-            if (file.isDirectory()) {
-                search(fullPath);
-            } else if (
-                file.name.toLowerCase().includes(keyword.toLowerCase())
-            ) {
-                results.push(path.relative(vault, fullPath));
-            }
+        if (!fs.existsSync(root)) {
+            error(`Folder tidak ditemukan: ${options.folder}`);
+            return;
         }
     }
 
+    const ext = normalizeExt(options.type);
+    const extensions = ext ? [ext] : undefined;
+
+    let query;
+    let results;
+
+    if (options.content) {
+        ({ query, results } = searchByContent(root, keyword, {
+            extensions: extensions || [".md"],
+        }));
+    } else if (options.fuzzy) {
+        ({ query, results } = fuzzySearchFiles(root, keyword, { extensions }));
+    } else {
+        ({ query, results } = searchFiles(root, keyword, { extensions }));
+        results = rankResults(results, keyword);
+    }
+
     if (results.length === 0) {
-        console.log("Tidak ada note yang ditemukan.");
+        info("Tidak ada note yang ditemukan.");
         return;
     }
 
-    console.log(`Ditemukan ${results.length} note\n`);
+    if (options.pick && results.length > 1) {
+        const choices = results.slice(0, 50).map((result) => ({
+            name: result.relativePath,
+            value: result,
+        }));
+        const chosen = await select({
+            message: "Pilih note:",
+            choices,
+        });
+        console.log(c.path(chosen.relativePath));
+        return;
+    }
 
-    results.forEach(file => {
-        console.log("📄", file);
+    console.log(`Ditemukan ${c.value(results.length)} note\n`);
 
-    });
+    if (options.content) {
+        results.forEach((result) => {
+            console.log(`${c.note(result.relativePath)} ${c.dim(`(line ${result.line})`)}`);
+            if (result.snippet) {
+                console.log(`  ${c.dim(result.snippet)}`);
+            }
+        });
+    } else {
+        results.forEach((result) => {
+            console.log("📄", c.path(result.relativePath));
+        });
+    }
 }
 
 module.exports = find;

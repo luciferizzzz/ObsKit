@@ -46,7 +46,7 @@ const tags = require("../commands/tags");
 
 const configCmd = require("../commands/config");
 
-const { aiWrite, aiTomorrow, aiUpdate, aiWeekly } = require("../commands/ai");
+const { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople } = require("../commands/ai");
 
 const dashboard = require("../commands/dashboard");
 
@@ -64,10 +64,38 @@ const templateCmd = require("../commands/template");
 
 const cleanup = require("../commands/cleanup");
 
+const relate = require("../commands/relate");
+
+const unrelate = require("../commands/unrelate");
+
+const relations = require("../commands/relations");
+
+const { completion, completeWords } = require("../commands/completion");
+
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.4.6");
+  .version("1.5.0")
+  .showSuggestionAfterError()
+  .showHelpAfterError()
+  .configureOutput({
+    writeErr: (str) => {
+      process.stderr.write(chalk.red(str.replace(/^error: /, "❌ ")));
+    },
+  })
+  .addHelpText(
+    "after",
+    `
+Contoh cepat:
+  obs today                          Buat daily note
+  obs new <folder> <title>           Buat note baru
+  obs ai "<topik>"                   Buat catatan dengan AI
+  obs find <kata>                    Cari note
+  obs doctor                         Cek kesehatan vault
+  obs relate <note> <related>        Hubungkan dua note
+
+Jalankan \`obs <perintah> --help\` untuk detail perintah.`
+  );
 
 program
   .command("hello")
@@ -99,7 +127,12 @@ program
 program
   .command("find <keywords>")
   .description("Cari note")
-  .action(find);
+  .option("--fuzzy", "Fuzzy search (tahan typo) pada nama file")
+  .option("--content", "Cari di dalam isi note (bukan nama file)")
+  .option("--folder <path>", "Batasi pencarian ke folder tertentu")
+  .option("--type <ext>", "Batasi ke ekstensi file (contoh: md, txt)")
+  .option("--pick", "Pilih hasil secara interaktif")
+  .action((keywords, options) => find(keywords, options));
 
 program
   .command("rename <folder> <oldName> <newName>")
@@ -178,7 +211,7 @@ program
   .action(configCmd);
 
 program
-  .command("ai [prompt]")
+  .command("ai [prompt] [name]")
   .description("Bikin catatan pake AI (Ollama lokal atau OpenAI API key)")
   .option("-t, --title <title>", "Judul catatan", "AI Note")
   .option("-f, --folder <folder>", "Folder di vault", "AI")
@@ -186,15 +219,19 @@ program
   .option("--daily", "Catat ke daily note hari ini")
   .option("--ask", "Interactive mode - AI tanya kamu dulu")
   .option("--template <name>", "Gunakan template untuk catatan AI")
-  .action((prompt, options) => {
+  .option("-p, --persona <name>", "Persona AI yang dipakai")
+  .action((prompt, name, options) => {
     if (prompt === "tomorrow") {
-      return aiTomorrow();
+      return aiTomorrow(options);
     }
     if (prompt === "update") {
-      return aiUpdate();
+      return aiUpdate(options);
     }
     if (prompt === "weekly") {
-      return aiWeekly();
+      return aiWeekly(options);
+    }
+    if (prompt === "people") {
+      return aiPeople(name, options);
     }
     return aiWrite(prompt, options);
   });
@@ -245,7 +282,42 @@ program
   .option("--preview <name>", "Preview isi template")
   .action(templateCmd);
 
+program
+  .command("relate <note> <related>")
+  .description("Add a related note to the Related section")
+  .action(relate);
+
+program
+  .command("unrelate <note> <related>")
+  .description("Remove a related note from the Related section")
+  .action(unrelate);
+
+program
+  .command("relations <note>")
+  .description("Show relationships for a note (related, backlinks, outgoing)")
+  .action(relations);
+
+program
+  .command("completion <shell>")
+  .description("Generate shell completion script (bash, zsh, fish, powershell)")
+  .action((shell) => completion(shell));
+
+program
+  .command("__complete", { hidden: true })
+  .argument("[line]", "teks yang akan dikomplete-kan")
+  .action((line) => {
+    completeWords(line || "", program).forEach((candidate) => console.log(candidate));
+  });
+
 program.parseAsync(process.argv).catch((err) => {
+    if (err && err.code === "commander.helpDisplayed") {
+        return;
+    }
+    if (err && err.code && err.code.startsWith("commander.")) {
+        console.error(chalk.red(`\n❌ ${err.message}`));
+        console.error(chalk.dim("  Jalankan `obs --help` untuk melihat daftar perintah."));
+        process.exit(1);
+    }
     console.error(chalk.red(`\n❌ ${err.message}`));
     process.exit(1);
 });

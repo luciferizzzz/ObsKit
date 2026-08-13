@@ -6,6 +6,9 @@ const { scanMarkdownFiles } = require("../utils/scanner");
 const { buildNoteIndex } = require("../utils/noteIndex");
 const { extractWikiLinks } = require("../utils/wikilinks");
 const { confirm } = require("@inquirer/prompts");
+const { error } = require("../utils/feedback");
+const { createProgress } = require("../utils/progress");
+const c = require("../utils/colors");
 
 function formatSize(bytes) {
     if (bytes < 1024) return `${bytes} B`;
@@ -16,7 +19,7 @@ function formatSize(bytes) {
 async function cleanup() {
     const vault = getVaultPath();
 
-    console.log("\n🧹 Vault Cleanup\n");
+    console.log(`\n${c.heading("🧹 Vault Cleanup")}\n`);
 
     const dryRun = await confirm({
         message: "Dry run (show what would be deleted)?",
@@ -68,45 +71,45 @@ async function cleanup() {
         0
     );
 
-    console.log("\n📊 Scan Results\n");
-    console.log(`Notes scanned : ${files.length}`);
-    console.log(`Total size    : ${formatSize(totalSize)}`);
-    console.log(`Broken links  : ${brokenLinks.length}`);
-    console.log(`Empty files   : ${emptyFiles.length}`);
-    console.log(`Orphan files  : ${orphanFiles.length}`);
+    console.log(`\n${c.heading("📊 Scan Results")}\n`);
+    console.log(`Notes scanned : ${c.value(files.length)}`);
+    console.log(`Total size    : ${c.value(formatSize(totalSize))}`);
+    console.log(`Broken links  : ${c.value(brokenLinks.length)}`);
+    console.log(`Empty files   : ${c.value(emptyFiles.length)}`);
+    console.log(`Orphan files  : ${c.value(orphanFiles.length)}`);
 
     if (emptyFiles.length > 0) {
-        console.log("\nEmpty files\n");
+        console.log(`\n${c.heading("Empty files")}\n`);
         emptyFiles.forEach((file) => {
             const rel = path.relative(vault, file).split(path.sep).join("/");
-            console.log(`  ${rel}`);
+            console.log(`  ${c.path(rel)}`);
         });
     }
 
     if (orphanFiles.length > 0) {
-        console.log("\nOrphan files (no incoming links)\n");
+        console.log(`\n${c.heading("Orphan files (no incoming links)")}\n`);
         orphanFiles.slice(0, 15).forEach((file) => {
             const rel = path.relative(vault, file).split(path.sep).join("/");
-            console.log(`  ${rel}`);
+            console.log(`  ${c.path(rel)}`);
         });
         if (orphanFiles.length > 15) {
-            console.log(`  ... dan ${orphanFiles.length - 15} lainnya`);
+            console.log(`  ${c.dim(`... dan ${orphanFiles.length - 15} lainnya`)}`);
         }
     }
 
     if (brokenLinks.length > 0) {
-        console.log("\nBroken links\n");
+        console.log(`\n${c.heading("Broken links")}\n`);
         brokenLinks.slice(0, 15).forEach(({ file, link }) => {
             const rel = path.relative(vault, file).split(path.sep).join("/");
-            console.log(`  ${rel} → [[${link}]]`);
+            console.log(`  ${c.path(rel)} → ${c.dim(`[[${link}]]`)}`);
         });
         if (brokenLinks.length > 15) {
-            console.log(`  ... dan ${brokenLinks.length - 15} lainnya`);
+            console.log(`  ${c.dim(`... dan ${brokenLinks.length - 15} lainnya`)}`);
         }
     }
 
     if (emptyFiles.length === 0 && orphanFiles.length === 0) {
-        console.log("\n✅ Nothing to clean up.");
+        console.log(c.dim("\n✅ Nothing to clean up."));
         return;
     }
 
@@ -117,10 +120,10 @@ async function cleanup() {
     );
 
     if (dryRun) {
-        console.log("\n🧪 Dry run mode - nothing deleted.");
-        console.log(`Would delete : ${deletable.length} empty file(s)`);
-        console.log(`Space freed  : ${formatSize(deletableSize)}`);
-        console.log("\nOrphans are kept for review - run without dry run to delete empty files.");
+        console.log(`\n${c.heading("🧪 Dry run mode - nothing deleted.")}`);
+        console.log(`Would delete : ${c.value(deletable.length)} empty file(s)`);
+        console.log(`Space freed  : ${c.value(formatSize(deletableSize))}`);
+        console.log(c.dim("\nOrphans are kept for review - run without dry run to delete empty files."));
         return;
     }
 
@@ -130,12 +133,14 @@ async function cleanup() {
     });
 
     if (!proceed) {
-        console.log("Cleanup cancelled.");
+        console.log(c.dim("Cleanup cancelled."));
         return;
     }
 
     let deleted = 0;
     let freed = 0;
+
+    const progress = createProgress({ total: deletable.length });
 
     for (const file of deletable) {
         try {
@@ -143,13 +148,17 @@ async function cleanup() {
             fs.unlinkSync(file);
             deleted++;
         } catch (err) {
-            console.error(`Error deleting ${file}: ${err.message}`);
+            error(`Error deleting ${file}: ${err.message}`);
         }
+
+        progress.setText(path.relative(vault, file));
+        progress.tick();
     }
+    progress.stop();
 
     console.log("\n✅ Cleanup complete");
-    console.log(`Deleted       : ${deleted} file(s)`);
-    console.log(`Space freed   : ${formatSize(freed)}`);
+    console.log(`Deleted       : ${c.value(deleted)} file(s)`);
+    console.log(`Space freed   : ${c.value(formatSize(freed))}`);
 }
 
 module.exports = cleanup;

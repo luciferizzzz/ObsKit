@@ -3,6 +3,8 @@ const path = require("path");
 const { input, select, password } = require("@inquirer/prompts");
 
 const configPath = path.join(__dirname, "..", "config.json");
+const { error, info, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function loadConfig() {
     if (!fs.existsSync(configPath)) {
@@ -77,7 +79,7 @@ async function setupAI(cfg) {
 
     saveConfig(cfg);
 
-    console.log("✅ Konfigurasi AI berhasil disimpan.");
+    success("Konfigurasi AI berhasil disimpan.");
 }
 
 async function config(subcommand) {
@@ -85,8 +87,8 @@ async function config(subcommand) {
     let cfg = loadConfig();
 
     if (!cfg) {
-        console.log("No configuration found.");
-        console.log("Run `obs init` first.");
+        error("No configuration found.");
+        info("Run `obs init` first.");
         return;
     }
 
@@ -111,7 +113,7 @@ async function config(subcommand) {
             })).trim();
 
             if (!vault || !fs.existsSync(vault)) {
-                console.log("Invalid path.");
+                error("Invalid path.");
                 return;
             }
 
@@ -119,7 +121,7 @@ async function config(subcommand) {
 
             saveConfig(cfg);
 
-            console.log("Vault updated.");
+            success("Vault updated.");
             return;
 
         case "ai":
@@ -132,19 +134,19 @@ async function config(subcommand) {
                 vault: ""
             });
 
-            console.log("Configuration reset.");
+            success("Configuration reset.");
             return;
 
         default:
 
-            console.log("Current Configuration");
-            console.log("----------------------");
-            console.log("Vault   :", cfg.vault || "(not configured)");
+            console.log(`${c.heading("Current Configuration")}`);
+            console.log(c.divider("----------------------"));
+            console.log(`Vault   : ${c.path(cfg.vault || "(not configured)")}`);
 
             if (cfg.ai?.provider === "openai") {
-                console.log("AI      : OpenAI (API key) —", cfg.ai.openai?.model || "gpt-4o-mini");
+                console.log(`AI      : OpenAI (API key) — ${c.value(cfg.ai.openai?.model || "gpt-4o-mini")}`);
             } else {
-                console.log("AI      : Ollama —", cfg.ai?.ollama?.model || "qwen2.5-coder:7b");
+                console.log(`AI      : Ollama — ${c.value(cfg.ai?.ollama?.model || "qwen2.5-coder:7b")}`);
             }
     }
 

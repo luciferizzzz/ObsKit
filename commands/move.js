@@ -3,6 +3,8 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { mdFileName } = require("../utils/sanitizeFilename");
+const { error, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function move(sourceFolder, title, targetFolder) {
     const vault = getVaultPath();
@@ -24,14 +26,14 @@ function move(sourceFolder, title, targetFolder) {
     );
 
     if (!fs.existsSync(source)) {
-        console.log("Note tidak ditemukan.");
+        error(`Note not found: ${title}`);
         return;
     }
 
     fs.renameSync(source, destination);
 
-    console.log("Note berhasil dipindahkan.");
-    console.log(`${sourceFolder} → ${targetFolder}`);
+    success("Note berhasil dipindahkan.");
+    console.log(`${c.folder(sourceFolder)} → ${c.folder(targetFolder)}`);
 }
 
 module.exports = move;

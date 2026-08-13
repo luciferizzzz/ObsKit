@@ -3,6 +3,8 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault")
 const { mdFileName } = require("../utils/sanitizeFilename");
+const { error, warning, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function rename(folder, oldName, newName) {
     const vault = getVaultPath();
@@ -24,19 +26,19 @@ function rename(folder, oldName, newName) {
     );
 
     if (!fs.existsSync(oldPath)) {
-        console.log("Note tidak ditemukan.");
+        error(`Note not found: ${oldName}`);
         return;
     }
 
     if (fs.existsSync(newPath)) {
-        console.log("Nama note sudah digunakan.");
+        warning(`Note already exists: ${newName}`);
         return;
     } 
 
     fs.renameSync(oldPath, newPath);
 
-    console.log("Note berhasil diubah.");
-    console.log(path.relative(vault, newPath));
+    success("Note berhasil diubah.");
+    console.log(c.note(path.relative(vault, newPath)));
 }
 
 module.exports = rename

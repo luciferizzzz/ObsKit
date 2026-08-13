@@ -2,7 +2,13 @@ const { getConfig } = require("./config");
 
 function getVaultPath() {
     const config = getConfig();
-    const vault = config && typeof config.vault === "string" ? config.vault.trim() : "";
+    const configVault =
+        config && typeof config.vault === "string" ? config.vault.trim() : "";
+    const envVault =
+        typeof process.env.OBSKIT_VAULT === "string"
+            ? process.env.OBSKIT_VAULT.trim()
+            : "";
+    const vault = envVault || configVault;
 
     if (vault) {
         return vault;

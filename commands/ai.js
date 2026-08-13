@@ -1,22 +1,26 @@
 const path = require("path");
 const fs = require("fs");
-const { input } = require("@inquirer/prompts");
+const { input, confirm } = require("@inquirer/prompts");
 const { generate } = require("../utils/ai");
+const { resolvePersona } = require("../utils/persona");
 const { createFile } = require("../utils/file");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
 const { getVaultPath } = require("../utils/vault");
+const { scanMarkdownFiles } = require("../utils/scanner");
+const { error, success, warning } = require("../utils/feedback");
+const { Spinner } = require("../utils/spinner");
+const c = require("../utils/colors");
 const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData } = require("../utils/markdown");
-
-const SYSTEM_PROMPT = `Tulis catatan markdown buat Obsidian.
-
-Aturan wajib:
-- Bahasa Indonesia santai, ngobrol kayak temen
-- JANGAN pakai kata "kamu", "anda", "kalian" - langsung ke intinya aja
-- JANGAN pembukaan kayak "Tentu", "Oke", "Baik" - langsung mulai isinya
-- Heading pakai ## dan ###
-- Gunakan bullet points, bold, code blocks kalau perlu
-- Jangan pakai frontmatter atau YAML
-- Isinya harus bermanfaat dan jelas`;
+const { loadTomorrowTasks, importTomorrowTasks } = require("../utils/dailyWorkflow");
+const { updateMarkdown } = require("../utils/relationship/editor");
+const {
+    findPeopleNote,
+    readPeopleNote,
+    parseInteractionOutput,
+    appendInteraction,
+    buildInteractionPrompt,
+    INTERACTIONS_HEADING,
+} = require("../utils/people");
 
 async function askUser() {
     const answers = {};
@@ -54,8 +58,8 @@ async function askUser() {
     return answers;
 }
 
-function buildPromptFromAnswers(answers) {
-    return `${SYSTEM_PROMPT}
+function buildPromptFromAnswers(answers, persona) {
+    return `${persona.system}
 
 Buat 6 bagian untuk daily note hari ini dengan heading:
 ## Target Hari Ini
@@ -97,13 +101,28 @@ function getISOWeek(d) {
 function handleAiError(err) {
     const msg = err.message || "Unknown error";
     if (msg.includes("connect ke Ollama") || msg.includes("ECONNREFUSED")) {
-        console.log("❌ Ollama belum jalan. Jalankan `ollama serve` dulu.");
+        error("Ollama belum jalan. Jalankan `ollama serve` dulu.");
     } else if (msg.includes("API key")) {
-        console.log("❌ " + msg);
+        error(msg);
     } else if (msg.includes("timeout")) {
-        console.log("❌ Response timeout. Coba prompt yang lebih pendek.");
+        error("Response timeout. Coba prompt yang lebih pendek.");
     } else {
-        console.log("❌ " + msg);
+        error(msg);
+    }
+}
+
+async function generateWithSpinner(prompt, message = "AI sedang memproses...") {
+    const spinner = new Spinner({ text: message });
+    const quiet = !spinner.enabled;
+    if (quiet) console.log(`\n🧠 ${message}...\n`);
+    spinner.start();
+    try {
+        const content = await generate(prompt);
+        spinner.stop();
+        return content;
+    } catch (err) {
+        spinner.stop();
+        throw err;
     }
 }
 
@@ -223,7 +242,7 @@ function fillDailyTemplate(template, sections) {
     return result;
 }
 
-async function fillTemplateWithAI(template, prompt, options) {
+async function fillTemplateWithAI(template, prompt, options, persona) {
     const aiBlocks = extractAIBlocks(template);
 
     if (aiBlocks.length === 0) {
@@ -238,7 +257,7 @@ async function fillTemplateWithAI(template, prompt, options) {
         const block = aiBlocks[i];
         console.log(`  [${i + 1}/${aiBlocks.length}] ${block.instruction}`);
 
-        const blockPrompt = `${SYSTEM_PROMPT}
+        const blockPrompt = `${persona.system}
 
 ${block.instruction}
 
@@ -259,16 +278,16 @@ Berikan jawaban langsung, tanpa pembukaan.`;
 }
 
 async function aiWrite(prompt, options) {
+    const persona = resolvePersona(options.persona);
+
     let finalPrompt;
 
     if (options.ask) {
         const answers = await askUser();
-        finalPrompt = buildPromptFromAnswers(answers);
+        finalPrompt = buildPromptFromAnswers(answers, persona);
     } else {
-        finalPrompt = `${SYSTEM_PROMPT}\n\nBuatkan catatan tentang: ${prompt}`;
+        finalPrompt = `${persona.system}\n\nBuatkan catatan tentang: ${prompt}`;
     }
-
-    console.log("\n🧠 Lagi diproses sama AI...\n");
 
     try {
         const vault = getVaultPath();
@@ -282,7 +301,7 @@ async function aiWrite(prompt, options) {
                 `${String(now.getDate()).padStart(2, "0")}`;
             filePath = path.join(vault, "Daily Notes", `${date}.md`);
 
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
 
             if (options.ask) {
                 const templatePath = path.join(
@@ -309,17 +328,17 @@ async function aiWrite(prompt, options) {
                         updated = insertUnderCatatan(existing, content);
                     }
                     fs.writeFileSync(filePath, updated);
-                    console.log("✅ Daily note diupdate!");
+                    success("Daily note diupdate!");
                 } else {
                     createFile(filePath, filled);
-                    console.log("✅ Daily note baru dibuat!");
+                    success("Daily note baru dibuat!");
                 }
             } else {
                 if (fs.existsSync(filePath)) {
                     const existing = fs.readFileSync(filePath, "utf8");
                     const updated = insertUnderCatatan(existing, content);
                     fs.writeFileSync(filePath, updated);
-                    console.log("✅ Catatan ditambahin ke daily note hari ini!");
+                    success("Catatan ditambahin ke daily note hari ini!");
                 } else {
                     const templatePath = path.join(
                         __dirname, "..", "templates", "daily.md"
@@ -333,7 +352,7 @@ async function aiWrite(prompt, options) {
                     }
                     const finalContent = insertUnderCatatan(header, content);
                     createFile(filePath, finalContent);
-                    console.log("✅ Daily note baru dibuat!");
+                    success("Daily note baru dibuat!");
                 }
             }
         } else if (options.template) {
@@ -342,7 +361,7 @@ async function aiWrite(prompt, options) {
             );
 
             if (!fs.existsSync(templatePath)) {
-                console.log("❌ Template tidak ditemukan: " + options.template);
+                error(`Template tidak ditemukan: ${options.template}`);
                 return;
             }
 
@@ -352,35 +371,35 @@ async function aiWrite(prompt, options) {
             let template = fs.readFileSync(templatePath, "utf8");
             template = parseTemplate(template, getTemplateData({ title, folder }));
 
-            const filledTemplate = await fillTemplateWithAI(template, prompt, options);
+            const filledTemplate = await fillTemplateWithAI(template, prompt, options, persona);
 
             if (filledTemplate) {
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
                 createFile(filePath, filledTemplate);
-                console.log("✅ Catatan dari template berhasil dibuat!");
+                success("Catatan dari template berhasil dibuat!");
             } else {
-                const content = await generate(finalPrompt);
+                const content = await generateWithSpinner(finalPrompt);
                 filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
                 createFile(filePath, content);
-                console.log("✅ Catatan berhasil dibuat!");
+                success("Catatan berhasil dibuat!");
             }
         } else if (options.file) {
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
             filePath = path.isAbsolute(options.file)
                 ? options.file
                 : path.join(vault, options.file);
             createFile(filePath, content);
-            console.log("✅ Catatan berhasil dibuat!");
+            success("Catatan berhasil dibuat!");
         } else {
-            const content = await generate(finalPrompt);
+            const content = await generateWithSpinner(finalPrompt);
             const title = sanitizeFilename(options.title || "AI Note");
             const folder = options.folder || "AI";
             filePath = uniquePath(path.join(vault, folder, mdFileName(title)));
             createFile(filePath, content);
-            console.log("✅ Catatan berhasil dibuat!");
+            success("Catatan berhasil dibuat!");
         }
 
-        console.log("📁 " + filePath);
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -414,8 +433,8 @@ async function askTomorrow() {
     return answers;
 }
 
-function buildTomorrowPrompt(answers) {
-    return `${SYSTEM_PROMPT}
+function buildTomorrowPrompt(answers, persona) {
+    return `${persona.system}
 
 Buat rencana terstruktur untuk besok dengan heading:
 # Tomorrow Plan
@@ -442,11 +461,10 @@ Jangan lupain: ${answers.ingat}
 Tiap bagian langsung isinya aja, bahasa santai, bullet points.`;
 }
 
-async function aiTomorrow() {
+async function aiTomorrow(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askTomorrow();
-    const prompt = buildTomorrowPrompt(answers);
-
-    console.log("\n🧠 Lagi diproses sama AI...\n");
+    const prompt = buildTomorrowPrompt(answers, persona);
 
     try {
         const vault = getVaultPath();
@@ -454,11 +472,11 @@ async function aiTomorrow() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const date = formatDate(tomorrow);
 
-        const content = await generate(prompt);
+        const content = await generateWithSpinner(prompt);
         const filePath = path.join(vault, "Planning", "Tomorrow", `${date}.md`);
         createFile(filePath, content);
-        console.log("✅ Rencana besok berhasil dibuat!");
-        console.log("📁 " + filePath);
+        success("Rencana besok berhasil dibuat!");
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -496,8 +514,13 @@ async function askUpdate() {
     return answers;
 }
 
-function buildUpdatePrompt(answers) {
-    return `${SYSTEM_PROMPT}
+function buildUpdatePrompt(answers, tomorrowTasks = [], persona) {
+    const tomorrowContext =
+        Array.isArray(tomorrowTasks) && tomorrowTasks.length > 0
+            ? `\nRencana dari note kemarin (bagian ## Tomorrow):\n${tomorrowTasks.join("\n")}`
+            : "";
+
+    return `${persona.system}
 
 Update daily note hari ini. Isi 6 bagian dengan heading:
 ## Target Hari Ini
@@ -513,15 +536,14 @@ Hambatan: ${answers.blocker}
 Mood: ${answers.mood}
 Syukur: ${answers.syukur}
 Pelajaran hari ini: ${answers.pelajaran}
+${tomorrowContext}
 
 Tiap bagian langsung isinya aja, bahasa santai, 2-3 kalimat.`;
 }
 
-async function aiUpdate() {
+async function aiUpdate(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askUpdate();
-    const prompt = buildUpdatePrompt(answers);
-
-    console.log("\n🧠 Lagi diproses sama AI...\n");
 
     try {
         const vault = getVaultPath();
@@ -529,7 +551,9 @@ async function aiUpdate() {
         const date = formatDate(now);
         const filePath = path.join(vault, "Daily Notes", `${date}.md`);
 
-        const content = await generate(prompt);
+        const tomorrowTasks = loadTomorrowTasks(vault, date);
+
+        const content = await generateWithSpinner(buildUpdatePrompt(answers, tomorrowTasks, persona));
         const sections = parseSections(content);
 
         if (fs.existsSync(filePath)) {
@@ -538,8 +562,9 @@ async function aiUpdate() {
             if (updated === existing) {
                 updated = insertUnderCatatan(existing, content);
             }
+            updated = importTomorrowTasks(updated, tomorrowTasks);
             fs.writeFileSync(filePath, updated);
-            console.log("✅ Daily note diupdate sama AI!");
+            success("Daily note diupdate sama AI!");
         } else {
             const templatePath = path.join(
                 __dirname, "..", "templates", "daily.md"
@@ -555,11 +580,16 @@ async function aiUpdate() {
             if (filled === template) {
                 filled = insertUnderCatatan(template, content);
             }
+            filled = importTomorrowTasks(filled, tomorrowTasks);
             createFile(filePath, filled);
-            console.log("✅ Daily note baru dibuat dan diisi AI!");
+            success("Daily note baru dibuat dan diisi AI!");
         }
 
-        console.log("📁 " + filePath);
+        if (tomorrowTasks.length > 0) {
+            console.log(`📥 ${tomorrowTasks.length} task dari ## Tomorrow (note kemarin) ditambahkan ke ## Update.`);
+        }
+
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
@@ -597,8 +627,8 @@ async function askWeekly() {
     return answers;
 }
 
-function buildWeeklyPrompt(answers) {
-    return `${SYSTEM_PROMPT}
+function buildWeeklyPrompt(answers, persona) {
+    return `${persona.system}
 
 Buat rencana mingguan terstruktur dengan heading:
 # Weekly Plan
@@ -640,25 +670,101 @@ Habit: ${answers.habit}
 Tiap bagian langsung isinya aja, bahasa santai, bullet points.`;
 }
 
-async function aiWeekly() {
+async function aiWeekly(options) {
+    const persona = resolvePersona(options && options.persona);
     const answers = await askWeekly();
-    const prompt = buildWeeklyPrompt(answers);
-
-    console.log("\n🧠 Lagi diproses sama AI...\n");
+    const prompt = buildWeeklyPrompt(answers, persona);
 
     try {
         const vault = getVaultPath();
         const now = new Date();
         const week = getISOWeek(now);
 
-        const content = await generate(prompt);
+        const content = await generateWithSpinner(prompt);
         const filePath = path.join(vault, "Planning", "Weekly", `Week-${week}.md`);
         createFile(filePath, content);
-        console.log("✅ Rencana mingguan berhasil dibuat!");
-        console.log("📁 " + filePath);
+        success("Rencana mingguan berhasil dibuat!");
+        console.log(`📁 ${c.path(filePath)}`);
     } catch (err) {
         handleAiError(err);
     }
 }
 
-module.exports = { aiWrite, aiTomorrow, aiUpdate, aiWeekly };
+async function aiPeople(personName, options) {
+    const persona = resolvePersona(options && options.persona);
+
+    try {
+        const vault = getVaultPath();
+
+        let name = String(personName || "").trim();
+        if (!name) {
+            name = (await input({
+                message: "👤 Nama orang? (contoh: John Doe)",
+            })).trim();
+            if (!name) {
+                error("Nama tidak boleh kosong.");
+                return;
+            }
+        }
+
+        const files = scanMarkdownFiles(vault);
+        const file = findPeopleNote(files, name);
+
+        if (!file) {
+            error(`People note tidak ditemukan: ${name}`);
+            return;
+        }
+
+        const content = readPeopleNote(file);
+
+        const interaction = (await input({
+            message: `📝 Interaksi terakhir dengan ${name}?`,
+        })).trim();
+
+        if (!interaction) {
+            error("Interaksi tidak boleh kosong.");
+            return;
+        }
+
+        const prompt = buildInteractionPrompt({ name, content, interaction, persona });
+
+        const output = await generateWithSpinner(prompt);
+
+        const bullets = parseInteractionOutput(output);
+        if (bullets.length === 0) {
+            error("AI tidak menghasilkan interaksi.");
+            return;
+        }
+
+        const { content: updated, changed, added, skipped } = appendInteraction(content, bullets);
+
+        if (!changed) {
+            warning("Tidak ada interaksi baru (semua duplikat).");
+            return;
+        }
+
+        console.log(`\n📄 Preview perubahan untuk ${c.note(path.basename(file))}:\n`);
+        console.log(`## ${INTERACTIONS_HEADING}\n`);
+        added.forEach((bullet) => console.log(`+ ${bullet}`));
+        if (skipped > 0) {
+            console.log(`\n(${skipped} interaksi duplikat di-skip)`);
+        }
+
+        const confirmed = await confirm({
+            message: "Tulis perubahan ini ke note?",
+        });
+
+        if (!confirmed) {
+            console.log("Batal - tidak ada perubahan.");
+            return;
+        }
+
+        updateMarkdown(file, updated);
+        success("Interaksi ditambahkan ke People note!");
+        console.log(`📁 ${c.path(file)}`);
+    } catch (err) {
+        handleAiError(err);
+    }
+}
+
+module.exports = { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople };

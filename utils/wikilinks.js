@@ -1,30 +1,9 @@
+const { parseWikiLinks } = require("./relationship/parser");
+
 function extractWikiLinks(content) {
-    const regex = /\[\[([^\]]+)\]\]/g;
-
-    const links = [];
-
-    let match;
-
-    while ((match = regex.exec(content)) !== null) {
-        let link = match[1];
-
-        // [[Page|Alias]]
-        link = link.split("|")[0];
-
-        // [[Folder/Page]]
-        link = link.split("/").pop();
-
-        link = link.trim();
-
-        // Skip attachment
-        if (/\.(png|jpg|jpeg|gif|svg|webp|pdf)$/i.test(link)) {
-            continue;
-        }
-
-        links.push(link);
-    }
-
-    return links;
+    return parseWikiLinks(content).map((link) => {
+        return link.heading ? `${link.target}#${link.heading}` : link.target;
+    });
 }
 
 module.exports = {

@@ -136,7 +136,7 @@ obs init
 
 ```text
 ? Lokasi Obsidian Vault D:\Vault
-Vault berhasil disimpan.
+✅ Vault berhasil disimpan.
 ```
 
 ---

@@ -2,14 +2,14 @@ const fs = require("fs");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
-const { buildNoteIndex } = require("../utils/noteIndex");
+const { buildNormalizedNoteIndex } = require("../utils/noteIndex");
 const { extractWikiLinks} = require("../utils/wikilinks");
 
 function checkDeadlinks() {
     const vault = getVaultPath();
 
     const files = scanMarkdownFiles(vault);
-    const notes = buildNoteIndex(files);
+    const notes = buildNormalizedNoteIndex(files);
 
     const broken = [];
     let totalLinks = 0;
@@ -21,7 +21,9 @@ function checkDeadlinks() {
         totalLinks += links.length;
 
         for (const link of links) {
-            if (!notes.has(link)) {
+            const clean = link.split("#")[0].trim().toLowerCase();
+
+            if (!notes.has(clean)) {
                 broken.push({
                     file,
                     link,

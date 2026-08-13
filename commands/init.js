@@ -1,5 +1,6 @@
 const { input } = require("@inquirer/prompts");
 const { saveConfig } = require("../utils/config");
+const { error, success } = require("../utils/feedback");
 
 async function init() {
     const vault = (await input({
@@ -7,13 +8,13 @@ async function init() {
     })).trim();
 
     if (!vault) {
-        console.log("Path tidak boleh kosong.");
+        error("Path tidak boleh kosong.");
         return;
     }
 
     saveConfig({ vault });
 
-    console.log("Vault berhasil disimpan.")
+    success("Vault berhasil disimpan.")
 }
 
 module.exports = init;

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
+const c = require("../utils/colors");
 
 function stats() {
     const vault = getVaultPath();
@@ -57,15 +58,15 @@ function stats() {
         return count;
     }
 
-    console.log("\n📊 Vault Statistics\n");
+    console.log(`\n${c.heading("📊 Vault Statistics")}\n`);
 
-    console.log(`📄 Total Notes : ${totalNotes}`);
-    console.log(`📁 Total Folder: ${totalFolders}`);
+    console.log(`📄 ${c.title("Total Notes")} : ${c.value(totalNotes)}`);
+    console.log(`📁 ${c.title("Total Folder")}: ${c.value(totalFolders)}`);
 
-    console.log("\nFolder\n");
+    console.log(`\n${c.heading("Folder")}\n`);
 
     for (const folder in folderStats) {
-        console.log(`📂 ${folder.padEnd(15)} ${folderStats[folder]}`);
+        console.log(`📂 ${c.folder(folder.padEnd(15))} ${c.value(folderStats[folder])}`);
     }
 }
 

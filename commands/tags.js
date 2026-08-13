@@ -3,6 +3,7 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const c = require("../utils/colors");
 
 function stripCodeBlocks(content) {
     // Remove fenced code blocks (``` ... ```)
@@ -52,15 +53,15 @@ function tags() {
     const uniqueCount = sorted.length;
     const totalCount = sorted.reduce((sum, [, count]) => sum + count, 0);
 
-    console.log("\n🏷️  Tags\n");
+    console.log(`\n${c.heading("🏷️  Tags")}\n`);
 
     for (const [tag, count] of sorted) {
-        console.log(`${tag} (${count})`);
+        console.log(`${c.tag(tag)} ${c.dim(`(${count})`)}`);
     }
 
-    console.log("\n-----------------------");
-    console.log(`Total Tags : ${totalCount}`);
-    console.log(`Unique Tags : ${uniqueCount}`);
+    console.log(`\n${c.divider("-----------------------")}`);
+    console.log(`${c.title("Total Tags")} : ${c.value(totalCount)}`);
+    console.log(`${c.title("Unique Tags")} : ${c.value(uniqueCount)}`);
 }
 
 module.exports = tags;

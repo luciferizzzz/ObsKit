@@ -3,13 +3,15 @@ const { exec } = require("child_process");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { info } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function random(options) {
     const vault = getVaultPath();
     const files = scanMarkdownFiles(vault);
 
     if (files.length === 0) {
-        console.log("Vault contains no notes.");
+        info("Vault contains no notes.");
         return;
     }
 
@@ -19,13 +21,13 @@ function random(options) {
     // Normalize path separators to "/"
     const relative = path.relative(vault, picked).split(path.sep).join("/");
 
-    console.log("\n🎲 Random Note\n");
-    console.log(relative);
+    console.log(`\n${c.heading("🎲 Random Note")}\n`);
+    console.log(c.note(relative));
 
     // Open the note if --open flag is provided
     if (options.open) {
         exec(`start "" "${picked}"`);
-        console.log("\nMembuka note...");
+        console.log(c.dim("\nMembuka note..."));
     }
 }
 

@@ -26,7 +26,7 @@ This document explains how ObsKit (OBS = Organized Knowledge System) works inter
 
 ## 🏛️ Overall architecture
 
-ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](https://github.com/tj/commander.js) for argument parsing and `@inquirer/prompts` for interactive input.
+ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](https://github.com/tj/commander.js) for argument parsing, `@inquirer/prompts` for interactive input, and `chalk` for colored CLI feedback.
 
 ```
 ┌────────────────────┐
@@ -46,7 +46,7 @@ ObsKit is a **layered CLI** built on plain Node.js (CommonJS) with [Commander](h
 └────────────────────┘
 ```
 
-The **only** dependencies are `commander` and `@inquirer/prompts` — everything else is the standard library.
+The dependencies are `commander`, `@inquirer/prompts`, and `chalk` — everything else is the standard library.
 
 ---
 
@@ -99,6 +99,7 @@ The `ai` command dispatches on its first argument:
 obs ai tomorrow  ──► aiTomorrow()
 obs ai update    ──► aiUpdate()
 obs ai weekly    ──► aiWeekly()
+obs ai people    ──► aiPeople(name)      (name optional — asked interactively)
 obs ai <prompt>  ──► aiWrite(prompt, options)
 ```
 
@@ -135,15 +136,24 @@ createFile(<vault path>\Notes\Learning Rust.md, content)   // mkdir -p + write
 
 | Module | Purpose |
 |--------|---------|
-| `utils/vault.js` | `getVaultPath()` — resolve and trim the vault path |
+| `utils/vault.js` | `getVaultPath()` — resolve and trim the vault path (config first, `OBSKIT_VAULT` env var overrides) |
 | `utils/config.js` | `getConfig()` / `saveConfig()` — read/write `config.json` |
 | `utils/file.js` | `createFile()` — recursive folder creation, refuses overwrite |
+| `utils/feedback.js` | Reusable CLI feedback layer — `success()`, `info()`, `warning()`, `error()` with ObsKit-style symbols (✅ ℹ️ ⚠️ ❌) and chalk colors |
+| `utils/colors.js` | Color helpers for headings, values, paths, folders, tags, dividers — auto-disabled when not a TTY |
+| `utils/spinner.js` | Loading spinner (used by `obs ai` while generating) |
+| `utils/progress.js` | Progress bar (used by `obs backup`, `obs archive`, `obs cleanup`) |
 | `utils/scanner.js` | `scanMarkdownFiles()` — recursive `.md` scanner |
-| `utils/noteIndex.js` | `buildNoteIndex()` — `Set` of note names for link analysis |
+| `utils/search.js` | Search foundation — `searchFiles()` / `searchNotes()` (substring), `fuzzySearchFiles()` / `fuzzySearchNotes()` (typo-tolerant, scored), `searchByContent()` (content + snippets), `rankResults()` (exact → prefix → substring). Result objects carry `name` / `path` / `relativePath` (plus `score` / `line` / `snippet` where relevant); supports extension filters and directory exclusion |
+| `utils/noteIndex.js` | `buildNoteIndex()` / `buildNormalizedNoteIndex()` / `buildFilePathMap()` — `Set`/`Map` indexes for O(1) link analysis |
 | `utils/wikilinks.js` | `extractWikiLinks()` — wiki-link parser |
 | `utils/markdown.js` | Template parser, AI blocks, template data |
+| `utils/dailyWorkflow.js` | Daily-note date/path helpers, `## Tomorrow` extraction, checklist parsing/dedup, `## Update` upsert |
 | `utils/sanitizeFilename.js` | `sanitizeFilename()` / `mdFileName()` — safe filenames |
 | `utils/ai.js` | Unified AI client (Ollama + OpenAI-compatible) |
+| `utils/persona.js` | Reusable AI persona registry — `resolvePersona()`, `findPersona()`, `registerPersona()`, `buildPersonaPrompt()` (see [AI.md](AI.md)) |
+| `utils/people.js` | People-note handling for `obs ai people` — note discovery, interaction parsing, dedup, and section append (CRLF-aware) |
+| `utils/relationship/` | Relationship module — parser, validator, scanner, editor, formatter (see [RELATIONSHIPS.md](RELATIONSHIPS.md)) |
 
 ---
 
@@ -179,15 +189,16 @@ Todo extraction and attachment inventory, used by `commands/todo.js` and `comman
 
 ## 💾 Vault access
 
-The vault is accessed through `utils/vault.js` and `utils/file.js`:
+The vault is accessed through `utils/vault.js` and `utils/file.js`. `getVaultPath()` reads `config.json` first; the `OBSKIT_VAULT` environment variable overrides it (useful for scripting and tests):
 
 ```text
 config.json ──► getVaultPath() ──► vault path (throws if not configured)
-                    │
-                    ▼
+    ▲            (OBSKIT_VAULT env overrides)
+    │
+    ▼
 utils/scanner.js scanMarkdownFiles() ──► [ ...full paths to .md files ]
-                    │
-                    ▼
+    │
+    ▼
 utils/file.js createFile()  ──► recursive mkdir + write (never overwrites)
 ```
 
@@ -196,6 +207,15 @@ Command-specific filters are applied on top of the scanner output:
 - `obs list` filters hidden paths (`.obsidian`, `.git`).
 - `obs tree` ignores `.obsidian`, `.git`, `node_modules`.
 - `obs stats` counts folders and per-folder note counts.
+
+**Search foundation** — `utils/search.js` powers `obs find` and is the reusable base for search features. It walks the vault, matches filenames case-insensitively, and returns result objects with `name`, absolute `path`, and vault-relative `relativePath`. On top of the base substring search it provides:
+- `fuzzyScore()` / `fuzzyMatches()` — typo-tolerant subsequence matching with scoring (exact > prefix > substring > fuzzy).
+- `fuzzySearchFiles()` / `fuzzySearchNotes()` — scored, sorted fuzzy search.
+- `searchByContent()` — searches note contents, returns matching line + snippet (defaults to `.md`, skips hidden folders, caps file size).
+- `rankResults()` — orders results by relevance.
+- Options support extension filters, directory exclusion, and folder-scoped roots. Default behavior matches the original `obs find` exactly (all file types, no hidden-dir exclusion).
+
+**Shell completion** — `commands/completion.js` generates bash/zsh/fish/PowerShell completion scripts (`obs completion <shell>`). The scripts call the hidden `obs __complete <line>` command, which returns candidate commands, `obs ai` subcommands, and note names from the vault.
 
 ---
 
@@ -213,6 +233,22 @@ The project uses small, purpose-built parsers rather than a full markdown engine
 [[image.png]]           → skipped     (attachments ignored)
 ```
 
+`extractWikiLinks()` is a thin compatibility layer over the relationship parser — both return identical output.
+
+### Wiki links — relationship parser (`utils/relationship/parser.js`)
+
+The structured parser used by the relationship module:
+
+```text
+[[Page]]                → { target: "Page", alias: null,  heading: null }
+[[Page|Alias]]          → { target: "Page", alias: "Alias", heading: null }
+[[Page#Heading]]        → { target: "Page", alias: null,  heading: "Heading" }
+[[Folder/Page]]         → { target: "Page", ... }          (folder stripped)
+[[image.png]]           → skipped                          (attachments ignored)
+```
+
+See [RELATIONSHIPS.md](RELATIONSHIPS.md) for the full relationship module reference.
+
 ### Template placeholders (`utils/markdown.js`)
 
 ```text
@@ -224,6 +260,10 @@ The project uses small, purpose-built parsers rather than a full markdown engine
 
 `parseSections()` splits AI output into the six daily sections (`Target Hari Ini`, `Catatan`, `Selesai`, `Mood`, `Syukur`, `Refleksi`) using tolerant heading matching. `fillDailyTemplate()` and `insertUnderCatatan()` merge content into existing notes.
 
+### Daily workflow (`utils/dailyWorkflow.js`)
+
+`obs ai update` reuses this module to import the previous daily note's `## Tomorrow` checklist items into today's note under `## Update`. It owns date resolution, daily-note path discovery, section extraction, checklist parsing, duplicate detection, and the `## Update` upsert. Section extraction reuses `getSectionContent()` from the relationship parser; newline handling reuses `detectNewline()` from the relationship editor.
+
 ---
 
 ## 🤖 AI pipeline
@@ -231,12 +271,17 @@ The project uses small, purpose-built parsers rather than a full markdown engine
 `utils/ai.js` is the single interface between commands and the LLM.
 
 ```text
-commands/ai.js ──► utils/ai.js generate(prompt)
+commands/ai.js ──► utils/persona.js resolvePersona(name) ──► persona.system
+                    │
+                    ▼
+                  utils/ai.js generate(prompt)
                         │
                         ├── provider === "ollama" ──► POST {url}/api/generate     (stream)
                         │
                         └── provider === "openai" ──► POST {baseUrl}/chat/completions (stream)
 ```
+
+Every AI command resolves a persona first (`resolvePersona(options.persona)`, defaulting to the **Default** persona) and uses `persona.system` as the system prompt. Persona logic is completely separate from the provider client — adding a persona never touches `utils/ai.js`.
 
 **Pipeline for `obs ai --ask --daily`**
 
@@ -300,12 +345,14 @@ obskit/
 ├── commands/                # one module per command
 │   ├── ai.js                # AI writer + productivity commands
 │   ├── config.js            # config subcommands
+│   ├── completion.js        # shell completion script generator
 │   ├── init.js              # vault setup
 │   ├── new.js / today.js / find.js / rename.js / move.js / open.js
 │   ├── list.js / tree.js / recent.js / random.js / stats.js
 │   ├── dashboard.js / report.js
 │   ├── deadlinks.js / backlinks.js / orphan.js / graph.js / tags.js / doctor.js
 │   ├── archive.js / attachments.js / backup.js / cleanup.js / todo.js
+│   ├── relate.js / unrelate.js / relations.js
 │   └── template.js
 ├── checks/                  # reusable analysis
 │   ├── deadlinks.js
@@ -313,9 +360,13 @@ obskit/
 │   ├── todos.js
 │   └── attachments.js
 ├── utils/                   # shared helpers
-│   ├── ai.js  config.js  file.js  markdown.js
-│   ├── noteIndex.js  sanitizeFilename.js  scanner.js  vault.js  wikilinks.js
+│   ├── ai.js  colors.js  config.js  feedback.js  file.js  markdown.js
+│   ├── noteIndex.js  persona.js  progress.js  sanitizeFilename.js  scanner.js
+│   ├── search.js  spinner.js  vault.js  wikilinks.js
+│   ├── people.js
+│   └── relationship/        # relationship module (parser, validator, scanner, editor, formatter, index)
 ├── templates/               # note templates
+├── test/                    # unit tests (node:test)
 ├── docs/                    # documentation
 ├── config-example.json
 ├── config.json

@@ -1,18 +1,20 @@
 const checkDeadLinks = require("../checks/deadlinks");
+const c = require("../utils/colors");
+const { success, warning } = require("../utils/feedback");
 
 function doctor() {
     const dead = checkDeadLinks();
 
-    console.log(" Vault Health Report\n");
+    console.log(`\n${c.heading(" Vault Health Report")}\n`);
 
-    console.log(`Notes : ${dead.files.length}`);
-    console.log(`Links : ${dead.totalLinks}`);
-    console.log(`Broken Links : ${dead.broken.length}`);
+    console.log(`Notes : ${c.value(dead.files.length)}`);
+    console.log(`Links : ${c.value(dead.totalLinks)}`);
+    console.log(`Broken Links : ${c.value(dead.broken.length)}`);
 
     if (dead.broken.length === 0) {
-        console.log("\n✅ Vault Healthy");
+        success("Vault Healthy");
     } else {
-        console.log("\n⚠ Ada masalah yang perlu diperbaiki.")
+        warning("Ada masalah yang perlu diperbaiki.")
     }
 
 }

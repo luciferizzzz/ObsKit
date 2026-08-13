@@ -14,7 +14,7 @@ Built for developers, students, writers, researchers, and terminal enthusiasts.
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-v1.4.6-blue)
+![Version](https://img.shields.io/badge/version-v1.5.0-blue)
 ![Node](https://img.shields.io/badge/node-18+-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -144,6 +144,7 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 - Dead Links
 - Vault Doctor
 - Graph Analysis
+- Relationships (`obs relate` / `obs unrelate` / `obs relations`)
 - Tags
 
 ---
@@ -267,6 +268,7 @@ Documentation is split into dedicated files.
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Configuration guide |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
 | [docs/FAQ.md](docs/FAQ.md) | Frequently asked questions |
+| [docs/RELATIONSHIPS.md](docs/RELATIONSHIPS.md) | Relationship system & module |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Future development |
 | [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md) | Template system |
 | CHANGELOG.md | Release history |
@@ -309,6 +311,7 @@ commands/
 checks/
 docs/
 templates/
+test/
 utils/
 
 README.md
@@ -322,11 +325,12 @@ LICENSE
 
 ## 🚧 v1.5
 
+- ✅ Relationship Management
+- ✅ Search Experience — fuzzy search, content search, ranking, filters, interactive pick
+- ✅ Colored Output
+- ✅ Shell Autocomplete (`obs completion <shell>`)
 - Interactive Terminal UI
 - Better Navigation
-- Relationship Commands
-- Shell Autocomplete
-- Fuzzy Search
 
 ---
 

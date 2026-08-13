@@ -1,6 +1,6 @@
 {
   "name": "obskit",
-  "version": "1.4.6",
+  "version": "1.5.0",
   "description": "ObsKit (OBS = Organized Knowledge System) is a fast, lightweight, open-source CLI toolkit for managing Markdown knowledge bases directly from the terminal.",
   "main": "index.js",
   "bin": {
@@ -9,7 +9,8 @@
     "obs": "./bin/obs.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:relationship": "node --test test/parser.test.js test/validator.test.js test/editor.test.js test/scanner.test.js test/formatter.test.js test/wikilinks.test.js",
     "lint": "echo \"No linting configured\"",
     "typecheck": "echo \"No type checking configured\""
   },

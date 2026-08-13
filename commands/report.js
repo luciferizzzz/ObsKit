@@ -3,6 +3,8 @@ const path = require("path");
 
 const collectVaultReport = require("../checks/vaultReport");
 const { formatSize } = require("../checks/vaultReport");
+const { info, success } = require("../utils/feedback");
+const c = require("../utils/colors");
 
 function formatDate(date) {
     return (
@@ -242,7 +244,7 @@ function report(options = {}) {
     const data = collectVaultReport();
 
     if (data.noteCount === 0) {
-        console.log("Vault kosong. Tidak ada note ditemukan.");
+        info("Vault kosong. Tidak ada note ditemukan.");
         return;
     }
 
@@ -301,79 +303,81 @@ function report(options = {}) {
         results.push(filepath);
     }
 
-    console.log("\n✅ Report exported:\n");
+    console.log("\n");
+    success("Report exported:");
+    console.log("\n");
     results.forEach((filepath) => {
         console.log(`  ${filepath}`);
     });
 }
 
 function printConsole(data) {
-    console.log("\n📋 Vault Report\n");
-    console.log(`📍 ${data.vault}\n`);
+    console.log(`\n${c.heading("📋 Vault Report")}\n`);
+    console.log(`📍 ${c.path(data.vault)}\n`);
 
-    console.log("Overview\n");
+    console.log(`${c.heading("Overview")}\n`);
 
-    console.log(`Notes          : ${data.noteCount}`);
-    console.log(`Folders        : ${data.folderCount}`);
-    console.log(`Total Size     : ${formatSize(data.totalSize)}`);
-    console.log(`Total Words    : ${data.totalWords}`);
+    console.log(`Notes          : ${c.value(data.noteCount)}`);
+    console.log(`Folders        : ${c.value(data.folderCount)}`);
+    console.log(`Total Size     : ${c.value(formatSize(data.totalSize))}`);
+    console.log(`Total Words    : ${c.value(data.totalWords)}`);
 
-    console.log("\nFolder Distribution\n");
+    console.log(`\n${c.heading("Folder Distribution")}\n`);
 
     for (const [folder, count] of data.folders) {
-        console.log(`  ${folder.padEnd(15)} ${count} notes`);
+        console.log(`  ${c.folder(folder.padEnd(15))} ${c.value(count)} notes`);
     }
 
-    console.log("\nGraph & Links\n");
+    console.log(`\n${c.heading("Graph & Links")}\n`);
 
-    console.log(`Wiki Links     : ${data.totalLinks}`);
-    console.log(`Average Links  : ${data.avgLinks} per note`);
-    console.log(`Broken Links   : ${data.brokenCount}`);
-    console.log(`Orphan Notes   : ${data.orphanCount}`);
+    console.log(`Wiki Links     : ${c.value(data.totalLinks)}`);
+    console.log(`Average Links  : ${c.value(data.avgLinks)} per note`);
+    console.log(`Broken Links   : ${c.value(data.brokenCount)}`);
+    console.log(`Orphan Notes   : ${c.value(data.orphanCount)}`);
 
     if (data.mostLinked.length > 0) {
-        console.log("\nMost Linked Notes\n");
+        console.log(`\n${c.heading("Most Linked Notes")}\n`);
 
         data.mostLinked.forEach(([note, count], i) => {
-            console.log(`  ${i + 1}. ${note} (${count})`);
+            console.log(`  ${i + 1}. ${c.note(note)} ${c.dim(`(${count})`)}`);
         });
     }
 
     if (data.tags.length > 0) {
-        console.log("\nTags\n");
+        console.log(`\n${c.heading("Tags")}\n`);
 
         data.tags.slice(0, 10).forEach(([tag, count]) => {
-            console.log(`  ${tag} (${count})`);
+            console.log(`  ${c.tag(tag)} ${c.dim(`(${count})`)}`);
         });
     }
 
-    console.log("\nAttachments\n");
+    console.log(`\n${c.heading("Attachments")}\n`);
 
-    console.log(`Files          : ${data.attachmentCount}`);
-    console.log(`Total Size     : ${formatSize(data.attachmentSize)}`);
+    console.log(`Files          : ${c.value(data.attachmentCount)}`);
+    console.log(`Total Size     : ${c.value(formatSize(data.attachmentSize))}`);
 
-    console.log("\nRecent Activity\n");
+    console.log(`\n${c.heading("Recent Activity")}\n`);
 
     data.recent.slice(0, 10).forEach((entry, index) => {
-        console.log(`  ${index + 1}. ${entry.path}`);
-        console.log(`     ${formatDate(entry.mtime)}`);
+        console.log(`  ${index + 1}. ${c.note(entry.path)}`);
+        console.log(`     ${c.dim(formatDate(entry.mtime))}`);
     });
 
     if (data.brokenCount > 0) {
-        console.log("\nBroken Links\n");
+        console.log(`\n${c.heading("Broken Links")}\n`);
 
         data.broken.slice(0, 10).forEach(({ file, link }) => {
             const rel = path.relative(data.vault, file).split(path.sep).join("/");
-            console.log(`  ${rel} → [[${link}]]`);
+            console.log(`  ${c.note(rel)} → ${c.dim(`[[${link}]]`)}`);
         });
 
         if (data.brokenCount > 10) {
-            console.log(`  ... dan ${data.brokenCount - 10} lainnya`);
+            console.log(`  ${c.dim(`... dan ${data.brokenCount - 10} lainnya`)}`);
         }
     }
 
-    console.log("\n────────────────────────");
-    console.log(`Total Note: ${data.noteCount} | Words: ${data.totalWords} | Broken Links: ${data.brokenCount}`);
+    console.log(`\n${c.divider("────────────────────────")}`);
+    console.log(`${c.title("Total Note")}: ${c.value(data.noteCount)} | ${c.title("Words")}: ${c.value(data.totalWords)} | ${c.title("Broken Links")}: ${c.value(data.brokenCount)}`);
 }
 
 module.exports = report;

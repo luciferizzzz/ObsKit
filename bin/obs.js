@@ -70,6 +70,8 @@ const unrelate = require("../commands/unrelate");
 
 const relations = require("../commands/relations");
 
+const { completion, completeWords } = require("../commands/completion");
+
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
@@ -294,6 +296,18 @@ program
   .command("relations <note>")
   .description("Show relationships for a note (related, backlinks, outgoing)")
   .action(relations);
+
+program
+  .command("completion <shell>")
+  .description("Generate shell completion script (bash, zsh, fish, powershell)")
+  .action((shell) => completion(shell));
+
+program
+  .command("__complete", { hidden: true })
+  .argument("[line]", "teks yang akan dikomplete-kan")
+  .action((line) => {
+    completeWords(line || "", program).forEach((candidate) => console.log(candidate));
+  });
 
 program.parseAsync(process.argv).catch((err) => {
     if (err && err.code === "commander.helpDisplayed") {

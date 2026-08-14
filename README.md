@@ -14,7 +14,7 @@ Built for developers, students, writers, researchers, and terminal enthusiasts.
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-v1.5.0-blue)
+![Version](https://img.shields.io/badge/version-v1.5.1-blue)
 ![Node](https://img.shields.io/badge/node-18+-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -170,6 +170,7 @@ Supports **local** and **cloud** AI.
 - Generate Notes
 - Update Notes
 - Fill Templates
+- Better Templates (standardized placeholders & layouts, improved People template)
 - Daily Journal
 - Tomorrow Planning
 - Weekly Planning
@@ -271,6 +272,7 @@ Documentation is split into dedicated files.
 | [docs/RELATIONSHIPS.md](docs/RELATIONSHIPS.md) | Relationship system & module |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Future development |
 | [docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md) | Template system |
+| [docs/TEMPLATE_AUDIT.md](docs/TEMPLATE_AUDIT.md) | v1.5.1 template audit report |
 | CHANGELOG.md | Release history |
 
 ---
@@ -322,6 +324,16 @@ LICENSE
 ---
 
 # 🛣 Roadmap
+
+## ✨ v1.5.1 — Better Templates
+
+- ✅ Better placeholders
+- ✅ Cleaner layouts
+- ✅ Improved People template
+- ✅ Better AI compatibility
+- ✅ More consistent formatting
+
+---
 
 ## 🚧 v1.5
 

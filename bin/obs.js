@@ -75,7 +75,7 @@ const { completion, completeWords } = require("../commands/completion");
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.5.0")
+  .version("1.5.1")
   .showSuggestionAfterError()
   .showHelpAfterError()
   .configureOutput({

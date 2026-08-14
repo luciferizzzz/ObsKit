@@ -174,6 +174,30 @@ Core note management.
 
 ---
 
+## v1.5.1 — Better Templates
+
+> **2026-08-14**
+
+- ✅ **Better placeholders** — standardized metadata line across all 11 built-in templates:
+  `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}`
+  with `{{tags}}` / `{{status}}` used consistently; `{{updated}}` added to
+  `getTemplateData()`.
+- ✅ **Cleaner layouts** — consistent heading hierarchy, spacing, section ordering, and
+  Markdown formatting across every template.
+- ✅ **Improved People template** — new sections (`Informasi Dasar`, `Kepribadian`, `Minat`,
+  `Fakta Penting`, `Topik Percakapan`, `Hubungan`, `Related`) tuned for the
+  `obs ai people <name>` workflow, keeping `## Pertemuan` and `## Catatan Interaksi`
+  verbatim for backward compatibility.
+- ✅ **Better AI compatibility** — predictable section names, stable heading structures, and
+  preserved AI daily-workflow sections (`Target Hari Ini`, `Catatan`, `Selesai`, `Mood`,
+  `Syukur`, `Refleksi`).
+- ✅ **More consistent formatting** — unified `## Catatan` catch-all section and `**Tags:**`
+  label; single `---` after the metadata header.
+- ✅ Template audit report (`docs/TEMPLATE_AUDIT.md`) and template test suite
+  (`test/templates.test.js`).
+
+---
+
 # 🚧 Planned Versions
 
 ## v1.5 — Interactive Experience

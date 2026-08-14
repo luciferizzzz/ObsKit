@@ -428,7 +428,7 @@ obs ai people "John Doe"
 **Behavior**
 
 - Works with the existing **People template** structure — bullets are appended under `## Catatan Interaksi` (the section is created if missing).
-- Existing content and other sections (`Profil`, `Kontak`, `Pertemuan`, …) are never modified.
+- Existing content and other sections (`Informasi Dasar`, `Kontak`, `Kepribadian`, `Pertemuan`, …) are never modified.
 - Interaction history stays **chronological** (new entries are appended, never overwritten).
 - Duplicate bullets (case-insensitive) are skipped.
 - Markdown formatting and **CRLF line endings** are preserved.

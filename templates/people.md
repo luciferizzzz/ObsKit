@@ -1,27 +1,55 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Role:** {{role}}
 
 ---
 
-## Profil
+## Informasi Dasar
 
-{{ai:Deskripsi singkat tentang apa yang dikerjakan orang ini dan latar belakangnya}}
+- **Nama:** 
+- **Panggilan:** 
+- **Pertama Bertemu:** 
+- **Interaksi Terakhir:** 
 
 ## Kontak
 
 - **Email:** {{email}}
 - **Telepon:** {{telepon}}
+- **Discord:** 
+- **GitHub:** 
+- **Website:** 
 - **LinkedIn:** {{linkedin}}
+
+## Kepribadian
+
+{{ai:Deskripsi singkat karakter dan kepribadian orang ini}}
+
+## Minat
+
+-
+
+## Fakta Penting
+
+-
+
+## Topik Percakapan
+
+-
+
+## Hubungan
+
+-
+
+## Related
+
+-
 
 ## Pertemuan
 
-- 
+-
 
 ## Catatan Interaksi
 
 -
-
----

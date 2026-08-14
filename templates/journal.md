@@ -1,6 +1,6 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Mood:** {{mood}}
 
@@ -12,7 +12,7 @@
 
 ## Apa yang Dilakukan
 
-- 
+-
 
 ## Syukur
 

@@ -1,6 +1,6 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 ---
 
@@ -16,7 +16,7 @@
 
 ## Properti
 
-- 
+-
 
 ## Contoh
 

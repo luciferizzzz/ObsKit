@@ -47,6 +47,7 @@ function getTemplateData(options = {}) {
         time = now.toLocaleTimeString("id-ID"),
         datetime = now.toISOString().replace("T", " ").substring(0, 19),
         created = now.toISOString(),
+        updated = now.toISOString(),
     } = options;
 
     return {
@@ -56,6 +57,7 @@ function getTemplateData(options = {}) {
         time,
         datetime,
         created,
+        updated,
         day: now.toLocaleDateString("id-ID", { weekday: "long" }),
         month: now.toLocaleDateString("id-ID", { month: "long" }),
         year: now.getFullYear().toString(),

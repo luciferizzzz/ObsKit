@@ -48,7 +48,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.0
+obs --version   # → 1.5.1
 ```
 
 ---
@@ -1265,6 +1265,13 @@ Manage templates.
 obs template --list
 obs template --preview project
 ```
+
+**Notes**
+
+- Since **v1.5.1 (Better Templates)** every built-in template uses a standardized metadata
+  line (`**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} ·
+  **Diperbarui:** {{updated}}`) and consistent heading structure; the People template gained
+  sections for the `obs ai people` workflow.
 
 See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for the full template reference.
 

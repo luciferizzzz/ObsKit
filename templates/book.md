@@ -1,8 +1,8 @@
 # {{title}}
 
-**Penulis:** {{penulis}} · **Folder:** {{folder}} · **Dibuat:** {{date}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
-**Rilis:** {{rilis}} · **Genre:** {{genre}} · **ISBN/URL:** {{isbn}}
+**Penulis:** {{penulis}} · **Rilis:** {{rilis}} · **Genre:** {{genre}} · **ISBN/URL:** {{isbn}}
 
 ---
 
@@ -16,17 +16,15 @@
 
 ## Poin Penting
 
-{{ai:Pelajaran atau ide kunci yang dipetik dari buku ini, bisa berupa bullet points}}
+{{ai:Pelajaran atau ide kunci yang dipetik dari buku ini, berupa bullet points}}
 
 ## Kata Kunci
 
-- 
+-
 
 ## Review
 
 {{ai:Pendapat pribadi tentang buku ini: kelebihan, kekurangan, dan untuk siapa buku ini cocok}}
-
----
 
 ## Catatan
 

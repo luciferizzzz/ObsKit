@@ -90,11 +90,18 @@ Available **data placeholders** (from `getTemplateData()`):
 | `{{time}}` | Current time (Indonesian format) | `14.32` |
 | `{{datetime}}` | Date + time | `2026-08-06 14:32:05` |
 | `{{created}}` | ISO creation timestamp | `2026-08-06T07:32:05.000Z` |
+| `{{updated}}` | ISO last-updated timestamp (same as `{{created}}` on creation) | `2026-08-06T07:32:05.000Z` |
 | `{{day}}` | Day of the week | `Kamis` |
 | `{{month}}` | Month name | `Agustus` |
 | `{{year}}` | 4-digit year | `2026` |
 
-**Custom fields** — built-in templates also use fields like `{{penulis}}`, `{{status}}`, `{{tags}}`, `{{peserta}}`, `{{role}}`, `{{email}}`, `{{mood}}`. These are left for you to fill manually.
+**Custom fields** — built-in templates also use fields like `{{penulis}}`, `{{rilis}}`,
+`{{genre}}`, `{{isbn}}`, `{{status}}`, `{{tags}}`, `{{peserta}}`, `{{role}}`, `{{email}}`,
+`{{telepon}}`, `{{linkedin}}`, `{{mood}}`. These are left for you to fill manually.
+
+> **v1.5.1 (Better Templates):** every built-in template now shares one standard metadata
+> line — `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} ·
+> **Diperbarui:** {{updated}}` — plus a consistent heading structure.
 
 ---
 
@@ -140,7 +147,7 @@ Project ini bertujuan untuk membangun aplikasi catatan berbasis terminal yang ri
 ```markdown
 # {{date}}
 
-**Hari:** {{day}} · **Tanggal:** {{date}} · **Folder:** Daily Notes
+**Hari:** {{day}} · **Tanggal:** {{date}} · **Folder:** Daily Notes · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 ---
 
@@ -157,6 +164,8 @@ Project ini bertujuan untuk membangun aplikasi catatan berbasis terminal yang ri
 ## Refleksi
 -
 
+---
+
 Jam dibuat : {{time}}
 ```
 
@@ -171,7 +180,9 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Penulis:** {{penulis}} · **Folder:** {{folder}} · **Dibuat:** {{date}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Penulis:** {{penulis}} · **Rilis:** {{rilis}} · **Genre:** {{genre}} · **ISBN/URL:** {{isbn}}
 
 ---
 
@@ -182,13 +193,16 @@ Jam dibuat : {{time}}
 {{ai:Kutipan kata-kata yang kuat atau inspiratif dan kenapa kutipan itu berkesan}}
 
 ## Poin Penting
-{{ai:Pelajaran atau ide kunci yang dipetik dari buku ini, bisa berupa bullet points}}
+{{ai:Pelajaran atau ide kunci yang dipetik dari buku ini, berupa bullet points}}
 
 ## Kata Kunci
 - 
 
 ## Review
 {{ai:Pendapat pribadi tentang buku ini: kelebihan, kekurangan, dan untuk siapa buku ini cocok}}
+
+## Catatan
+-
 ```
 
 **Custom fields:** `{{penulis}}`, `{{rilis}}`, `{{genre}}`, `{{isbn}}`.
@@ -202,7 +216,9 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+---
 
 ## Pengertian
 {{ai:Jelaskan konsep JavaScript {{title}} secara sederhana dan mudah dipahami}}
@@ -212,13 +228,13 @@ Jam dibuat : {{time}}
 
 ```
 
+## Komponen
+- 
+
 ## Contoh
 ```js
 
 ```
-
-## Komponen
-- 
 
 ## Catatan
 -
@@ -233,7 +249,9 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+---
 
 ## Pengertian
 {{ai:Jelaskan konsep HTML {{title}} secara sederhana dan mudah dipahami}}
@@ -264,7 +282,9 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+---
 
 ## Pengertian
 {{ai:Jelaskan konsep CSS {{title}} secara sederhana dan mudah dipahami}}
@@ -295,9 +315,11 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Peserta:** {{peserta}}
+
+---
 
 ## Ringkasan
 {{ai:Ringkasan singkat jalannya meeting}}
@@ -310,6 +332,9 @@ Jam dibuat : {{time}}
 
 ## Tindak Lanjut
 {{ai:Daftar tindak lanjut yang harus dikerjakan, lengkap dengan penanggung jawab masing-masing}}
+
+## Catatan
+-
 ```
 
 **Custom fields:** `{{peserta}}`.
@@ -323,15 +348,17 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Status:** {{status}}
+
+---
 
 ## Deskripsi
 {{ai:Deskripsi singkat tentang project ini, tujuan utamanya, dan masalah yang diselesaikan}}
 
 ## Tujuan
-{{ai:Daftar tujuan spesifik yang ingin dicapai dengan project ini, bisa berupa bullet points}}
+{{ai:Daftar tujuan spesifik yang ingin dicapai dengan project ini, berupa bullet points}}
 
 ## Ruang Lingkup
 {{ai:Ruang lingkup (in scope) dan apa yang tidak termasuk (out of scope) dari project ini}}
@@ -346,6 +373,9 @@ Jam dibuat : {{time}}
 
 ### Task
 - [ ] Task pertama
+
+## Catatan
+-
 ```
 
 **Custom fields:** `{{status}}`.
@@ -354,22 +384,48 @@ Jam dibuat : {{time}}
 
 ## 🧑‍🤝‍🧑 People
 
-`templates/people.md` — contact / people profile.
+`templates/people.md` — people profile tuned for the `obs ai people` workflow.
 
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Role:** {{role}}
 
-## Profil
-{{ai:Deskripsi singkat tentang apa yang dikerjakan orang ini dan latar belakangnya}}
+---
+
+## Informasi Dasar
+- **Nama:** 
+- **Panggilan:** 
+- **Pertama Bertemu:** 
+- **Interaksi Terakhir:** 
 
 ## Kontak
 - **Email:** {{email}}
 - **Telepon:** {{telepon}}
+- **Discord:** 
+- **GitHub:** 
+- **Website:** 
 - **LinkedIn:** {{linkedin}}
+
+## Kepribadian
+{{ai:Deskripsi singkat karakter dan kepribadian orang ini}}
+
+## Minat
+- 
+
+## Fakta Penting
+- 
+
+## Topik Percakapan
+- 
+
+## Hubungan
+- 
+
+## Related
+- 
 
 ## Pertemuan
 - 
@@ -380,6 +436,9 @@ Jam dibuat : {{time}}
 
 **Custom fields:** `{{role}}`, `{{email}}`, `{{telepon}}`, `{{linkedin}}`.
 
+> `## Pertemuan` and `## Catatan Interaksi` are the sections used by `obs ai people <name>`;
+> `## Related` is the section used by `obs relate`.
+
 ---
 
 ## 📝 Article
@@ -389,9 +448,11 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
-**Tag:** {{tags}}
+**Tags:** {{tags}}
+
+---
 
 ## Ide Utama
 {{ai:Poin utama yang ingin disampaikan dalam artikel ini}}
@@ -425,9 +486,11 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Mood:** {{mood}}
+
+---
 
 ## Cerita Hari Ini
 {{ai:Ceritakan kejadian atau momen yang paling berkesan dari hari ini}}
@@ -456,9 +519,11 @@ Jam dibuat : {{time}}
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
-**Tag:** {{tags}}
+**Tags:** {{tags}}
+
+---
 
 ## Ide
 {{ai:Jelaskan ide secara singkat dan jelas, apa yang sedang dipikirkan}}
@@ -471,6 +536,9 @@ Jam dibuat : {{time}}
 
 ## Langkah Berikutnya
 - [ ] Langkah pertama
+
+## Catatan
+-
 ```
 
 **Custom fields:** `{{tags}}`.
@@ -496,7 +564,9 @@ obs ai "Resep nasi goreng" --template recipe -t "Nasi Goreng Spesial"
 ```markdown
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+---
 
 ## Bahan
 {{ai:Daftar bahan-bahan yang dibutuhkan, berupa bullet points}}
@@ -513,7 +583,9 @@ obs ai "Resep nasi goreng" --template recipe -t "Nasi Goreng Spesial"
 ```markdown
 # Nasi Goreng Ayam
 
-**Tanggal:** 06-08-2026 · **Folder:** AI · **Dibuat:** 14.32
+**Tanggal:** 06-08-2026 · **Folder:** AI · **Dibuat:** 2026-08-06T07:32:05.000Z · **Diperbarui:** 2026-08-06T07:32:05.000Z
+
+---
 
 ## Bahan
 - 2 piring nasi putih
@@ -533,6 +605,7 @@ obs ai "Resep nasi goreng" --template recipe -t "Nasi Goreng Spesial"
 
 # ✅ Best Practices
 
+- **Use the standard metadata line** — `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}` — so every note looks the same.
 - **Use data placeholders for everything repetitive** — title, date, folder.
 - **Use AI placeholders for content you want generated** — summaries, lists, decisions.
 - **Keep AI instructions specific** — they become the prompt.

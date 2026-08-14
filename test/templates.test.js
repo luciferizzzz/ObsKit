@@ -243,7 +243,7 @@ test("obs new -t renders a template into a note", () => {
 
     assert.ok(fs.existsSync(filePath), "note created");
     const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.startsWith("# Jane Doe\n"));
+    assert.ok(content.replace(/\r\n/g, "\n").startsWith("# Jane Doe\n"));
     assert.ok(content.includes("## Informasi Dasar"));
     assert.ok(content.includes(`## ${INTERACTIONS_HEADING}`));
     assert.ok(content.includes("**Tanggal:**"));

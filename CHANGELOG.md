@@ -6,6 +6,43 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [1.5.1] - 2026-08-14
+
+### Better Templates
+
+- Better placeholders — standardized the metadata line across all 11 built-in templates:
+  `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}`,
+  with `{{tags}}` / `{{status}}` used consistently where relevant.
+- Cleaner layouts — consistent heading hierarchy, spacing, section ordering, and Markdown
+  formatting (single `---` after the metadata header, no stray inter-section or trailing rules).
+- Improved People template — new sections (`Informasi Dasar`, `Kepribadian`, `Minat`,
+  `Fakta Penting`, `Topik Percakapan`, `Hubungan`, `Related`) designed for the
+  `obs ai people <name>` workflow, while keeping the code-compatible `## Pertemuan` and
+  `## Catatan Interaksi` sections verbatim.
+- Better AI compatibility — predictable section names and stable heading structures; all six
+  AI daily-workflow sections and the `Jam dibuat` footer token are preserved.
+- More consistent formatting — `## Catatan` as the standard catch-all section and
+  `**Tags:**` as the standard label.
+- Added `{{updated}}` placeholder to `getTemplateData()` (same value as `{{created}}` on
+  creation) so templates can express last-updated timestamps.
+- Added a template test suite (`test/templates.test.js`) covering rendering, placeholder
+  replacement, AI-block extraction/fill, required heading contracts, and `obs today` /
+  `obs new -t` / `obs template --list` integration.
+- Added a template audit report (`docs/TEMPLATE_AUDIT.md`).
+
+### Backward Compatible
+
+- `obs today`, `obs ai --ask --daily`, `obs ai --daily`, and `obs ai update` continue to use
+  the exact daily sections (`Target Hari Ini`, `Catatan`, `Selesai`, `Mood`, `Syukur`,
+  `Refleksi`) and the `Jam dibuat` footer token.
+- `obs ai people <name>` continues to append to `## Catatan Interaksi`; `obs relate` still
+  targets the `## Related` section.
+- Custom fields (`{{status}}`, `{{tags}}`, `{{penulis}}`, `{{peserta}}`, `{{mood}}`,
+  `{{role}}`, `{{email}}`, `{{telepon}}`, `{{linkedin}}`, …) are unchanged and remain
+  fillable by hand.
+
+---
+
 ## [1.5.0] - 2026-08-13
 
 ### Changed

@@ -48,7 +48,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.0
+obs --version   # → 1.5.1
 ```
 
 ---

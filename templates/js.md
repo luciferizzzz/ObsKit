@@ -1,6 +1,6 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 ---
 
@@ -14,15 +14,15 @@
 
 ```
 
+## Komponen
+
+-
+
 ## Contoh
 
 ```js
 
 ```
-
-## Komponen
-
-- 
 
 ## Catatan
 

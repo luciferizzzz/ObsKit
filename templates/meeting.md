@@ -1,6 +1,6 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Peserta:** {{peserta}}
 
@@ -22,8 +22,6 @@
 
 {{ai:Daftar tindak lanjut yang harus dikerjakan, lengkap dengan penanggung jawab masing-masing}}
 
----
-
-## Catatan Tambahan
+## Catatan
 
 -

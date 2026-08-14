@@ -1,6 +1,6 @@
 # {{date}}
 
-**Hari:** {{day}} · **Tanggal:** {{date}} · **Folder:** Daily Notes
+**Hari:** {{day}} · **Tanggal:** {{date}} · **Folder:** Daily Notes · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 ---
 
@@ -8,31 +8,21 @@
 
 -
 
----
-
 ## Catatan
 
 -
-
----
 
 ## Selesai
 
 -
 
----
-
 ## Mood
 
 -
 
----
-
 ## Syukur
 
 -
-
----
 
 ## Refleksi
 

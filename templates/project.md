@@ -1,6 +1,6 @@
 # {{title}}
 
-**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{time}}
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Status:** {{status}}
 
@@ -12,7 +12,7 @@
 
 ## Tujuan
 
-{{ai:Daftar tujuan spesifik yang ingin dicapai dengan project ini, bisa berupa bullet points}}
+{{ai:Daftar tujuan spesifik yang ingin dicapai dengan project ini, berupa bullet points}}
 
 ## Ruang Lingkup
 
@@ -31,8 +31,6 @@
 ### Task
 
 - [ ] Task pertama
-
----
 
 ## Catatan
 

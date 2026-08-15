@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const { getSectionContent } = require("./relationship/parser");
 const { detectNewline } = require("./relationship/editor");
@@ -184,6 +185,51 @@ Instruksi:
 - Jangan mengulang interaksi yang sudah ada.`;
 }
 
+function getPeopleDirectory(vaultPath) {
+    return path.join(vaultPath, "People");
+}
+
+function listPeople(vaultPath) {
+    const dir = getPeopleDirectory(vaultPath);
+
+    if (!fs.existsSync(dir)) {
+        return [];
+    }
+
+    return fs
+        .readdirSync(dir)
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => file.replace(/\.md$/i, ""))
+        .sort((a, b) => a.localeCompare(b));
+}
+
+function recentPeople(vaultPath, limit = 10) {
+    const dir = getPeopleDirectory(vaultPath);
+
+    if (!fs.existsSync(dir)) {
+        return [];
+    }
+
+    return fs
+        .readdirSync(dir)
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => ({
+            name: file.replace(/\.md$/i, ""),
+            modified: fs.statSync(path.join(dir, file)).mtime,
+        }))
+        .sort((a, b) => b.modified - a.modified)
+        .slice(0, limit)
+        .map((item) => item.name);
+}
+
+function peopleStats(vaultPath) {
+    const notes = listPeople(vaultPath);
+
+    return {
+        total: notes.length,
+    };
+}
+
 module.exports = {
     INTERACTIONS_HEADING,
     MEETINGS_HEADING,
@@ -196,4 +242,8 @@ module.exports = {
     extractInteractionBullets,
     appendInteraction,
     buildInteractionPrompt,
+    getPeopleDirectory,
+    listPeople,
+    recentPeople,
+    peopleStats,
 };

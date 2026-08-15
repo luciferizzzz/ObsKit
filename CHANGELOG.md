@@ -6,6 +6,25 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [1.5.2] - 2026-08-15
+
+### Added
+
+- `obs people list` — display all People notes inside the `People` directory (alphabetical, `•`-bulleted).
+- `obs people recent` — display the most recently modified People notes (newest first, default limit 10).
+- `obs people stats` — display People note statistics (total note count).
+- People management utilities in `utils/people.js`: `getPeopleDirectory()`, `listPeople()`, `recentPeople()`, `peopleStats()`.
+- `commands/people.js` with `peopleList()`, `peopleRecentCommand()`, `peopleStatsCommand()`.
+- Unit test suite for People management (`test/people-management.test.js`).
+
+### Backward Compatible
+
+- The existing `obs ai people <name>` AI workflow is unchanged.
+- All existing commands, utilities, and tests keep their previous behavior.
+- CRLF line endings are preserved.
+
+---
+
 ## [1.5.1] - 2026-08-14
 
 ### Better Templates

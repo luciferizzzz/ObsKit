@@ -149,6 +149,14 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 
 ---
 
+## 👥 People Management
+
+- List People Notes (`obs people list`)
+- Recent People Notes (`obs people recent`)
+- People Statistics (`obs people stats`)
+
+---
+
 ## 🤖 AI
 
 Supports **local** and **cloud** AI.
@@ -324,6 +332,14 @@ LICENSE
 ---
 
 # 🛣 Roadmap
+
+## ✨ v1.5.2 — People Management
+
+- ✅ `obs people list` — list all People notes
+- ✅ `obs people recent` — most recently modified People notes
+- ✅ `obs people stats` — People note statistics
+
+---
 
 ## ✨ v1.5.1 — Better Templates
 

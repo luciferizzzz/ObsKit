@@ -198,6 +198,19 @@ Core note management.
 
 ---
 
+## v1.5.2 — People Management
+
+> **2026-08-15**
+
+- ✅ `obs people list` — list all People notes in the `People` directory
+- ✅ `obs people recent` — most recently modified People notes
+- ✅ `obs people stats` — People note statistics
+- ✅ Reusable People management utilities (`getPeopleDirectory()`, `listPeople()`,
+  `recentPeople()`, `peopleStats()` in `utils/people.js`) and unit test suite
+  (`test/people-management.test.js`)
+
+---
+
 # 🚧 Planned Versions
 
 ## v1.5 — Interactive Experience

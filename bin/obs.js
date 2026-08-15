@@ -72,6 +72,8 @@ const relations = require("../commands/relations");
 
 const { completion, completeWords } = require("../commands/completion");
 
+const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("../commands/people")
+
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
@@ -308,6 +310,20 @@ program
   .action((line) => {
     completeWords(line || "", program).forEach((candidate) => console.log(candidate));
   });
+
+const people = program.command("people").description("Kelola People notes");
+people
+  .command("list")
+  .description("Menampilkan semua People note")
+  .action(peopleList);
+people
+  .command("recent")
+  .description("Menampilkan People note yang baru diubah")
+  .action(peopleRecentCommand);
+people
+  .command("stats")
+  .description("Menampilkan statistik People note")
+  .action(peopleStatsCommand);
 
 program.parseAsync(process.argv).catch((err) => {
     if (err && err.code === "commander.helpDisplayed") {

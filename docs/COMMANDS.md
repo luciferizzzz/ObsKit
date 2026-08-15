@@ -13,6 +13,7 @@ The complete CLI reference for **ObsKit** (`obs`, OBS = Organized Knowledge Syst
 - [Note Management](#-note-management)
 - [Vault Management](#-vault-management)
 - [Knowledge Management](#-knowledge-management)
+- [People Management](#-people-management)
 - [AI Commands](#-ai-commands)
 - [Utilities](#-utilities)
 
@@ -1036,6 +1037,121 @@ Broken Links : 0
 
 ✅ Vault Healthy
 ```
+
+---
+
+# 👥 People Management
+
+## `obs people list`
+
+Display all notes inside the People directory.
+
+**Description**
+
+Lists every `.md` file inside the vault's `People` directory, sorted alphabetically.
+
+**Syntax**
+
+```
+obs people list
+```
+
+**Arguments** — none
+
+**Options** — none
+
+**Example**
+
+```bash
+obs people list
+```
+
+```text
+✅ People notes (4)
+
+• Alice
+• Bob
+• Charlie
+• Sarah
+```
+
+**Notes**
+
+- Shows `ℹ️ Tidak ada People note.` when the directory is empty or missing.
+
+---
+
+## `obs people recent`
+
+Display the most recently modified People notes.
+
+**Description**
+
+Lists People notes by modification time, newest first (default limit 10).
+
+**Syntax**
+
+```
+obs people recent
+```
+
+**Arguments** — none
+
+**Options** — none
+
+**Example**
+
+```bash
+obs people recent
+```
+
+```text
+✅ Recently updated
+
+• Sarah
+• Bob
+• Alice
+```
+
+**Notes**
+
+- Shows `ℹ️ Tidak ada People note.` when the directory is empty or missing.
+
+---
+
+## `obs people stats`
+
+Display People note statistics.
+
+**Description**
+
+Shows the total number of People notes.
+
+**Syntax**
+
+```
+obs people stats
+```
+
+**Arguments** — none
+
+**Options** — none
+
+**Example**
+
+```bash
+obs people stats
+```
+
+```text
+✅ People statistics
+
+Total notes: 12
+```
+
+**Notes**
+
+- Reports `Total notes: 0` when the directory is empty or missing.
 
 ---
 

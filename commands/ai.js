@@ -26,33 +26,42 @@ async function askUser() {
     const answers = {};
 
     console.log("\n📝 Oke, kita isi daily note dulu ya!\n");
+    console.log("Jawab pertanyaan di bawah ini. Kosongkan saja kalau tidak relevan.\n");
 
-    answers.target = await input({
-        message: "🎯 Target hari ini apa aja?",
+    answers.aktivitasUtama = await input({
+        message: "🎯 Kegiatan utama hari ini apa?",
     });
 
-    answers.selesai = await input({
-        message: "✅ Dari target tadi, udah selesai semua?",
+    answers.waktu = await input({
+        message: "🕐 Kira-kira jam berapa terjadi?",
+    });
+
+    answers.baik = await input({
+        message: "✅ Apa yang berjalan dengan baik hari ini?",
+    });
+
+    answers.kurang = await input({
+        message: "⚠️  Apa yang kurang berjalan baik?",
     });
 
     answers.pelajaran = await input({
-        message: "📚 Hari ini kamu belajar atau kerjain apa aja?",
+        message: "📚 Apa yang dipelajari hari ini?",
     });
 
-    answers.cerita = await input({
-        message: "✨ Ada yang menarik atau memorable?",
+    answers.perbaikan = await input({
+        message: "🔧 Apa yang perlu diperbaiki?",
+    });
+
+    answers.interaksi = await input({
+        message: "👥 Siapa saja yang di-interaksi hari ini?",
+    });
+
+    answers.energi = await input({
+        message: "⚡ Gimana level energi hari ini? (tinggi/sedang/rendah)",
     });
 
     answers.mood = await input({
-        message: "😊 Gimana hari ini secara overall?",
-    });
-
-    answers.syukur = await input({
-        message: "🙏 Ada hal yang kamu syukuri hari ini?",
-    });
-
-    answers.refleksi = await input({
-        message: "💭 Ada pelajaran atau refleksi buat hari ini?",
+        message: "😊 Gimana perasaan hari ini secara keseluruhan?",
     });
 
     return answers;
@@ -69,13 +78,15 @@ Buat 6 bagian untuk daily note hari ini dengan heading:
 ## Syukur
 ## Refleksi
 
-Target: ${answers.target}
-Kegiatan: ${answers.pelajaran}
-Cerita: ${answers.cerita}
+Kegiatan utama: ${answers.aktivitasUtama}
+Waktu: ${answers.waktu}
+Yang berjalan baik: ${answers.baik}
+Yang kurang baik: ${answers.kurang}
+Pelajaran: ${answers.pelajaran}
+Perbaikan: ${answers.perbaikan}
+Interaksi: ${answers.interaksi}
+Energi: ${answers.energi}
 Mood: ${answers.mood}
-Syukur: ${answers.syukur}
-Refleksi: ${answers.refleksi}
-Yang udah selesai: ${answers.selesai}
 
 Tiap bagian langsung isinya aja, bahasa santai, masing-masing 2-3 kalimat.
 JANGAN pakai kata "kamu", "anda", "kalian".
@@ -406,59 +417,81 @@ async function aiWrite(prompt, options) {
 }
 
 async function askTomorrow() {
-    const answers = {};
+    const activities = [];
 
     console.log("\n🗓️  Oke, kita rencanain hari besok!\n");
+    console.log("Tambahkan kegiatan satu per satu. Ketik 'selesai' pada nama kegiatan untuk berhenti.\n");
 
-    answers.prioritas = await input({
-        message: "🎯 Prioritas terbesar besok apa?",
-    });
+    let activityNum = 1;
+    while (true) {
+        console.log(`--- Kegiatan ${activityNum} ---`);
 
-    answers.jadwal = await input({
-        message: "📅 Ada meeting atau acara penting?",
-    });
+        const name = (await input({
+            message: `🎯 Nama kegiatan${activityNum > 1 ? " (atau 'selesai' untuk berhenti)" : ""}?`,
+        })).trim();
 
-    answers.belum = await input({
-        message: "🔁 Ada yang belum selesai dari hari ini?",
-    });
+        if (!name || name.toLowerCase() === "selesai") break;
 
-    answers.goals = await input({
-        message: "💪 Ada goal pribadi yang mau dicapai?",
-    });
+        const startTime = (await input({
+            message: "🕐 Jam mulai? (contoh: 08:00)",
+        })).trim();
 
-    answers.ingat = await input({
-        message: "🧠 Ada yang gak boleh kamu lupain?",
-    });
+        const endTime = (await input({
+            message: "🕑 Jam selesai? (contoh: 09:00)",
+        })).trim();
 
-    return answers;
+        const priority = (await input({
+            message: "⚡ Prioritas? (High/Medium/Low)",
+        })).trim();
+
+        const goal = (await input({
+            message: "🎯 Goal dari kegiatan ini?",
+        })).trim();
+
+        const notes = (await input({
+            message: "📝 Catatan tambahan? (opsional)",
+        })).trim();
+
+        activities.push({ name, startTime, endTime, priority, goal, notes });
+        activityNum++;
+    }
+
+    return { activities };
 }
 
 function buildTomorrowPrompt(answers, persona) {
+    const { activities } = answers;
+
+    const activityList = activities.map((a) => {
+        const timeRange = a.startTime && a.endTime ? `${a.startTime}-${a.endTime}` : a.startTime || "Belum ditentukan";
+        const priority = a.priority || "Medium";
+        const goal = a.goal || "-";
+        const notes = a.notes ? `\n  - Catatan: ${a.notes}` : "";
+        return `- [ ] ${timeRange} ${a.name}\n  - Priority: ${priority}\n  - Goal: ${goal}${notes}`;
+    }).join("\n\n");
+
     return `${persona.system}
 
-Buat rencana terstruktur untuk besok dengan heading:
-# Tomorrow Plan
+Buat rencana terstruktur untuk besok dengan format checklist.
 
-## Priorities
-- ...
+Gunakan heading:
+# Tomorrow
 
-## Schedule
-09:00 - Coding
-13:00 - Meeting
+Dan format checklist seperti ini untuk tiap kegiatan:
+- [ ] HH:MM-HH:MM Nama Kegiatan
+  - Priority: High/Medium/Low
+  - Goal: Deskripsi goal
 
-## Goals
-- ...
+Kalau ada catatan tambahan, tambahkan baris:
+  - Catatan: isi catatan
 
-## Reminders
-- ...
+Kegiatan yang direncanakan:
+${activityList}
 
-Prioritas terbesar: ${answers.prioritas}
-Meeting / acara penting: ${answers.jadwal}
-Yang belum selesai: ${answers.belum}
-Goal pribadi: ${answers.goals}
-Jangan lupain: ${answers.ingat}
-
-Tiap bagian langsung isinya aja, bahasa santai, bullet points.`;
+JANGAN pakai heading lain selain # Tomorrow.
+Langsung gunakan # Tomorrow lalu checklist.
+JANGAN pakai kata "kamu", "anda", "kalian".
+JANGAN pembukaan kayak "Tentu", "Oke", "Baik".`;
 }
 
 async function aiTomorrow(options) {
@@ -598,22 +631,59 @@ async function aiUpdate(options) {
 async function askWeekly() {
     const answers = {};
 
-    console.log("\n🗓️  Oke, kita rencanain seminggu ke depan!\n");
+    console.log("\n🗓️  Oke, kita rencanain minggu depan!\n");
+    console.log("Isi bagian review minggu ini dulu, lalu rencana minggu depan.\n");
+
+    console.log("--- Review Minggu Ini ---");
+
+    answers.pencapaian = await input({
+        message: "🏆 Pencapaian terbesar minggu ini?",
+    });
+
+    answers.produktivitas = await input({
+        message: "⏱️  Hal yang paling menyita waktu?",
+    });
+
+    answers.belajar = await input({
+        message: "📚 Apa yang dipelajari minggu ini?",
+    });
+
+    answers.relation = await input({
+        message: "👥 Siapa yang paling sering di-interaksi?",
+    });
+
+    answers.tidur = await input({
+        message: "😴 Gimana kualitas tidur minggu ini?",
+    });
+
+    answers.energi = await input({
+        message: "⚡ Gimana level energi minggu ini?",
+    });
+
+    answers.obsKitDone = await input({
+        message: "🛠️  Fitur ObsKit yang diselesaikan minggu ini?",
+    });
+
+    answers.obsKitIssues = await input({
+        message: "🐛 Masalah yang ditemukan di ObsKit?",
+    });
+
+    console.log("\n--- Rencana Minggu Depan ---");
 
     answers.goal = await input({
-        message: "🎯 Goal utama minggu ini?",
+        message: "🎯 Goal utama minggu depan?",
     });
 
     answers.prioritas = await input({
         message: "⚡ Prioritas teratas apa aja?",
     });
 
-    answers.goals = await input({
+    answers.personalGoals = await input({
         message: "💪 Goal pribadi?",
     });
 
-    answers.belajar = await input({
-        message: "📚 Mau belajar apa?",
+    answers.belajarNext = await input({
+        message: "📚 Mau belajar apa minggu depan?",
     });
 
     answers.deadline = await input({
@@ -631,9 +701,29 @@ function buildWeeklyPrompt(answers, persona) {
     return `${persona.system}
 
 Buat rencana mingguan terstruktur dengan heading:
-# Weekly Plan
+# Weekly Review & Plan
 
-## Goals
+## Achievements
+- Apa pencapaian terbesar minggu ini?
+
+## Productivity
+- Apa yang paling menyita waktu?
+
+## Learning
+- Apa yang dipelajari?
+
+## Relationships
+- Siapa yang paling sering di-interaksi?
+
+## Health
+- Kualitas tidur
+- Level energi
+
+## ObsKit Development
+- Fitur yang diselesaikan
+- Masalah yang ditemukan
+
+## Goals for Next Week
 - ...
 
 ## Monday
@@ -660,10 +750,18 @@ Buat rencana mingguan terstruktur dengan heading:
 ## Notes
 - ...
 
-Goal utama: ${answers.goal}
+Pencapaian: ${answers.pencapaian}
+Produktivitas: ${answers.produktivitas}
+Belajar: ${answers.belajar}
+Interaksi: ${answers.relation}
+Tidur: ${answers.tidur}
+Energi: ${answers.energi}
+ObsKit selesai: ${answers.obsKitDone}
+ObsKit masalah: ${answers.obsKitIssues}
+Goal minggu depan: ${answers.goal}
 Prioritas: ${answers.prioritas}
-Goal pribadi: ${answers.goals}
-Mau belajar: ${answers.belajar}
+Goal pribadi: ${answers.personalGoals}
+Mau belajar: ${answers.belajarNext}
 Deadline: ${answers.deadline}
 Habit: ${answers.habit}
 
@@ -717,9 +815,32 @@ async function aiPeople(personName, options) {
 
         const content = readPeopleNote(file);
 
-        const interaction = (await input({
-            message: `📝 Interaksi terakhir dengan ${name}?`,
+        console.log(`\n👤 Interaksi dengan ${name}\n`);
+        console.log("Jawab pertanyaan di bawah ini untuk mencatat interaksi.\n");
+
+        const when = (await input({
+            message: "🕐 Kapan interaksi terjadi? (contoh: 2026-08-15, atau 'hari ini')",
         })).trim();
+
+        const topics = (await input({
+            message: "💬 Topik apa yang dibahas?",
+        })).trim();
+
+        const learned = (await input({
+            message: "📚 Apa yang dipelajari dari interaksi ini?",
+        })).trim();
+
+        const followUp = (await input({
+            message: "📋 Apakah ada follow-up yang diperlukan? (isi detail atau kosongkan)",
+        })).trim();
+
+        const attention = (await input({
+            message: "❤️ Apakah hubungan ini perlu perhatian lebih? (ya/tidak, atau kosongkan)",
+        })).trim();
+
+        const interaction = [when, topics, learned, followUp, attention]
+            .filter(Boolean)
+            .join(". ");
 
         if (!interaction) {
             error("Interaksi tidak boleh kosong.");
@@ -767,4 +888,22 @@ async function aiPeople(personName, options) {
     }
 }
 
-module.exports = { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople };
+module.exports = {
+    aiWrite,
+    aiTomorrow,
+    aiUpdate,
+    aiWeekly,
+    aiPeople,
+    askUser,
+    buildPromptFromAnswers,
+    askTomorrow,
+    buildTomorrowPrompt,
+    askUpdate,
+    buildUpdatePrompt,
+    askWeekly,
+    buildWeeklyPrompt,
+    parseSections,
+    fillDailyTemplate,
+    formatDate,
+    getISOWeek,
+};

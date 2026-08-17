@@ -263,7 +263,7 @@ obs ai "Explain JavaScript closures"
 
 ### `obs ai --ask --daily`
 
-Interactive journaling: answer **7 questions**, the AI builds a daily note with 6 sections.
+Structured daily interview: answer **9 questions**, the AI builds a daily note with 6 sections.
 
 ```bash
 obs ai --ask --daily
@@ -271,13 +271,15 @@ obs ai --ask --daily
 
 **Questions asked**
 
-1. 🎯 What are today's targets?
-2. ✅ What got done?
-3. 📚 What did you learn / work on?
-4. ✨ Anything memorable?
-5. 😊 How was today overall?
-6. 🙏 What are you grateful for?
-7. 💭 Any reflections?
+1. 🎯 What was your most important activity today?
+2. 🕐 What time did it happen?
+3. ✅ What went well?
+4. ⚠️ What didn't go well?
+5. 📚 What did you learn?
+6. 🔧 What should be improved?
+7. 👥 Who did you interact with today?
+8. ⚡ How was your energy level?
+9. 😊 How did you feel today?
 
 **Sections filled**
 
@@ -304,37 +306,36 @@ obs ai "Focus areas today" --daily
 
 ### `obs ai tomorrow`
 
-Interactive planning session that produces a structured **Tomorrow Plan**.
+Structured multi-activity planning session that produces a **Tomorrow** plan with `- [ ]` checklists and time blocks.
 
 ```bash
 obs ai tomorrow
 ```
 
-**Questions asked**
+**Interview process**
 
-- 🎯 Biggest priority tomorrow?
-- 📅 Meetings or important events?
-- 🔁 Anything unfinished from today?
-- 💪 Personal goals?
-- 🧠 Anything you must not forget?
+The command asks for each activity one by one:
+
+1. 🎯 Activity name (type 'selesai' to stop adding activities)
+2. 🕐 Start time (e.g. `08:00`)
+3. 🕑 End time (e.g. `09:00`)
+4. ⚡ Priority (`High` / `Medium` / `Low`)
+5. 🎯 Goal for this activity
+6. 📝 Additional notes (optional)
 
 **Generated note structure**
 
 ```markdown
-# Tomorrow Plan
+# Tomorrow
 
-## Priorities
-- ...
+- [ ] 08:00-09:00 Learn JavaScript
+  - Priority: High
+  - Goal: Finish the Array section in FreeCodeCamp
 
-## Schedule
-09:00 - Coding
-13:00 - Meeting
-
-## Goals
-- ...
-
-## Reminders
-- ...
+- [ ] 10:00-12:00 Develop ObsKit
+  - Priority: High
+  - Goal: Complete People Management.
+  - Catatan: Focus on tests
 ```
 
 **Location:** `Planning/Tomorrow/YYYY-MM-DD.md`
@@ -345,15 +346,30 @@ obs ai tomorrow
 
 ### `obs ai weekly`
 
-Interactive weekly planning that produces a structured **Weekly Plan**.
+Interactive weekly planning with a **retrospective review** and forward-looking weekly schedule.
 
 ```bash
 obs ai weekly
 ```
 
-**Questions asked**
+**Interview process**
 
-- 🎯 Main goal this week?
+The command first asks for a review of the current week, then plans for next week:
+
+**Review questions:**
+
+- 🏆 Biggest achievement this week?
+- ⏰ What consumed most of your time?
+- 📚 What did you learn?
+- 👥 Who did you interact with the most?
+- 😴 How was your sleep?
+- ⚡ How was your energy level?
+- 🛠️ What ObsKit features were completed?
+- 🐛 What problems were discovered?
+
+**Planning questions:**
+
+- 🎯 Main goal for next week?
 - ⚡ Top priorities?
 - 💪 Personal goals?
 - 📚 What to learn?
@@ -363,9 +379,15 @@ obs ai weekly
 **Generated note structure**
 
 ```markdown
-# Weekly Plan
+# Weekly Review & Plan
 
-## Goals
+## Achievements
+## Productivity
+## Learning
+## Relationships
+## Health
+## ObsKit Development
+## Goals for Next Week
 ## Monday
 ## Tuesday
 ## Wednesday
@@ -384,7 +406,7 @@ obs ai weekly
 
 ### `obs ai people <name>`
 
-Updates an existing **People** note with a new interaction, using the AI to structure the entry.
+Updates an existing **People** note with a new interaction, using a structured interview and the AI to structure the entry.
 
 ```bash
 obs ai people "John Doe"
@@ -394,7 +416,12 @@ obs ai people "John Doe"
 
 1. Locates the People note for `<name>` anywhere in the vault (case-insensitive).
 2. Reads the note content.
-3. Asks for the latest interaction / context.
+3. Asks a structured interview:
+   - 🕐 When did the interaction happen?
+   - 💬 What topics were discussed?
+   - 📚 What did you learn from this interaction?
+   - 📋 Is follow-up required?
+   - ❤️ Does this relationship need more attention?
 4. Sends the note context + interaction to the AI (with the selected persona).
 5. Converts the AI output into `- ` bullet points for the `## Catatan Interaksi` section.
 6. Shows a **preview** of the change.

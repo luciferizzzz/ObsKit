@@ -49,7 +49,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.1
+obs --version   # → 1.5.2
 ```
 
 ---
@@ -1227,7 +1227,9 @@ obs ai --ask --daily
 
 ## `obs ai tomorrow`
 
-Interactive tomorrow-planning session → `Planning/Tomorrow/YYYY-MM-DD.md`.
+Structured multi-activity planning session → `Planning/Tomorrow/YYYY-MM-DD.md`.
+
+Asks for each activity: name, start time, end time, priority, goal, and notes. Generates a `- [ ]` checklist with time blocks.
 
 ```bash
 obs ai tomorrow
@@ -1276,7 +1278,9 @@ The checklist items are carried over into today's daily note:
 
 ## `obs ai weekly`
 
-Interactive weekly-planning session → `Planning/Weekly/Week-<n>.md`.
+Interactive weekly planning with retrospective review and weekly schedule → `Planning/Weekly/Week-<n>.md`.
+
+Reviews achievements, productivity, learning, relationships, health, ObsKit development, and plans goals for next week.
 
 ```bash
 obs ai weekly
@@ -1288,7 +1292,7 @@ Update an existing **People** note with a new AI-structured interaction.
 
 **Description**
 
-Locates the People note for `<name>`, asks for the latest interaction, has the AI structure it as bullets, previews the change, and appends it to the `## Catatan Interaksi` section only after confirmation.
+Locates the People note for `<name>`, runs a structured interview (when, topics, learned, follow-up, relationship attention), has the AI structure it as bullets, previews the change, and appends it to the `## Catatan Interaksi` section only after confirmation.
 
 **Syntax**
 
@@ -1307,6 +1311,14 @@ obs ai people <name> [options]
 | Option | Description |
 |--------|-------------|
 | `-p, --persona <name>` | AI persona to use |
+
+**Interview questions**
+
+1. 🕐 When did the interaction happen?
+2. 💬 What topics were discussed?
+3. 📚 What did you learn from this interaction?
+4. 📋 Is follow-up required?
+5. ❤️ Does this relationship need more attention?
 
 **Example**
 

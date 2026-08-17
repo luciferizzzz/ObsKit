@@ -208,6 +208,15 @@ Core note management.
 - ✅ Reusable People management utilities (`getPeopleDirectory()`, `listPeople()`,
   `recentPeople()`, `peopleStats()` in `utils/people.js`) and unit test suite
   (`test/people-management.test.js`)
+- ✅ **Improved `obs ai tomorrow`** — structured multi-activity planning with time blocks,
+  priorities, goals, and notes per activity
+- ✅ **Improved `obs ai --ask --daily`** — structured daily interview with activity, time,
+  what went well/didn't, learnings, improvements, interactions, energy, and feeling
+- ✅ **Improved `obs ai weekly`** — retrospective review categories (Achievements, Productivity,
+  Learning, Relationships, Health, ObsKit Development) plus forward-looking weekly plan
+- ✅ **Improved `obs ai people <name>`** — deeper interaction interview (when, topics, learned,
+  follow-up, relationship attention) with preserved backward compatibility
+- ✅ AI workflow test suite (`test/aiWorkflows.test.js`)
 
 ---
 

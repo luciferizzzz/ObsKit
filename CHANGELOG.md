@@ -17,11 +17,21 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 - `commands/people.js` with `peopleList()`, `peopleRecentCommand()`, `peopleStatsCommand()`.
 - Unit test suite for People management (`test/people-management.test.js`).
 
+### Improved
+
+- `obs ai tomorrow` — replaced the simple 5-question interview with a structured multi-activity planning session. Asks for each activity: name, start time, end time, priority, goal, and notes. Output uses `- [ ]` checklist format with time blocks (e.g. `08:00-09:00 Learn JavaScript`).
+- `obs ai --ask --daily` — converted into a structured daily interview. Now asks: most important activity, time, what went well, what didn't go well, learned, improvement, interactions, energy level, and overall feeling.
+- `obs ai weekly` — added review categories: Achievements, Productivity, Learning, Relationships, Health, ObsKit Development, and Goals for Next Week. The weekly plan now includes both a retrospective review and a forward-looking weekly schedule.
+- `obs ai people <name>` — added a deeper interaction interview. Now asks: when the interaction happened, topics discussed, what was learned, follow-up requirements, and whether the relationship needs more attention. All existing behaviors preserved (preview, confirmation, duplicate prevention, Markdown structure, CRLF preservation).
+- AI workflow test suite (`test/aiWorkflows.test.js`) covering tomorrow, daily, weekly, and people prompt builders, section parsing, template filling, and backward compatibility.
+
 ### Backward Compatible
 
-- The existing `obs ai people <name>` AI workflow is unchanged.
+- The existing `obs ai people <name>` AI workflow behavior is preserved (preview, confirmation, duplicate prevention, Markdown structure, CRLF handling).
 - All existing commands, utilities, and tests keep their previous behavior.
 - CRLF line endings are preserved.
+- The `## Tomorrow` checklist import in `obs ai update` continues to work unchanged.
+- The daily note sections (`Target Hari Ini`, `Catatan`, `Selesai`, `Mood`, `Syukur`, `Refleksi`) are unchanged.
 
 ---
 

@@ -126,7 +126,7 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 
 ## 📂 Vault Management
 
-- Dashboard
+- Dashboard (vault, knowledge, and productivity statistics)
 - Statistics
 - Tree View
 - Backup

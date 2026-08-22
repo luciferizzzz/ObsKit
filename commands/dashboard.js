@@ -41,8 +41,35 @@ function dashboard() {
     })}`);
     console.log(`📂 ${c.path(vault)}\n`);
 
-    // Today's activity
-    console.log(`${c.heading("📝 Notes Modified Today")}\n`);
+    console.log(`${c.heading("📝 Vault Statistics")}\n`);
+    console.log(`  Total Notes     : ${c.value(data.noteCount)}`);
+    console.log(`  People          : ${c.value(data.peopleCount)}`);
+    console.log(`  Projects        : ${c.value(data.projectsCount)}`);
+    console.log(`  Attachments     : ${c.value(data.attachmentCount)}`);
+    console.log(`  Markdown Files  : ${c.value(data.noteCount)}`);
+
+    console.log(`\n${c.heading("🔗 Knowledge Statistics")}\n`);
+    console.log(`  Backlinks       : ${c.value(data.totalBacklinks)}`);
+    console.log(`  Orphan Notes    : ${c.value(data.orphanCount)}`);
+    console.log(`  Relationships   : ${c.value(data.relationshipsCount)}`);
+    console.log(`  Tags            : ${c.value(data.tags.length)}`);
+    console.log(`  Related Notes   : ${c.value(data.relatedNotesCount)}`);
+    console.log(`  Wiki Links      : ${c.value(data.totalLinks)}`);
+
+    console.log(`\n${c.heading("📋 Productivity Statistics")}\n`);
+    const totalTasks = data.pendingTasks + data.completedTasks;
+    console.log(`  Today's Tasks   : ${c.value(totalTasks)}`);
+    console.log(`  Completed       : ${c.value(data.completedTasks)}`);
+    console.log(`  Pending         : ${c.value(data.pendingTasks)}`);
+
+    if (data.recentDailyNotes.length > 0) {
+        console.log(`\n  ${c.heading("Recent Daily Notes")}`);
+        data.recentDailyNotes.forEach((entry) => {
+            console.log(`    ${c.note(entry.name)} ${c.dim(`(${formatDate(entry.mtime)})`)}`);
+        });
+    }
+
+    console.log(`\n${c.heading("📝 Notes Modified Today")}\n`);
 
     if (data.notesToday.length === 0) {
         console.log(c.dim("  Belum ada note yang dimodifikasi hari ini."));
@@ -58,14 +85,13 @@ function dashboard() {
             });
     }
 
-    // Last 7 days activity
+    console.log(`\n${c.heading("📈 Activity (Last 7 Days)")}\n`);
+
     const days = Object.entries(data.activity);
     const maxCount = Math.max(
         ...days.map(([, count]) => count),
         1
     );
-
-    console.log(`\n${c.heading("📈 Last 7 Days")}\n`);
 
     for (const [key, count] of days) {
         const [, month, day] = key.split("-");
@@ -77,25 +103,23 @@ function dashboard() {
         console.log(`  ${c.dim(label)}  ${c.value(count.toString().padStart(2))}  ${c.value(bar)}`);
     }
 
-    // Key metrics
-    console.log(`\n${c.heading("⚡ Key Metrics")}\n`);
-
-    console.log(`  Notes       : ${c.value(data.noteCount)}`);
-    console.log(`  Folders     : ${c.value(data.folderCount)}`);
-    console.log(`  Wiki Links  : ${c.value(data.totalLinks)}`);
-    console.log(`  Broken Links: ${c.value(data.brokenCount)}`);
-    console.log(`  Orphans     : ${c.value(data.orphanCount)}`);
-    console.log(`  Tags        : ${c.value(data.tags.length)}`);
-
-    // Recent notes
-    const shown = data.recent.slice(0, 5);
-
     console.log(`\n${c.heading("🕒 Recent Notes")}\n`);
 
+    const shown = data.recent.slice(0, 5);
     shown.forEach((entry, index) => {
         console.log(`  ${index + 1}. ${c.note(entry.path)}`);
         console.log(`     ${c.dim(`${formatDate(entry.mtime)} ${formatTime(entry.mtime)}`)}`);
     });
+
+    if (data.createdNotes.length > 0) {
+        console.log(`\n${c.heading("🆕 Recently Created")}\n`);
+
+        const createdShown = data.createdNotes.slice(0, 5);
+        createdShown.forEach((entry, index) => {
+            console.log(`  ${index + 1}. ${c.note(entry.path)}`);
+            console.log(`     ${c.dim(`${formatDate(entry.ctime)} ${formatTime(entry.ctime)}`)}`);
+        });
+    }
 
     console.log(`\n${c.divider("────────────────────────")}`);
     console.log(`${c.dim(`Dashboard terakhir diperbarui: ${formatTime(now)}`)}`);

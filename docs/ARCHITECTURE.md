@@ -174,12 +174,18 @@ Used by `commands/deadlinks.js` and `commands/doctor.js`.
 ```js
 collectVaultReport() → {
   vault, noteCount, folderCount, totalSize, totalWords, totalLinks,
-  brokenCount, broken, orphanCount, orphans, notesToday, activity,
-  recent, mostLinked, tags, folders, attachmentCount, attachmentSize, avgLinks
+  totalBacklinks, brokenCount, broken, orphanCount, orphans,
+  notesToday, createdToday, activity, recent, createdNotes,
+  mostLinked, tags, folders, attachmentCount, attachmentSize,
+  peopleCount, projectsCount, relationshipsCount, relatedNotesCount,
+  pendingTasks, completedTasks, recentDailyNotes, avgLinks
 }
 ```
 
 A single pass over the vault that powers both `commands/dashboard.js` and `commands/report.js`.
+Per-file stats (`mtime`/`ctime`) are collected once and reused for the
+recently-modified and recently-created lists; wiki-link targets are resolved
+through a normalized `Set` index (O(1) per link).
 
 ### `checks/todos.js` & `checks/attachments.js`
 

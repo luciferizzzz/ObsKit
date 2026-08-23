@@ -14,7 +14,7 @@ Built for developers, students, writers, researchers, and terminal enthusiasts.
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-v1.5.2-blue)
+![Version](https://img.shields.io/badge/version-v1.5.3-blue)
 ![Node](https://img.shields.io/badge/node-18+-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -126,7 +126,7 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 
 ## 📂 Vault Management
 
-- Dashboard
+- Dashboard (vault, knowledge, and productivity statistics)
 - Statistics
 - Tree View
 - Backup

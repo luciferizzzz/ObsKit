@@ -3,8 +3,10 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
-const { buildNoteIndex } = require("../utils/noteIndex");
+const { buildNoteIndex, buildNormalizedNoteIndex } = require("../utils/noteIndex");
 const { extractWikiLinks } = require("../utils/wikilinks");
+const { listPeople } = require("../utils/people");
+const { getSectionContent } = require("../utils/relationship/parser");
 
 function stripCodeBlocks(content) {
     let result = content.replace(/```[\s\S]*?```/g, "");
@@ -12,8 +14,7 @@ function stripCodeBlocks(content) {
     return result;
 }
 
-function extractTags(content) {
-    const cleaned = stripCodeBlocks(content);
+function extractTags(cleaned) {
     const regex = /(?:^|\s)#([a-zA-Z0-9_/][a-zA-Z0-9_\-/]*)/g;
     const tags = [];
     let match;
@@ -25,6 +26,26 @@ function extractTags(content) {
     return tags;
 }
 
+function extractChecklists(content) {
+    const lines = content.split(/\r?\n/);
+    const pending = [];
+    const completed = [];
+
+    for (const line of lines) {
+        const match = line.match(/^\s*[-*]\s+\[([ xX])\]\s+(.+)$/);
+        if (!match) continue;
+        const done = match[1].toLowerCase() === "x";
+        const text = match[2].trim();
+        if (done) {
+            completed.push(text);
+        } else {
+            pending.push(text);
+        }
+    }
+
+    return { pending, completed };
+}
+
 function scanAttachments(root) {
     const attachments = [];
 
@@ -34,7 +55,6 @@ function scanAttachments(root) {
         });
 
         for (const entry of entries) {
-            // Skip hidden folders like .obsidian
             if (entry.name.startsWith(".")) {
                 continue;
             }
@@ -49,9 +69,32 @@ function scanAttachments(root) {
         }
     }
 
-    scan(root);
+    if (fs.existsSync(root)) {
+        scan(root);
+    }
 
     return attachments;
+}
+
+function countDirectoryMarkdownFiles(dir) {
+    if (!fs.existsSync(dir)) return 0;
+
+    let count = 0;
+
+    function scan(d) {
+        const entries = fs.readdirSync(d, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(d, entry.name);
+            if (entry.isDirectory()) {
+                scan(fullPath);
+            } else if (entry.name.endsWith(".md")) {
+                count++;
+            }
+        }
+    }
+
+    scan(dir);
+    return count;
 }
 
 function formatSize(bytes) {
@@ -78,7 +121,8 @@ function collectVaultReport() {
     const vault = getVaultPath();
 
     const files = scanMarkdownFiles(vault);
-    const notes = buildNoteIndex(files);
+    const noteNames = buildNoteIndex(files);
+    const normalizedNotes = buildNormalizedNoteIndex(files);
 
     let totalWords = 0;
     let totalSize = 0;
@@ -90,11 +134,17 @@ function collectVaultReport() {
     const incoming = {};
     const outgoing = {};
     const notesToday = [];
+    const createdToday = [];
     const activity = {};
+    const fileEntries = [];
+    const relatedTargets = new Set();
 
     const todayKey = dateKey(new Date());
 
-    // Last 7 days activity buckets (including today)
+    let totalPending = 0;
+    let totalCompleted = 0;
+    let totalRelationships = 0;
+
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -107,16 +157,22 @@ function collectVaultReport() {
 
         totalSize += stat.size;
 
-        const words = stripCodeBlocks(content)
+        const cleaned = stripCodeBlocks(content);
+        const words = cleaned
             .replace(/[#*_>`[\]]/g, " ")
             .split(/\s+/)
             .filter(Boolean);
         totalWords += words.length;
 
         const mtimeKey = dateKey(stat.mtime);
+        const ctimeKey = dateKey(stat.ctime);
 
         if (mtimeKey === todayKey) {
             notesToday.push(file);
+        }
+
+        if (ctimeKey === todayKey) {
+            createdToday.push(file);
         }
 
         if (activity[mtimeKey] !== undefined) {
@@ -131,67 +187,108 @@ function collectVaultReport() {
 
         for (const link of links) {
             const clean = link.split("#")[0].trim().toLowerCase();
-            let found = false;
 
-            for (const note of notes) {
-                if (note.toLowerCase() === clean) {
-                    if (!incoming[note]) {
-                        incoming[note] = 0;
-                    }
-                    incoming[note]++;
-                    found = true;
-                    break;
+            if (normalizedNotes.has(clean)) {
+                if (!incoming[clean]) {
+                    incoming[clean] = 0;
                 }
-            }
-
-            if (!found) {
+                incoming[clean]++;
+            } else {
                 broken.push({ file, link });
             }
         }
 
-        for (const tag of extractTags(content)) {
+        const relatedSection = getSectionContent(content, "Related");
+        if (relatedSection) {
+            const relatedLinks = extractWikiLinks(relatedSection);
+            totalRelationships += relatedLinks.length;
+
+            for (const link of relatedLinks) {
+                relatedTargets.add(link.split("#")[0].trim().toLowerCase());
+            }
+        }
+
+        const checklists = extractChecklists(content);
+        totalPending += checklists.pending.length;
+        totalCompleted += checklists.completed.length;
+
+        for (const tag of extractTags(cleaned)) {
             tagCount[tag] = (tagCount[tag] || 0) + 1;
         }
 
         const folder = path.relative(vault, path.dirname(file));
         const folderName = folder.split(path.sep)[0] || "(root)";
         folderCount[folderName] = (folderCount[folderName] || 0) + 1;
+
+        fileEntries.push({
+            path: path.relative(vault, file).split(path.sep).join("/"),
+            mtime: stat.mtime,
+            ctime: stat.ctime,
+        });
     }
 
-    // Orphan notes (never referenced by any wiki link)
     const orphans = [];
 
-    for (const note of notes) {
-        if (!incoming[note]) {
+    for (const note of noteNames) {
+        if (!incoming[note.toLowerCase()]) {
             orphans.push(note);
         }
     }
 
-    // Attachments (non-markdown files)
+    let totalBacklinks = 0;
+    for (const key of Object.keys(incoming)) {
+        totalBacklinks += incoming[key];
+    }
+
     const attachments = scanAttachments(vault);
     const attachmentSize = attachments.reduce(
-        (sum, file) => sum + fs.statSync(file).size,
+        (sum, file) => {
+            try {
+                return sum + fs.statSync(file).size;
+            } catch (_) {
+                return sum;
+            }
+        },
         0
     );
 
-    // Recent notes sorted by modification time
-    const recent = files
-        .map((file) => ({
-            path: path.relative(vault, file).split(path.sep).join("/"),
-            mtime: fs.statSync(file).mtime,
-        }))
-        .sort((a, b) => b.mtime - a.mtime);
+    const recent = fileEntries
+        .slice()
+        .sort((a, b) => b.mtime - a.mtime)
+        .map((entry) => ({ path: entry.path, mtime: entry.mtime }));
 
-    // Most linked notes (by outgoing links)
+    const createdNotes = fileEntries
+        .slice()
+        .sort((a, b) => b.ctime - a.ctime)
+        .map((entry) => ({ path: entry.path, ctime: entry.ctime }));
+
+    const peopleCount = listPeople(vault).length;
+
+    const projectsDir = path.join(vault, "Projects");
+    const projectsCount = countDirectoryMarkdownFiles(projectsDir);
+
+    const dailyDir = path.join(vault, "Daily Notes");
+    let recentDailyNotes = [];
+
+    if (fs.existsSync(dailyDir)) {
+        recentDailyNotes = fs
+            .readdirSync(dailyDir)
+            .filter((f) => f.endsWith(".md"))
+            .map((f) => ({
+                name: f.replace(/\.md$/i, ""),
+                mtime: fs.statSync(path.join(dailyDir, f)).mtime,
+            }))
+            .sort((a, b) => b.mtime - a.mtime)
+            .slice(0, 5);
+    }
+
     const mostLinked = Object.entries(outgoing)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
 
-    // Tags sorted by frequency
     const tags = Object.entries(tagCount)
         .sort((a, b) => b[1] - a[1]);
 
-    // Folders sorted by note count
     const folders = Object.entries(folderCount)
         .sort((a, b) => b[1] - a[1]);
 
@@ -202,18 +299,28 @@ function collectVaultReport() {
         totalSize,
         totalWords,
         totalLinks,
+        totalBacklinks,
         brokenCount: broken.length,
         broken,
         orphanCount: orphans.length,
         orphans,
         notesToday,
+        createdToday,
         activity,
         recent,
+        createdNotes,
         mostLinked,
         tags,
         folders,
         attachmentCount: attachments.length,
         attachmentSize,
+        peopleCount,
+        projectsCount,
+        relationshipsCount: totalRelationships,
+        relatedNotesCount: relatedTargets.size,
+        pendingTasks: totalPending,
+        completedTasks: totalCompleted,
+        recentDailyNotes,
         avgLinks: files.length > 0
             ? (totalLinks / files.length).toFixed(2)
             : "0.00",

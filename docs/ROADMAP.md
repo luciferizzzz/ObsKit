@@ -220,6 +220,23 @@ Core note management.
 
 ---
 
+## v1.5.3 — Dashboard Insights
+
+> **2026-08-23**
+
+Focus: a richer `obs dashboard` with vault, knowledge, and productivity statistics.
+
+- ✅ **Vault Statistics** — total notes, people, projects, attachments, markdown files
+- ✅ **Knowledge Statistics** — backlinks, orphan notes, relationships, tags,
+  related notes
+- ✅ **Productivity Statistics** — task totals (pending vs completed) and recent daily notes
+- ✅ **Recent Activity** — recently modified and recently created notes with
+  sorting and output limits
+- ✅ **Performance** — single stat collection per file and O(1) link resolution
+  in the shared vault report
+
+---
+
 # 🚧 Planned Versions
 
 ## v1.5 — Interactive Experience

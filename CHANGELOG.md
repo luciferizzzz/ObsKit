@@ -6,6 +6,38 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [1.5.3] - 2026-08-23
+
+### Added
+
+- Dashboard Vault Statistics — total notes, people, projects, attachments, and
+  markdown files in one view (`obs dashboard`).
+- Dashboard Knowledge Statistics — backlinks, orphan notes, relationships,
+  tags, related notes (unique `## Related` link targets), and wiki links.
+- Dashboard Productivity Statistics — task totals (`- [ ]` / `- [x]`, pending
+  vs completed) and the 5 most recent daily notes from the `Daily Notes`
+  directory.
+- Dashboard Recent Activity — recently modified notes and recently created
+  notes (newest first, limited to 5 each) alongside the existing
+  notes-modified-today list and 7-day activity chart.
+- `relatedNotesCount` in the vault report data (also available via
+  `obs report --json`).
+
+### Improved
+
+- Link resolution in the vault report now uses a normalized note-name index
+  (`Set` lookups instead of scanning all notes per link).
+- Per-file filesystem stats are collected once and reused for the recently
+  modified / recently created lists instead of re-statting every file.
+
+### Backward Compatible
+
+- The existing `obs dashboard` sections (notes modified today, 7-day activity,
+  recent notes) and `obs report` output keep their previous behavior; new
+  statistics are additive.
+
+---
+
 ## [1.5.2] - 2026-08-15
 
 ### Added

@@ -49,7 +49,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.2
+obs --version   # → 1.5.3
 ```
 
 ---
@@ -596,7 +596,18 @@ Show the daily activity dashboard.
 
 **Description**
 
-Today's date, notes modified today, a 7-day activity bar chart, key metrics, and recent notes.
+Vault, knowledge, and productivity statistics, notes modified today, a 7-day
+activity bar chart, recently modified/created notes, and recent daily notes.
+
+Statistics shown:
+
+- Vault Statistics — total notes, people, projects, attachments, markdown files
+- Knowledge Statistics — backlinks, orphan notes, relationships, tags,
+  related notes (unique targets of `## Related` links), wiki links
+- Productivity Statistics — total tasks (`- [ ]` / `- [x]`, pending + completed),
+  recent daily notes from the `Daily Notes` directory
+- Recent Activity — notes modified today, 7-day activity chart,
+  5 most recently modified notes, 5 most recently created notes
 
 **Syntax**
 
@@ -620,20 +631,46 @@ obs dashboard
 🗓  Kamis, 6 Agustus 2026
 📂 D:\Vault
 
+📝 Vault Statistics
+
+  Total Notes     : 42
+  People          : 8
+  Projects        : 5
+  Attachments     : 12
+  Markdown Files  : 42
+
+🔗 Knowledge Statistics
+
+  Backlinks       : 87
+  Orphan Notes    : 2
+  Relationships   : 21
+  Tags            : 15
+  Related Notes   : 18
+  Wiki Links      : 156
+
+📋 Productivity Statistics
+
+  Today's Tasks   : 9
+  Completed       : 4
+  Pending         : 5
+
 📝 Notes Modified Today
 
   • Notes/Learning Rust.md (14:32)
 
-📈 Last 7 Days
+📈 Activity (Last 7 Days)
 
   07-31   1  █
 
-⚡ Key Metrics
+🕒 Recent Notes
 
-  Notes       : 42
-  Wiki Links  : 156
-  Broken Links: 1
-  Orphans     : 2
+  1. Notes/Learning Rust.md
+     2026-08-06 14:32
+
+🆕 Recently Created
+
+  1. Notes/Learning Rust.md
+     2026-08-06 14:32
 ```
 
 ---

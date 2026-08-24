@@ -77,7 +77,7 @@ const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("../comm
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.5.3")
+  .version("1.5.4")
   .showSuggestionAfterError()
   .showHelpAfterError()
   .configureOutput({
@@ -182,9 +182,9 @@ program
   .action(graph);
 
 program
-  .command("tags")
-  .description("Extract and display tags from all notes")
-  .action(tags);
+  .command("tags [tag]")
+  .description("Extract tags, or list notes containing a tag")
+  .action((tag) => tags(tag));
 
 program
   .command("doctor")

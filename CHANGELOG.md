@@ -6,6 +6,40 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [1.5.4] - 2026-08-24
+
+### Tag Explorer
+
+### Added
+
+- Tag lookup by name — `obs tags <tag>` lists every note containing that tag
+  (e.g. `obs tags rust`), with vault-relative forward-slash paths sorted
+  alphabetically and a `Total Notes` summary.
+- Optional `#` prefix — `obs tags rust` and `obs tags #rust` resolve to the
+  same tag.
+- Exact matching — `#rust` never matches `#rustlang`, `#rust-web`, or nested
+  variants; longer and nested tags are found when requested explicitly
+  (`rust-web`, `rust/web`).
+- Case-insensitive matching — `obs tags #RUST` matches `#rust` and `#Rust`.
+- Code block / inline code exclusion — tags inside fenced code blocks and
+  inline code are ignored during lookup (reuses the existing `extractTags()`
+  behavior).
+- Note listing deduplication — a note tagged multiple times is listed once.
+- Zero-result handling — unknown tags print `No notes found.` and exit
+  normally instead of failing.
+- Dedicated test suite (`test/tags.test.js`) covering count-mode compatibility,
+  lookup modes, exact/case-insensitive matching, code fences, nested folders,
+  Unicode/emoji filenames, spaces in filenames, CRLF/LF content, and
+  zero-match behavior.
+
+### Backward Compatible
+
+- `obs tags` without an argument continues to display tag statistics exactly
+  as before.
+- No other commands, utilities, or frozen v1.5.3 surfaces were changed.
+
+---
+
 ## [1.5.3] - 2026-08-23
 
 ### Added

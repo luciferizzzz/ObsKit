@@ -237,6 +237,22 @@ Focus: a richer `obs dashboard` with vault, knowledge, and productivity statisti
 
 ---
 
+## v1.5.4 — Tag Explorer
+
+> **2026-08-24**
+
+Focus: explore notes by tag.
+
+- ✅ `obs tags <tag>` — list every note containing an exact tag
+  - Accepts input with or without the leading `#` (`rust` ≡ `#rust`)
+  - Exact, case-insensitive matching (`#Rust` matches; `#rustlang` / `#rust-web` do not)
+  - Nested tags found when requested explicitly (`rust/web`)
+  - Code-block-aware scanning reusing the existing tag extraction
+  - Vault-relative forward-slash paths; Unicode/emoji/CRLF/LF safe
+- ✅ `obs tags` — existing tag counts remain unchanged
+
+---
+
 # 🚧 Planned Versions
 
 ## v1.5 — Interactive Experience

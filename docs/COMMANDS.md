@@ -49,7 +49,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.3
+obs --version   # → 1.5.4
 ```
 
 ---
@@ -876,23 +876,28 @@ Most Linked Notes
 
 ## `obs tags`
 
-Extract and count tags.
+Extract tags or explore notes by tag.
 
 **Description**
 
-Counts `#tag` occurrences across the vault (ignores code blocks).
+Without an argument, counts `#tag` occurrences across the vault (ignores code blocks).
+With a tag argument, lists every note that contains that exact tag.
 
 **Syntax**
 
 ```
-obs tags
+obs tags [tag]
 ```
 
-**Arguments** — none
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `[tag]` | Optional tag to explore. Works with or without the leading `#` (`rust` and `#rust` are equivalent) |
 
 **Options** — none
 
-**Example**
+**Examples**
 
 ```bash
 obs tags
@@ -908,6 +913,33 @@ obs tags
 Total Tags : 16
 Unique Tags : 3
 ```
+
+```bash
+obs tags rust
+obs tags #rust
+```
+
+Both resolve to the same tag:
+
+```text
+🏷️  Tag: #rust
+
+Notes:
+
+  📄 Daily Notes/2026-08-20.md
+  📄 Notes/Programming.md
+  📄 Projects/Rust.md
+
+-----------------------
+Total Notes : 3
+```
+
+**Notes**
+
+- Matching is exact and case-insensitive: `rust` matches `#Rust` but never `#rustlang` or `#rust-web`.
+- Longer tags are found when requested explicitly (`obs tags rust-web`, `obs tags rust/web` for nested tags).
+- Tags inside fenced code blocks and inline code are ignored.
+- A tag with no notes prints `No notes found.` (not an error).
 
 ---
 

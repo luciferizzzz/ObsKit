@@ -253,6 +253,23 @@ Focus: explore notes by tag.
 
 ---
 
+## ✅ v1.5.5 — Note Inspector
+
+> **Released**
+
+Focus: read-only note inspection.
+
+- ✅ `obs info <note>` — show detailed information about a single note
+  - File metadata (name, path, size, created, modified)
+  - Word count (strips Markdown syntax)
+  - Heading outline with full hierarchy (levels 1–6)
+  - Outgoing wikilinks, backlinks, and related notes
+  - Tags (code-block-aware)
+  - Case-insensitive note resolution
+  - Unicode/emoji/CRLF/LF safe
+
+---
+
 # 🚧 Planned Versions
 
 ## v1.5 — Interactive Experience

@@ -70,6 +70,8 @@ const unrelate = require("../commands/unrelate");
 
 const relations = require("../commands/relations");
 
+const info = require("../commands/info");
+
 const { completion, completeWords } = require("../commands/completion");
 
 const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("../commands/people")
@@ -77,7 +79,7 @@ const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("../comm
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.5.4")
+  .version("1.5.5")
   .showSuggestionAfterError()
   .showHelpAfterError()
   .configureOutput({
@@ -298,6 +300,11 @@ program
   .command("relations <note>")
   .description("Show relationships for a note (related, backlinks, outgoing)")
   .action(relations);
+
+program
+  .command("info <note>")
+  .description("Show detailed information about a note")
+  .action(info);
 
 program
   .command("completion <shell>")

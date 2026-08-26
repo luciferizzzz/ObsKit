@@ -14,7 +14,7 @@ Built for developers, students, writers, researchers, and terminal enthusiasts.
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-v1.5.4-blue)
+![Version](https://img.shields.io/badge/version-v1.5.5-blue)
 ![Node](https://img.shields.io/badge/node-18+-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -146,6 +146,7 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 - Graph Analysis
 - Relationships (`obs relate` / `obs unrelate` / `obs relations`)
 - Tags (`obs tags`, `obs tags <tag>`)
+- Note Inspector (`obs info <note>`)
 
 ---
 
@@ -333,13 +334,19 @@ LICENSE
 
 # 🛣 Roadmap
 
-## ✨ v1.5.4 — Tag Explorer
+## 🚧 v1.5.4 — Tag Explorer
 
 - ✅ `obs tags <tag>` — list notes containing a tag
 - ✅ Optional `#` prefix (`rust` ≡ `#rust`)
 - ✅ Exact, case-insensitive matching (`rust` / `#rust`; never matches `#rustlang`)
 - ✅ Code-block-aware scanning, Unicode/emoji/CRLF-safe paths
 - ✅ `obs tags` statistics unchanged
+
+---
+
+## ✅ v1.5.5 — Note Inspector
+
+- ✅ `obs info <note>` — detailed note overview (metadata, headings, links, tags)
 
 ---
 

@@ -6,6 +6,33 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [1.5.5] - 2026-08-26
+
+### Note Inspector
+
+#### Added
+
+- `obs info <note>` — show detailed information about a single note:
+  - File metadata (name, vault-relative path, size, created date, modified date)
+  - Word count (strips Markdown syntax: headings, bold, italic, code, links, images)
+  - Heading outline with full hierarchy (levels 1–6, tree rendering with box-drawing characters)
+  - Outgoing wikilinks count
+  - Backlinks count
+  - Related notes count (from `## Related` section)
+  - Tags (code-block-aware, deduplicated)
+- Case-insensitive note resolution
+- Nested folder resolution
+- Unicode, emoji, and spaces in filenames
+- CRLF and LF line ending support
+- Graceful error handling for missing notes and broken Markdown
+
+### Backward Compatible
+
+- All existing commands, utilities, and tests keep their previous behavior.
+- No frozen v1.5.4 surfaces were changed.
+
+---
+
 ## [1.5.4] - 2026-08-24
 
 ### Tag Explorer

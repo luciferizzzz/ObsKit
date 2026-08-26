@@ -49,7 +49,7 @@ obs <command> [arguments] [options]
 
 ```bash
 obs --help
-obs --version   # → 1.5.4
+obs --version   # → 1.5.5
 ```
 
 ---
@@ -1069,6 +1069,78 @@ Related: 1 · Backlinks: 1 · Outgoing: 1
 
 **Notes**
 
+- Errors with `Note not found: <note>` if the note does not exist.
+
+---
+
+## `obs info`
+
+Show detailed information about a note.
+
+**Description**
+
+Displays a comprehensive overview of a single Markdown note, including file
+metadata, heading hierarchy, outgoing links, backlinks, related notes, and tags.
+The command is read-only and never modifies the note.
+
+**Syntax**
+
+```
+obs info <note>
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note name (without `.md`) |
+
+**Options** — none
+
+**Example**
+
+```bash
+obs info "ObsKit Roadmap"
+```
+
+```text
+Note Information
+
+Name       : ObsKit Roadmap
+Path       : Notes/ObsKit Roadmap.md
+Size       : 12.4 KB
+Words      : 1,284
+Created    : 2026-08-20 14:32
+Modified   : 2026-08-25 10:14
+
+Headings
+
+└── Overview
+    ├── Features
+    │   ├── Dashboard
+    │   └── Relationships
+    └── Roadmap
+
+Links
+
+Outgoing   : 8
+Backlinks  : 5
+Related    : 3
+
+Tags
+
+#obskit
+#roadmap
+
+-----------------------
+```
+
+**Notes**
+
+- Note resolution is case-insensitive and works with or without `.md`.
+- Word count strips Markdown syntax (headings, bold, italic, code, links, images).
+- Tags inside fenced code blocks and inline code are ignored.
+- Heading outline preserves the full hierarchy (levels 1–6).
 - Errors with `Note not found: <note>` if the note does not exist.
 
 ---

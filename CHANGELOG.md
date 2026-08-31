@@ -6,6 +6,35 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
+## [Unreleased] — v1.5.6 (In Development)
+
+### Interactive Mode
+
+#### Added
+
+- `obs` (no arguments) now launches an interactive terminal menu
+- Main menu with high-level actions: New Note, Today, Find Note, Recent Notes, Random Note, Todo, Dashboard, Vault Stats, People, Relationships, AI, Template
+- People submenu: List, Recent, Stats
+- Relationships submenu: View, Add, Remove
+- AI submenu: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
+- Template submenu: List, Preview
+- Ctrl+C graceful exit (no stack trace)
+- Non-interactive environment detection
+
+#### Changed
+
+- `obs` with no arguments now launches Interactive Mode instead of showing help
+- `obs --help` and `obs --version` continue to work normally
+- All existing commands remain unaffected
+
+#### Backward Compatible
+
+- All existing commands continue to work identically
+- `obs --help` and `obs --version` behavior unchanged
+- No configuration changes required
+
+---
+
 ## [1.5.5] - 2026-08-26
 
 ### Note Inspector

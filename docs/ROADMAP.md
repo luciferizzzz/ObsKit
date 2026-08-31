@@ -292,7 +292,7 @@ Focus: interactive terminal experience, relationship management, and better navi
 - ✅ **Better Error Messages** — commander suggestions (`Did you mean …?`), help-after-error, and actionable hints
 - ✅ **Improved Help Pages** — quick-example cheat sheet on `obs --help`
 - ✅ **Shell Autocomplete** — `obs completion <shell>` generates bash/zsh/fish/PowerShell completion for commands, `obs ai` subcommands, and note names
-- **Interactive Mode** — launch a full terminal interface (`obs` with a menu)
+- **Interactive Mode** — launch a full terminal interface (`obs` with a menu) ✅ (v1.5.6)
 
 ## v1.6 — Intelligence
 

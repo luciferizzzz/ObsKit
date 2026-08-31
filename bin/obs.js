@@ -76,10 +76,12 @@ const { completion, completeWords } = require("../commands/completion");
 
 const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("../commands/people")
 
+const interactive = require("../commands/interactive");
+
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.5.5")
+  .version("1.5.6")
   .showSuggestionAfterError()
   .showHelpAfterError()
   .configureOutput({
@@ -331,6 +333,10 @@ people
   .command("stats")
   .description("Menampilkan statistik People note")
   .action(peopleStatsCommand);
+
+program.action(async () => {
+    await interactive();
+});
 
 program.parseAsync(process.argv).catch((err) => {
     if (err && err.code === "commander.helpDisplayed") {

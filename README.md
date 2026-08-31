@@ -384,7 +384,7 @@ LICENSE
 - ✅ Search Experience — fuzzy search, content search, ranking, filters, interactive pick
 - ✅ Colored Output
 - ✅ Shell Autocomplete (`obs completion <shell>`)
-- Interactive Terminal UI
+- ✅ Interactive Terminal UI
 - Better Navigation
 
 ---

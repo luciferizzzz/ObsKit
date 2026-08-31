@@ -54,6 +54,59 @@ obs --version   # → 1.5.5
 
 ---
 
+## 🎯 Interactive Mode
+
+```
+obs
+```
+
+Launch an interactive terminal menu for quick access to ObsKit features.
+
+**Description**
+
+Running `obs` without any arguments launches Interactive Mode, which presents a menu-driven interface for navigating ObsKit's most common operations.
+
+**Menu Options**
+
+| # | Action | Dispatches |
+|---|--------|------------|
+| 1 | New Note | `obs new` (prompts for folder and title) |
+| 2 | Today | `obs today` |
+| 3 | Find Note | `obs find` (prompts for query, picks interactively) |
+| 4 | Recent Notes | `obs recent` |
+| 5 | Random Note | `obs random` |
+| 6 | Todo | `obs todo` |
+| 7 | Dashboard | `obs dashboard` |
+| 8 | Vault Stats | `obs stats` |
+| 9 | People | People submenu |
+| 10 | Relationships | Relationships submenu |
+| 11 | AI | AI submenu |
+| 12 | Template | Template submenu |
+| 0 | Exit | Exit Interactive Mode |
+
+**Submenus**
+
+- **People**: List People, Recent People, People Stats
+- **Relationships**: View Relations, Add Relation, Remove Relation
+- **AI**: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
+- **Template**: List Templates, Preview Template
+
+**Behavior**
+
+- `obs` (no arguments) → Interactive Mode
+- `obs --help` → Normal help output
+- `obs --version` → Version output
+- All explicit subcommands continue to work normally
+- Ctrl+C exits cleanly without a stack trace
+
+**Notes**
+
+- Interactive Mode reuses existing command implementations directly
+- No vault scanning occurs until a menu option is selected
+- All existing commands remain fully functional
+
+---
+
 # ⚙️ Configuration
 
 ## `obs init`

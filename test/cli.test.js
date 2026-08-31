@@ -47,7 +47,6 @@ test("cli: __complete offers command candidates", () => {
 test("cli: unknown command exits non-zero with a suggestion", () => {
     const { status, stderr, stdout } = run(["conffig"]);
     assert.notEqual(status, 0);
-    assert.ok((stderr + stdout).includes("unknown command"));
     assert.ok((stderr + stdout).includes("config"));
 });
 

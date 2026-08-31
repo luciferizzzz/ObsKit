@@ -93,6 +93,32 @@ vault on disk ──► read/write notes
 terminal output
 ```
 
+**Interactive Mode** (`obs` with no arguments):
+
+```text
+user types `obs` (no arguments)
+        │
+        ▼
+bin/obs.js ──► Commander finds no matching subcommand
+        │
+        ▼
+program.action() ──► interactive() launches menu
+        │
+        ▼
+@inquirer/prompts select ──► user picks an option
+        │
+        ▼
+dispatch() ──► calls existing command module directly
+        │
+        ▼
+command module runs (e.g., dashboard(), stats(), peopleList())
+        │
+        ▼
+terminal output ──► returns to menu
+```
+
+Interactive Mode reuses existing command modules without duplicating logic. Each menu option dispatches to the corresponding command function.
+
 The `ai` command dispatches on its first argument:
 
 ```text

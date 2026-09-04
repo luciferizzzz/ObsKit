@@ -81,7 +81,7 @@ const interactive = require("../commands/interactive");
 program
   .name("obs")
   .description("ObsKit CLI — Organized Knowledge System")
-  .version("1.5.6")
+  .version(require("../package.json").version)
   .showSuggestionAfterError()
   .showHelpAfterError()
   .configureOutput({

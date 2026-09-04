@@ -6,7 +6,23 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
 
 ---
 
-## [Unreleased] — v1.5.6 (In Development)
+## [Unreleased] — v1.5.7
+
+### Bug Fix
+
+#### Fixed
+
+- `obs ai tomorrow` — AI no longer invents extra activities. The prompt now instructs the model to output **exactly** the activities the user entered (no more, no fewer), repeating the name, time, priority, goal, and notes verbatim instead of generating its own schedule (e.g. adding breaks, freelancing, etc.).
+- CLI version-assertion tests no longer hardcode a version string; they read the current version from `package.json` so they stop failing on every release.
+
+#### Backward Compatible
+
+- Existing `obs ai tomorrow` checklist format (`# Tomorrow`, `- [ ] HH:MM-HH:MM Nama Kegiatan`) is unchanged.
+- All other commands, utilities, and tests keep their previous behavior.
+
+---
+
+## [1.5.6] - 2026-09-03
 
 ### Interactive Mode
 

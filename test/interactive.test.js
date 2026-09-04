@@ -4,6 +4,7 @@ const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
 const bin = path.join(__dirname, "..", "bin", "obs.js");
+const pkg = require("../package.json");
 
 function run(args) {
     return spawnSync(process.execPath, [bin, ...args], {
@@ -32,7 +33,7 @@ test("interactive: --help still works", () => {
 test("interactive: --version still works", () => {
     const { status, stdout } = run(["--version"]);
     assert.equal(status, 0);
-    assert.equal(stdout.trim(), "1.5.5");
+    assert.equal(stdout.trim(), pkg.version);
 });
 
 test("interactive: unknown command still exits non-zero", () => {
@@ -69,7 +70,7 @@ test("interactive: --help does not trigger interactive mode", () => {
 test("interactive: --version does not trigger interactive mode", () => {
     const { status, stdout } = run(["--version"]);
     assert.equal(status, 0);
-    assert.equal(stdout.trim(), "1.5.5");
+    assert.equal(stdout.trim(), pkg.version);
     assert.ok(!stdout.includes("Pilih aksi"));
 });
 

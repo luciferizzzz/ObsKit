@@ -4,6 +4,7 @@ const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
 const bin = path.join(__dirname, "..", "bin", "obs.js");
+const pkg = require("../package.json");
 
 function run(args) {
     return spawnSync(process.execPath, [bin, ...args], {
@@ -15,7 +16,7 @@ function run(args) {
 test("cli: --version prints the package version", () => {
     const { status, stdout } = run(["--version"]);
     assert.equal(status, 0);
-    assert.equal(stdout.trim(), "1.5.5");
+    assert.equal(stdout.trim(), pkg.version);
 });
 
 test("cli: --help shows usage and quick examples", () => {

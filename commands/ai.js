@@ -472,7 +472,7 @@ function buildTomorrowPrompt(answers, persona) {
 
     return `${persona.system}
 
-Buat rencana terstruktur untuk besok dengan format checklist.
+Ubah ${activities.length} kegiatan dari user jadi rencana besok dengan format checklist.
 
 Gunakan heading:
 # Tomorrow
@@ -487,6 +487,12 @@ Kalau ada catatan tambahan, tambahkan baris:
 
 Kegiatan yang direncanakan:
 ${activityList}
+
+WAJIB:
+- Output PERSIS ${activities.length} kegiatan dari daftar di atas, tidak lebih dan tidak kurang.
+- Tulis ULANG nama, jam, prioritas, goal, dan catatan sesuai input user. JANGAN mengubah atau mengganti isinya.
+- JANGAN menambah kegiatan, istirahat, atau tugas baru yang tidak ada di daftar.
+- JANGAN menghapus kegiatan dari daftar.
 
 JANGAN pakai heading lain selain # Tomorrow.
 Langsung gunakan # Tomorrow lalu checklist.

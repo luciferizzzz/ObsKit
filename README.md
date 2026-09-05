@@ -14,7 +14,7 @@ Built for developers, students, writers, researchers, and terminal enthusiasts.
 
 <p align="center">
 
-![Version](https://img.shields.io/badge/version-v1.5.7-blue)
+![Version](https://img.shields.io/badge/version-v1.6.0-blue)
 ![Node](https://img.shields.io/badge/node-18+-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -142,7 +142,10 @@ ObsKit is a **modular toolkit** — small commands backed by reusable utilities.
 - Backlinks
 - Wiki Links
 - Dead Links
-- Vault Doctor
+- Vault Doctor (`obs doctor` — health score, issues, warnings, `--json`)
+- Related Notes (`obs related <note>`)
+- Suggestions (`obs suggest <note>`)
+- Review (`obs review [period]`)
 - Graph Analysis
 - Relationships (`obs relate` / `obs unrelate` / `obs relations`)
 - Tags (`obs tags`, `obs tags <tag>`)
@@ -333,6 +336,17 @@ LICENSE
 ---
 
 # 🛣 Roadmap
+
+## ✅ v1.6.0 — Automation & Intelligence
+
+- ✅ `obs doctor` — full vault health analysis with deterministic Health Score (0–100), `--verbose`, `--json`
+- ✅ `obs related <note>` — weighted related-note discovery
+- ✅ `obs suggest <note>` — actionable per-note recommendations (optional `--ai`)
+- ✅ `obs review [period]` — activity digest (today/week/month/`--days`) with optional `--ai`
+- ✅ Shared single-scan vault index — fast analysis on large vaults
+- ✅ New **Intelligence** submenu in Interactive Mode
+
+---
 
 ## 🚧 v1.5.4 — Tag Explorer
 

@@ -78,15 +78,17 @@ Running `obs` without any arguments launches Interactive Mode, which presents a 
 | 6 | Todo | `obs todo` |
 | 7 | Dashboard | `obs dashboard` |
 | 8 | Vault Stats | `obs stats` |
-| 9 | People | People submenu |
-| 10 | Relationships | Relationships submenu |
-| 11 | AI | AI submenu |
-| 12 | Template | Template submenu |
+| 9 | Intelligence | Intelligence submenu |
+| 10 | People | People submenu |
+| 11 | Relationships | Relationships submenu |
+| 12 | AI | AI submenu |
+| 13 | Template | Template submenu |
 | 0 | Exit | Exit Interactive Mode |
 
 **Submenus**
 
 - **People**: List People, Recent People, People Stats
+- **Intelligence**: Vault Doctor, Related Notes, Suggestions, Review
 - **Relationships**: View Relations, Add Relation, Remove Relation
 - **AI**: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
 - **Template**: List Templates, Preview Template
@@ -1204,17 +1206,46 @@ Analyze vault health.
 
 **Description**
 
-Vault health summary focused on broken wiki links.
+Full vault health analysis built on a single vault scan. Reports issues, warnings,
+a deterministic **Health Score** (0–100), and an overall rating.
 
 **Syntax**
 
 ```
-obs doctor
+obs doctor [options]
 ```
 
 **Arguments** — none
 
-**Options** — none
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `--verbose` | List the offending files under each issue/warning category |
+| `--json` | Output a structured machine-readable report |
+
+**Checks**
+
+| Category | Type | Condition |
+|----------|------|-----------|
+| Broken Links | Issue | Wiki link target does not exist |
+| Orphan Notes | Issue | No other note links to the note |
+| Empty Notes | Issue | No content besides headings/comments |
+| Duplicate Names | Issue | Same basename in more than one folder |
+| Missing Tags | Issue | Note has no tags |
+| No Outgoing Links | Issue | Note links to nothing |
+| Malformed Frontmatter | Issue | `---` opened but never closed |
+| Stale Notes | Warning | Not modified in 30 days |
+| Large Notes | Warning | Larger than 200 KB |
+
+**Rating**
+
+| Score | Rating |
+|-------|--------|
+| ≥ 90 | Excellent |
+| ≥ 75 | Good |
+| ≥ 50 | Fair |
+| < 50 | Needs Attention |
 
 **Example**
 
@@ -1223,14 +1254,256 @@ obs doctor
 ```
 
 ```text
- Vault Health Report
+🩺 Vault Doctor
 
-Notes : 42
-Links : 156
-Broken Links : 0
+Notes scanned : 42
 
-✅ Vault Healthy
+Issues
+
+  Broken Links             1
+  Orphan Notes             2
+
+Warnings
+
+  Stale Notes (30d)        3
+
+Health Score
+
+  Score         : 48/100
+  Rating        : Needs Attention
+
+⚠️  Beberapa masalah ditemukan. Cek verbose untuk detail.
 ```
+
+**Example — `--json`**
+
+```bash
+obs doctor --json
+```
+
+```json
+{
+  "vault": "D:\\Vault",
+  "notesScanned": 42,
+  "issues": { "brokenLinks": 1, "orphanNotes": 2, "emptyNotes": 0 },
+  "warnings": { "staleNotes": 3, "largeNotes": 0 },
+  "score": 48,
+  "rating": "Needs Attention"
+}
+```
+
+**Notes**
+
+- The health score formula is deterministic and documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+- `--json --verbose` includes the per-file `details` object.
+
+---
+
+## `obs related`
+
+Find notes related to a given note.
+
+**Description**
+
+Ranks every other note by weighted, deterministic signals and lists the strongest
+matches. The note itself is never included.
+
+**Syntax**
+
+```
+obs related <note> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note to analyze (without `.md`) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `-n, --limit <n>` | Max number of results (default `10`) |
+
+**Signals (weights)**
+
+| Signal | Weight | Displayed as |
+|--------|--------|--------------|
+| Backlinks to the note | +10 | `Links to this note: yes` |
+| Shared outgoing links | +3 each | `Shared links` |
+| Shared tags | +2 each | `Shared tags` |
+| Shared backlinks | +2 each | `Referenced by` |
+| Title token overlap | +1 each | `Title overlap` |
+
+**Example**
+
+```bash
+obs related "Learning Rust"
+```
+
+```text
+🔗 Related Notes
+
+  Based on   : Notes/Learning Rust.md
+
+1. Rust Reference
+   Shared tags: #rust
+   Shared links: cargo
+   Links to this note: yes
+   Backlinks: 2
+
+────────────────────────
+Total Related : 1
+```
+
+**Notes**
+
+- Sorting is deterministic: score desc, then name ascending.
+- Matching is case-insensitive; folders and `.md` suffixes in the argument are normalized.
+- Errors with `Note not found: <note>` if the note does not exist.
+
+---
+
+## `obs suggest`
+
+Actionable recommendations for a single note.
+
+**Description**
+
+Analyzes one note and prints **Issues** (things to fix) and **Opportunities**
+(improvements worth doing). With `--ai`, appends AI guidance based on a bounded prompt.
+
+**Syntax**
+
+```
+obs suggest <note> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<note>` | Note to analyze (without `.md`) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `--ai` | Add AI-generated guidance (requires a configured provider) |
+
+**Issue types**
+
+- Empty note
+- Duplicate title (same name in another folder)
+- Similar title (Jaccard similarity ≥ 0.5)
+- Unclosed frontmatter
+
+**Opportunity types**
+
+- Missing tags
+- No outgoing links
+- No backlinks
+- Stale (not modified in 30 days)
+- Oversized (> 200 KB)
+- Open tasks
+- Suggested links to the most related notes (up to 3; skips already-linked notes and notes already in `## Related`)
+
+**Example**
+
+```bash
+obs suggest "Learning Rust"
+```
+
+```text
+💡 Suggestions
+
+  For        : Notes/Learning Rust.md
+
+Issues
+
+  • Similar note exists: Notes/Learning Rust (copy).md
+
+Opportunities
+
+  • This note has no backlinks. Link to it from another note.
+  • Add a link to related note [[Rust Reference]]
+```
+
+**Notes**
+
+- The `--ai` prompt uses only a note excerpt (≤ 1200 chars) and a capped suggestion
+  list — never the whole vault.
+- Never suggests deleting a note.
+- Errors with `Note not found: <note>` if the note does not exist.
+
+---
+
+## `obs review`
+
+Vault activity digest for a period.
+
+**Description**
+
+Summarizes what happened in the vault over `today`, `week`, `month`, or a custom
+number of days: notes created/modified, pending tasks, relationships (links inside
+`## Related` sections), broken links, orphan notes created, and most active tags.
+
+**Syntax**
+
+```
+obs review [period] [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `[period]` | `today`, `week`, or `month` (default `week`) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `--days <n>` | Review the last N days (overrides `[period]`) |
+| `--ai` | Append an AI summary of the period (requires a configured provider) |
+
+**Example**
+
+```bash
+obs review week
+```
+
+```text
+📅 Review
+
+  Period   : Week (2026-08-30 – 2026-09-05)
+
+Overview
+
+  Notes Created           = 5
+  Notes Modified          = 9
+  Pending Tasks           = 3
+  Relationships           = 2
+  Broken Links            = 1
+  Orphan Notes Created    = 1
+
+Most Active Tags
+
+  #project (3)
+  #rust (2)
+
+Recently Modified
+
+  1. Notes/Learning Rust.md
+     2026-09-05 14:32
+```
+
+**Notes**
+
+- "Notes created" uses the file creation time (`birthtime`) — notes must have been
+  created within the period to count.
+- The `--ai` summary is built from the digest only (capped name lists) — never the whole vault.
 
 ---
 

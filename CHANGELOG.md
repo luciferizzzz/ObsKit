@@ -4,13 +4,53 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.6.0] - 2026-09-05
+
+### Automation & Intelligence
+
+#### Added
+
+- `obs doctor` — full vault health analysis:
+  - Detects broken links, orphan notes, empty notes, duplicate names, missing tags,
+    notes with no outgoing links, and malformed frontmatter
+  - Warnings for stale notes (not modified in 30 days) and oversized notes (> 200 KB)
+  - Deterministic **Health Score** (0–100) with a documented rating (Excellent / Good / Fair / Needs Attention)
+  - `--verbose` shows per-file detail lists
+  - `--json` emits a structured machine-readable report
+- `obs related <note>` — deterministic related-note discovery ranked by weighted signals
+  (backlinks, shared links, shared tags, shared backlinks, title overlap) with `-n, --limit`
+- `obs suggest <note>` — actionable recommendations for a single note (issues + opportunities),
+  including duplicate/similar-title detection and related-note link suggestions
+- `obs review [period]` — periodic vault activity digest (`today`, `week`, `month`,
+  or `--days <n>`) covering created/modified notes, pending tasks, relationships,
+  broken links, orphan notes created, and most active tags; `--ai` appends an AI summary
+- Single-scan shared vault index (`utils/vaultIndex.js`) reused by doctor, related,
+  suggest, and review
+- Shared tag utilities (`utils/tags.js`) now power `obs tags`, `obs info`, health checks,
+  and the new commands
+
+#### Changed
+
+- `obs doctor` output format extended (previously only broken links). Text-mode output is
+  human-readable; `--json` is intended for scripting.
+- Interactive Mode: new **Intelligence** submenu (Vault Doctor, Related Notes, Suggestions, Review).
+
+#### Notes
+
+- AI enhancement (`suggest --ai`, `review --ai`) is optional and uses a bounded prompt
+  (note excerpt ≤ 1200 chars, capped name lists) — never the whole vault.
+- Health-score formula is deterministic and documented in docs/ARCHITECTURE.md.
+
+#### Backward Compatible
+
+- All other commands, utilities, and test surfaces keep their previous behavior.
+- No configuration changes required.
+
 ---
 
 ## [Unreleased] — v1.5.7
 
 ### Bug Fix
-
-#### Fixed
 
 - `obs ai tomorrow` — AI no longer invents extra activities. The prompt now instructs the model to output **exactly** the activities the user entered (no more, no fewer), repeating the name, time, priority, goal, and notes verbatim instead of generating its own schedule (e.g. adding breaks, freelancing, etc.).
 - CLI version-assertion tests no longer hardcode a version string; they read the current version from `package.json` so they stop failing on every release.

@@ -28,6 +28,11 @@ The format is inspired by **Keep a Changelog** and follows **Semantic Versioning
   suggest, and review
 - Shared tag utilities (`utils/tags.js`) now power `obs tags`, `obs info`, health checks,
   and the new commands
+- Added templates:
+  - `research` — research and investigation notes
+  - `learning` — learning and study notes
+  - `decision` — decision log for tracking important choices
+  - `weekly` — weekly review and planning note
 
 #### Changed
 

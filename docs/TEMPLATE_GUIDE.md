@@ -545,6 +545,148 @@ Jam dibuat : {{time}}
 
 ---
 
+## 🔬 Research
+
+`templates/research.md` — research and investigation notes for gathering information.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Topik:** {{topik}}
+
+---
+
+## Pertanyaan Penelitian
+{{ai:Rumuskan pertanyaan utama yang ingin dijawab melalui penelitian ini}}
+
+## Temuan
+{{ai:Bagikan temuan-temuan kunci dari penelitian ini, beserta bukti atau data pendukungnya}}
+
+## Sumber
+-
+
+## Catatan
+-
+
+## Pertanyaan Terbuka
+- [ ]
+
+## Related
+-
+```
+
+**Custom fields:** `{{topik}}`.
+
+---
+
+## 📖 Learning
+
+`templates/learning.md` — learning and study notes for educational content.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Mata Kuliah:** {{mata_kuliah}}
+
+---
+
+## Yang Dipelajari
+{{ai:Jelaskan topik atau konsep yang sedang dipelajari secara ringkas}}
+
+## Konsep Kunci
+{{ai:Daftar konsep-konsep penting beserta penjelasan singkatnya}}
+
+## Contoh
+-
+
+## Pertanyaan
+- [ ]
+
+## Takeaways
+-
+
+## Related
+-
+```
+
+**Custom fields:** `{{mata_kuliah}}`.
+
+---
+
+## 📋 Decision
+
+`templates/decision.md` — decision log for tracking important choices and their rationale.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Status:** {{status}}
+
+---
+
+## Konteks
+{{ai:Jelaskan situasi atau masalah yang membutuhkan keputusan}}
+
+## Opsi
+1. Opsi A
+2. Opsi B
+3. Opsi C
+
+## Keputusan
+{{keputusan}}
+
+## Alasan
+{{ai:Jelaskan alasan pemilihan opsi ini berdasarkan pertimbangan yang ada}}
+
+## Konsekuensi
+{{ai:Apa yang berubah atau dampak dari keputusan ini}}
+
+## Review
+Ditinjau ulang pada: {{review_date}}
+
+## Catatan
+-
+```
+
+**Custom fields:** `{{status}}`, `{{keputusan}}`, `{{review_date}}`.
+
+---
+
+## 📅 Weekly
+
+`templates/weekly.md` — weekly review and planning note.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+---
+
+## Pencapaian
+{{ai:Ringkasan pencapaian dan kemajuan minggu ini}}
+
+## Refleksi
+{{ai:Pelajaran atau refleksi dari minggu ini}}
+
+## Goals Minggu Depan
+- [ ]
+
+## Prioritas
+-
+
+## Catatan
+-
+```
+
+---
+
 # 🛠️ Custom Templates
 
 Creating your own template takes **two steps**:
@@ -633,4 +775,12 @@ obs template --preview daily
 obs new Code "Closures" -t js
 obs new Code "Flexbox" -t css
 obs new Web "Forms" -t html
+
+# Research and learning
+obs new Research "AI Trends" -t research
+obs new Learning "React Hooks" -t learning
+
+# Decision log and weekly review
+obs new Decisions "Database Choice" -t decision
+obs new Planning "Week 36" -t weekly
 ```

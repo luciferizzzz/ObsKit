@@ -345,6 +345,7 @@ LICENSE
 - ✅ `obs review [period]` — activity digest (today/week/month/`--days`) with optional `--ai`
 - ✅ Shared single-scan vault index — fast analysis on large vaults
 - ✅ New **Intelligence** submenu in Interactive Mode
+- ✅ Added templates: research, learning, decision, weekly
 
 ---
 

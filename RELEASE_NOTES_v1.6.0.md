@@ -42,6 +42,14 @@
 - Reports: notes created/modified, pending tasks, relationships (links in `## Related` sections), broken links, orphan notes created, most active tags, and created/modified lists
 - `--ai` — appends a bounded AI summary of the period
 
+### Templates
+
+- Added templates:
+  - `research` — research and investigation notes
+  - `learning` — learning and study notes
+  - `decision` — decision log for tracking important choices
+  - `weekly` — weekly review and planning note
+
 ### Interactive Mode
 
 - New **Intelligence** submenu: Vault Doctor, Related Notes, Suggestions, Review
@@ -67,5 +75,5 @@
 
 ## Tests
 
-- Test suite grew from 385 to 424 tests (vault index, doctor/health, related, suggest, review)
-- 424/424 passing
+- Test suite grew from 385 to 436 tests (vault index, doctor/health, related, suggest, review, new templates)
+- 436/436 passing

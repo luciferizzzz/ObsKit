@@ -334,7 +334,7 @@ test("research template renders via parseTemplate", () => {
         readTemplate("research"),
         getTemplateData({ title: "AI Research", folder: "Research", date: "2026-09-05" })
     );
-    assert.ok(rendered.startsWith("# AI Research\n"));
+    assert.match(rendered, /^# AI Research\r?\n/);
     assert.ok(rendered.includes("**Topik:**"));
     assert.ok(!rendered.includes("{{title}}"), "title replaced");
     assert.ok(!rendered.includes("{{created}}"), "created replaced");
@@ -345,7 +345,7 @@ test("learning template renders via parseTemplate", () => {
         readTemplate("learning"),
         getTemplateData({ title: "React Hooks", folder: "Learning", date: "2026-09-05" })
     );
-    assert.ok(rendered.startsWith("# React Hooks\n"));
+    assert.match(rendered, /^# React Hooks\r?\n/);
     assert.ok(rendered.includes("**Mata Kuliah:**"));
     assert.ok(!rendered.includes("{{title}}"), "title replaced");
 });
@@ -355,7 +355,7 @@ test("decision template renders via parseTemplate", () => {
         readTemplate("decision"),
         getTemplateData({ title: "Database Choice", folder: "Decisions", date: "2026-09-05" })
     );
-    assert.ok(rendered.startsWith("# Database Choice\n"));
+    assert.match(rendered, /^# Database Choice\r?\n/);
     assert.ok(rendered.includes("**Status:**"));
     assert.ok(!rendered.includes("{{title}}"), "title replaced");
 });
@@ -365,7 +365,7 @@ test("weekly template renders via parseTemplate", () => {
         readTemplate("weekly"),
         getTemplateData({ title: "Week 36", folder: "Planning", date: "2026-09-05" })
     );
-    assert.ok(rendered.startsWith("# Week 36\n"));
+    assert.match(rendered, /^# Week 36\r?\n/);
     assert.ok(!rendered.includes("{{title}}"), "title replaced");
 });
 
@@ -379,7 +379,7 @@ test("obs new -t research creates a note", () => {
 
     assert.ok(fs.existsSync(filePath), "note created");
     const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.startsWith("# AI Research\n"));
+    assert.match(content, /^# AI Research\r?\n/);
     assert.ok(content.includes("## Pertanyaan Penelitian"));
     assert.ok(content.includes("## Temuan"));
     assert.ok(!content.includes("{{title}}"), "title replaced");
@@ -395,7 +395,7 @@ test("obs new -t learning creates a note", () => {
 
     assert.ok(fs.existsSync(filePath), "note created");
     const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.startsWith("# React Hooks\n"));
+    assert.match(content, /^# React Hooks\r?\n/);
     assert.ok(content.includes("## Yang Dipelajari"));
     assert.ok(!content.includes("{{title}}"), "title replaced");
 });
@@ -410,7 +410,7 @@ test("obs new -t decision creates a note", () => {
 
     assert.ok(fs.existsSync(filePath), "note created");
     const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.startsWith("# Database Choice\n"));
+    assert.match(content, /^# Database Choice\r?\n/);
     assert.ok(content.includes("## Konteks"));
     assert.ok(content.includes("## Keputusan"));
     assert.ok(!content.includes("{{title}}"), "title replaced");
@@ -426,7 +426,7 @@ test("obs new -t weekly creates a note", () => {
 
     assert.ok(fs.existsSync(filePath), "note created");
     const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.startsWith("# Week 36\n"));
+    assert.match(content, /^# Week 36\r?\n/);
     assert.ok(content.includes("## Pencapaian"));
     assert.ok(!content.includes("{{title}}"), "title replaced");
 });

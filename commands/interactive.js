@@ -13,6 +13,10 @@ const { peopleList, peopleRecentCommand, peopleStatsCommand } = require("./peopl
 const relate = require("./relate");
 const unrelate = require("./unrelate");
 const relations = require("./relations");
+const doctor = require("./doctor");
+const relatedCmd = require("./related");
+const suggestCmd = require("./suggest");
+const reviewCmd = require("./review");
 const { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople } = require("./ai");
 const templateAction = require("./template");
 
@@ -42,6 +46,7 @@ async function mainMenu() {
                     { name: "Todo", value: "todo" },
                     { name: "Dashboard", value: "dashboard" },
                     { name: "Vault Stats", value: "stats" },
+                    { name: "Intelligence", value: "intel" },
                     { name: "People", value: "people" },
                     { name: "Relationships", value: "relations" },
                     { name: "AI", value: "ai" },
@@ -90,6 +95,9 @@ async function dispatch(choice) {
             break;
         case "stats":
             stats();
+            break;
+        case "intel":
+            await intelligenceMenu();
             break;
         case "people":
             await peopleMenu();
@@ -404,6 +412,90 @@ async function handleTemplatePreview() {
     if (!name) return;
 
     templateAction({ preview: name });
+}
+
+async function intelligenceMenu() {
+    while (true) {
+        console.log("");
+        console.log(c.heading("Intelligence"));
+        console.log(c.divider("─────────────────────────────────"));
+        console.log("");
+
+        let choice;
+        try {
+            choice = await select({
+                message: "Pilih aksi:",
+                choices: [
+                    { name: "Vault Doctor", value: "doctor" },
+                    { name: "Related Notes", value: "related" },
+                    { name: "Suggestions", value: "suggest" },
+                    { name: "Review", value: "review" },
+                    { name: "Back", value: "back" },
+                ],
+            });
+        } catch (err) {
+            if (
+                err.name === "ExitPromptError" ||
+                err.message === "User force closed the prompt with 0 null"
+            ) {
+                return;
+            }
+            throw err;
+        }
+
+        if (choice === "back") return;
+
+        switch (choice) {
+            case "doctor":
+                doctor({});
+                break;
+            case "related":
+                await handleIntelligenceRelated();
+                break;
+            case "suggest":
+                await handleIntelligenceSuggest();
+                break;
+            case "review":
+                await handleIntelligenceReview();
+                break;
+        }
+    }
+}
+
+async function handleIntelligenceRelated() {
+    let note;
+    try {
+        note = (await input({ message: "Nama note:" })).trim();
+    } catch {
+        return;
+    }
+    if (!note) return;
+
+    relatedCmd(note, {});
+}
+
+async function handleIntelligenceSuggest() {
+    let note;
+    try {
+        note = (await input({ message: "Nama note:" })).trim();
+    } catch {
+        return;
+    }
+    if (!note) return;
+
+    await suggestCmd(note, {});
+}
+
+async function handleIntelligenceReview() {
+    let period;
+    try {
+        period = (await input({ message: "Periode (today/week/month):" }))
+            .trim() || "week";
+    } catch {
+        return;
+    }
+
+    await reviewCmd(period, {});
 }
 
 module.exports = interactive;

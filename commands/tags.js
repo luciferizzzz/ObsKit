@@ -3,30 +3,8 @@ const path = require("path");
 
 const { getVaultPath } = require("../utils/vault");
 const { scanMarkdownFiles } = require("../utils/scanner");
+const { stripCodeBlocks, extractTags } = require("../utils/tags");
 const c = require("../utils/colors");
-
-function stripCodeBlocks(content) {
-    // Remove fenced code blocks (``` ... ```)
-    let result = content.replace(/```[\s\S]*?```/g, "");
-
-    // Remove inline code (` ... `)
-    result = result.replace(/`[^`\n]+`/g, "");
-
-    return result;
-}
-
-function extractTags(content) {
-    const cleaned = stripCodeBlocks(content);
-    const regex = /(?:^|\s)#([a-zA-Z0-9_/][a-zA-Z0-9_\-/]*)/g;
-    const tags = [];
-    let match;
-
-    while ((match = regex.exec(cleaned)) !== null) {
-        tags.push("#" + match[1]);
-    }
-
-    return tags;
-}
 
 function normalizeTagQuery(query) {
     return String(query || "")

@@ -1,6 +1,6 @@
 {
   "name": "obskit",
-  "version": "1.5.7",
+  "version": "1.6.0",
   "description": "ObsKit (OBS = Organized Knowledge System) is a fast, lightweight, open-source CLI toolkit for managing Markdown knowledge bases directly from the terminal.",
   "main": "index.js",
   "bin": {

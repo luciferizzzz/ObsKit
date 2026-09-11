@@ -7,24 +7,7 @@ const { buildNoteIndex, buildNormalizedNoteIndex } = require("../utils/noteIndex
 const { extractWikiLinks } = require("../utils/wikilinks");
 const { listPeople } = require("../utils/people");
 const { getSectionContent } = require("../utils/relationship/parser");
-
-function stripCodeBlocks(content) {
-    let result = content.replace(/```[\s\S]*?```/g, "");
-    result = result.replace(/`[^`\n]+`/g, "");
-    return result;
-}
-
-function extractTags(cleaned) {
-    const regex = /(?:^|\s)#([a-zA-Z0-9_/][a-zA-Z0-9_\-/]*)/g;
-    const tags = [];
-    let match;
-
-    while ((match = regex.exec(cleaned)) !== null) {
-        tags.push("#" + match[1]);
-    }
-
-    return tags;
-}
+const { stripCodeBlocks, extractTags } = require("../utils/tags");
 
 function extractChecklists(content) {
     const lines = content.split(/\r?\n/);

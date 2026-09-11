@@ -32,6 +32,10 @@ const ALL_TEMPLATES = [
     "js",
     "html",
     "css",
+    "research",
+    "learning",
+    "decision",
+    "weekly",
 ];
 
 const CUSTOM_FIELDS = new Set([
@@ -47,6 +51,10 @@ const CUSTOM_FIELDS = new Set([
     "email",
     "telepon",
     "linkedin",
+    "topik",
+    "mata_kuliah",
+    "keputusan",
+    "review_date",
 ]);
 
 const DAILY_SECTIONS = [
@@ -274,4 +282,151 @@ test("obs template --list reports all built-in templates", () => {
     for (const name of ALL_TEMPLATES) {
         assert.ok(output.includes(name), `list should include ${name}`);
     }
+});
+
+test("research template has required sections", () => {
+    const raw = readTemplate("research");
+    assert.ok(raw.includes("## Pertanyaan Penelitian"));
+    assert.ok(raw.includes("## Temuan"));
+    assert.ok(raw.includes("## Sumber"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("## Pertanyaan Terbuka"));
+    assert.ok(raw.includes("## Related"));
+    assert.ok(raw.includes("**Topik:** {{topik}}"));
+});
+
+test("learning template has required sections", () => {
+    const raw = readTemplate("learning");
+    assert.ok(raw.includes("## Yang Dipelajari"));
+    assert.ok(raw.includes("## Konsep Kunci"));
+    assert.ok(raw.includes("## Contoh"));
+    assert.ok(raw.includes("## Pertanyaan"));
+    assert.ok(raw.includes("## Takeaways"));
+    assert.ok(raw.includes("## Related"));
+    assert.ok(raw.includes("**Mata Kuliah:** {{mata_kuliah}}"));
+});
+
+test("decision template has required sections", () => {
+    const raw = readTemplate("decision");
+    assert.ok(raw.includes("## Konteks"));
+    assert.ok(raw.includes("## Opsi"));
+    assert.ok(raw.includes("## Keputusan"));
+    assert.ok(raw.includes("## Alasan"));
+    assert.ok(raw.includes("## Konsekuensi"));
+    assert.ok(raw.includes("## Review"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("**Status:** {{status}}"));
+    assert.ok(raw.includes("{{keputusan}}"));
+    assert.ok(raw.includes("{{review_date}}"));
+});
+
+test("weekly template has required sections", () => {
+    const raw = readTemplate("weekly");
+    assert.ok(raw.includes("## Pencapaian"));
+    assert.ok(raw.includes("## Refleksi"));
+    assert.ok(raw.includes("## Goals Minggu Depan"));
+    assert.ok(raw.includes("## Prioritas"));
+    assert.ok(raw.includes("## Catatan"));
+});
+
+test("research template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("research"),
+        getTemplateData({ title: "AI Research", folder: "Research", date: "2026-09-05" })
+    );
+    assert.ok(rendered.startsWith("# AI Research\n"));
+    assert.ok(rendered.includes("**Topik:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+    assert.ok(!rendered.includes("{{created}}"), "created replaced");
+});
+
+test("learning template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("learning"),
+        getTemplateData({ title: "React Hooks", folder: "Learning", date: "2026-09-05" })
+    );
+    assert.ok(rendered.startsWith("# React Hooks\n"));
+    assert.ok(rendered.includes("**Mata Kuliah:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("decision template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("decision"),
+        getTemplateData({ title: "Database Choice", folder: "Decisions", date: "2026-09-05" })
+    );
+    assert.ok(rendered.startsWith("# Database Choice\n"));
+    assert.ok(rendered.includes("**Status:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("weekly template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("weekly"),
+        getTemplateData({ title: "Week 36", folder: "Planning", date: "2026-09-05" })
+    );
+    assert.ok(rendered.startsWith("# Week 36\n"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t research creates a note", () => {
+    const root = makeVault("obs-tpl-research-");
+    const filePath = path.join(root, "Research", "AI Research.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Research", "AI Research", { template: "research" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.startsWith("# AI Research\n"));
+    assert.ok(content.includes("## Pertanyaan Penelitian"));
+    assert.ok(content.includes("## Temuan"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t learning creates a note", () => {
+    const root = makeVault("obs-tpl-learning-");
+    const filePath = path.join(root, "Learning", "React Hooks.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Learning", "React Hooks", { template: "learning" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.startsWith("# React Hooks\n"));
+    assert.ok(content.includes("## Yang Dipelajari"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t decision creates a note", () => {
+    const root = makeVault("obs-tpl-decision-");
+    const filePath = path.join(root, "Decisions", "Database Choice.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Decisions", "Database Choice", { template: "decision" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.startsWith("# Database Choice\n"));
+    assert.ok(content.includes("## Konteks"));
+    assert.ok(content.includes("## Keputusan"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t weekly creates a note", () => {
+    const root = makeVault("obs-tpl-weekly-");
+    const filePath = path.join(root, "Planning", "Week 36.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Planning", "Week 36", { template: "weekly" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.startsWith("# Week 36\n"));
+    assert.ok(content.includes("## Pencapaian"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
 });

@@ -10,6 +10,12 @@ const program = new Command();
 
 const doctor = require("../commands/doctor");
 
+const relatedCmd = require("../commands/related");
+
+const suggestCmd = require("../commands/suggest");
+
+const reviewCmd = require("../commands/review");
+
 const deadlinks = require("../commands/deadlinks");
 
 const move = require("../commands/move");
@@ -193,7 +199,28 @@ program
 program
   .command("doctor")
   .description("Analyze vault health")
-  .action(doctor);
+  .option("--verbose", "Show detailed issue lists")
+  .option("--json", "Output health report as JSON")
+  .action((options) => doctor(options));
+
+program
+  .command("related <note>")
+  .description("Find notes related to a given note")
+  .option("-n, --limit <n>", "Max number of results (default 10)")
+  .action((note, options) => relatedCmd(note, options));
+
+program
+  .command("suggest <note>")
+  .description("Actionable recommendations for a note")
+  .option("--ai", "Add AI-generated guidance (requires configured provider)")
+  .action((note, options) => suggestCmd(note, options));
+
+program
+  .command("review [period]")
+  .description("Vault activity digest (today, week, month, or --days)")
+  .option("--days <n>", "Review the last N days")
+  .option("--ai", "Add an AI summary (requires configured provider)")
+  .action((period, options) => reviewCmd(period, options));
 
 program
   .command("tree")

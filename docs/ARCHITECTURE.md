@@ -172,6 +172,8 @@ createFile(<vault path>\Notes\Learning Rust.md, content)   // mkdir -p + write
 | `utils/scanner.js` | `scanMarkdownFiles()` — recursive `.md` scanner |
 | `utils/search.js` | Search foundation — `searchFiles()` / `searchNotes()` (substring), `fuzzySearchFiles()` / `fuzzySearchNotes()` (typo-tolerant, scored), `searchByContent()` (content + snippets), `rankResults()` (exact → prefix → substring). Result objects carry `name` / `path` / `relativePath` (plus `score` / `line` / `snippet` where relevant); supports extension filters and directory exclusion |
 | `utils/noteIndex.js` | `buildNoteIndex()` / `buildNormalizedNoteIndex()` / `buildFilePathMap()` — `Set`/`Map` indexes for O(1) link analysis |
+| `utils/vaultIndex.js` | `buildVaultIndex()` — single-scan, deterministic vault index (sorted). Each note carries `outgoing`, `outgoingDetails`, `tags` (lowercase, sorted), `backlinks`, `content`, `size`, `mtime`, `created` (birthtime), `relPath`; the index also exposes `byName` (case-insensitive) and `referenced` sets |
+| `utils/tags.js` | Canonical tag extraction — `stripCodeBlocks()` + `extractTags()`. Reused by `obs tags`, `obs info`, health checks, and the vault index |
 | `utils/wikilinks.js` | `extractWikiLinks()` — wiki-link parser |
 | `utils/markdown.js` | Template parser, AI blocks, template data |
 | `utils/dailyWorkflow.js` | Daily-note date/path helpers, `## Tomorrow` extraction, checklist parsing/dedup, `## Update` upsert |
@@ -193,7 +195,8 @@ Checks analyze the vault and **return structured data**. They are the reusable a
 checkDeadlinks() → { vault, files, totalLinks, broken: [{ file, link }] }
 ```
 
-Used by `commands/deadlinks.js` and `commands/doctor.js`.
+Used by `commands/deadlinks.js` and `commands/cleanup.js`. `commands/doctor.js`
+detects broken links through the shared vault index instead.
 
 ### `checks/vaultReport.js`
 
@@ -216,6 +219,53 @@ through a normalized `Set` index (O(1) per link).
 ### `checks/todos.js` & `checks/attachments.js`
 
 Todo extraction and attachment inventory, used by `commands/todo.js` and `commands/attachments.js`.
+
+### Intelligence checks (v1.6.0)
+
+All four intelligence commands share one `buildVaultIndex()` single scan and render its output themselves:
+
+```js
+// checks/health.js
+analyzeVaultIndex(index, options) → {
+  notesScanned, brokenLinks, orphanNotes, emptyNotes, duplicates,
+  duplicateNames, missingTags, noOutgoing, malformedFrontmatter,
+  staleNotes, largeNotes, score, rating, details
+}
+
+// checks/related.js
+findRelatedNotes(index, targetRef, { limit }) → { target, results: [{ note, score, reasons }] }
+
+// checks/suggest.js
+buildSuggestions(index, targetRef) → { note, issues, opportunities }
+
+// checks/review.js
+resolvePeriod(period, days) → { days, label }
+aggregateReview(index, { start, days }) → { created, modified, activeTags,
+  pendingTasks, relationships, brokenLinks, orphansCreated, … }
+```
+
+**Health-score formula** (`computeHealthScore`): start at 100 and subtract penalties per
+issue, capped per category so a single category can never wipe the whole score:
+
+| Category | Penalty per unit | Cap |
+|----------|------------------|-----|
+| Broken Links | 2 | 20 |
+| Orphan Notes | 3 | 15 |
+| Empty Notes | 5 | — |
+| Duplicate Names | 4 | — |
+| Missing Tags | 2 | 10 |
+| No Outgoing Links | 1 | 10 |
+| Malformed Frontmatter | 4 | — |
+| Stale Notes (warning) | 1 | 10 |
+| Large Notes (warning) | 1 | 5 |
+
+Score is clamped to `[0, 100]`. Rating: `≥ 90` Excellent, `≥ 75` Good, `≥ 50` Fair,
+else Needs Attention. The formula only depends on note content and filesystem metadata,
+so it is fully deterministic and testable.
+
+**Related-note weights** (per signal per candidate note): backlink +10, shared outgoing
+link +3 each, shared tag +2 each, shared backlink +2 each, title-token overlap +1 each.
+Results sort by score desc, then name ascending; results with 0 score are dropped.
 
 ---
 
@@ -382,7 +432,8 @@ obskit/
 │   ├── new.js / today.js / find.js / rename.js / move.js / open.js
 │   ├── list.js / tree.js / recent.js / random.js / stats.js
 │   ├── dashboard.js / report.js
-│   ├── deadlinks.js / backlinks.js / orphan.js / graph.js / tags.js / doctor.js
+│   ├── deadlinks.js / backlinks.js / orphan.js / graph.js / tags.js
+│   ├── doctor.js / related.js / suggest.js / review.js
 │   ├── archive.js / attachments.js / backup.js / cleanup.js / todo.js
 │   ├── relate.js / unrelate.js / relations.js
 │   └── template.js
@@ -390,11 +441,15 @@ obskit/
 │   ├── deadlinks.js
 │   ├── vaultReport.js
 │   ├── todos.js
-│   └── attachments.js
+│   ├── attachments.js
+│   ├── health.js            # doctor analysis + health score
+│   ├── related.js           # weighted related-note ranking
+│   ├── suggest.js           # per-note recommendations
+│   └── review.js            # period activity digest
 ├── utils/                   # shared helpers
 │   ├── ai.js  colors.js  config.js  feedback.js  file.js  markdown.js
 │   ├── noteIndex.js  persona.js  progress.js  sanitizeFilename.js  scanner.js
-│   ├── search.js  spinner.js  vault.js  wikilinks.js
+│   ├── search.js  spinner.js  tags.js  vault.js  vaultIndex.js  wikilinks.js
 │   ├── people.js
 │   └── relationship/        # relationship module (parser, validator, scanner, editor, formatter, index)
 ├── templates/               # note templates

@@ -4,6 +4,66 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.6.1] - 2026-09-14
+
+### Template Expansion
+
+#### Added
+
+- `feature` — feature / improvement tracker (Deskripsi, Kriteria Keberhasilan, Desain,
+  Implementasi, Pengujian)
+- `experiment` — science/experiment log (Tujuan, Langkah, Hasil, Analisis, Kesimpulan) with
+  `{{hipotesis}}` / `{{lingkungan}}` fields
+- `retrospective` — project/period retrospective (Yang Berjalan Baik, Yang Perlu Diperbaiki,
+  Pembelajaran, Tindak Lanjut)
+- `code-review` — pull-request / code review notes (Ringkasan Perubahan, Yang Dilakukan dengan
+  Baik, Saran Perbaikan, Kesalahan/Bug)
+- Interactive Mode **Template** submenu now offers **Create Note from Template** (folder, title,
+  template name) alongside the existing List / Preview actions.
+
+### Bug Fixes
+
+#### Fixed
+
+- **`$` corruption in template rendering** — `parseTemplate()`, `fillAIBlocks()`,
+  `insertUnderCatatan()`, `replaceSection()`, and `fillDailyTemplate()` used
+  `String.replace()` with string replacements, which treats `$` patterns as special
+  placeholders (`$&`, `$1`, `$$`, …). Values containing `$` (e.g. `$100`, `$&Sons`,
+  `$5/day`) were silently mangled. All replacements now use function callbacks, so
+  `$` is preserved verbatim. (v1.4.5 regression)
+- **Filename sanitization gap** — `sanitizeFilename()` now also strips non-whitespace
+  control characters (`\x00`–`\x08`, `\x0b`–`\x1f`, `\x7f`) and trims trailing dots in
+  addition to the existing illegal-character and whitespace handling, while preserving
+  newlines/tabs (allowing label collapse) and Unicode/emoji.
+- **Template-name path traversal** — `obs new -t ../name`, `obs template --preview ../name`,
+  and `obs ai --template ../name` previously resolved template paths outside `templates/`.
+  A shared `isValidTemplateName()` guard now rejects empty names, names over 100 chars,
+  and names containing `/`, `\`, `..`, `:`, or NUL, reporting `Template tidak ditemukan.`
+- **`obs config` robustness** — `obs config show`/`set`/`ai` crashed with a raw JSON
+  error when `config.json` was malformed; `obs config reset` failed when `config.json`
+  was missing. Corrupt configs now show a clear recovery message, and `config reset`
+  always works.
+
+### Tests
+
+- `test/templates.test.js`: coverage extended to all 19 templates (section contracts,
+  rendering, `obs new -t` integration), Unicode titles, CRLF preservation, `$` regression
+  cases, and path-traversal rejection.
+- `test/sanitizeFilename.test.js` (new): 12 cases — illegal characters, control
+  characters, trailing dots, Unicode, emoji, whitespace collapse, `.md` preservation.
+- `test/aiWorkflows.test.js`: `$`-preservation regression tests for `fillDailyTemplate()`.
+- Full suite: **468 tests, all passing** (baseline 436 → +32).
+
+#### Backward Compatible
+
+- All v1.6.0 commands, utilities, output formats, AI workflows, and existing template
+  contents are unchanged.
+- The `{{ai:...}}` placeholder system, custom fields, and the shared metadata line are
+  unchanged.
+- No configuration changes required.
+
+---
+
 ## [1.6.0] - 2026-09-05
 
 ### Automation & Intelligence

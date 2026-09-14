@@ -1,8 +1,9 @@
 function sanitizeFilename(name) {
     return String(name)
-        .replace(/[<>:"/\\|?*]/g, "")
+        .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f<>:"/\\|?*]/g, "")
         .replace(/\s+/g, " ")
-        .trim();
+        .trim()
+        .replace(/\.+$/g, "");
 }
 
 function mdFileName(title) {

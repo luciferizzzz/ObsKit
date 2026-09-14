@@ -36,6 +36,10 @@ const ALL_TEMPLATES = [
     "learning",
     "decision",
     "weekly",
+    "feature",
+    "experiment",
+    "retrospective",
+    "code-review",
 ];
 
 const CUSTOM_FIELDS = new Set([
@@ -55,6 +59,12 @@ const CUSTOM_FIELDS = new Set([
     "mata_kuliah",
     "keputusan",
     "review_date",
+    "priority",
+    "hipotesis",
+    "lingkungan",
+    "period",
+    "reviewer",
+    "link",
 ]);
 
 const DAILY_SECTIONS = [
@@ -429,4 +439,216 @@ test("obs new -t weekly creates a note", () => {
     assert.match(content, /^# Week 36\r?\n/);
     assert.ok(content.includes("## Pencapaian"));
     assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("feature template has required sections", () => {
+    const raw = readTemplate("feature");
+    assert.ok(raw.includes("## Deskripsi"));
+    assert.ok(raw.includes("## Kriteria Keberhasilan"));
+    assert.ok(raw.includes("## Desain"));
+    assert.ok(raw.includes("## Implementasi"));
+    assert.ok(raw.includes("## Pengujian"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("**Prioritas:** {{priority}}"));
+});
+
+test("experiment template has required sections", () => {
+    const raw = readTemplate("experiment");
+    assert.ok(raw.includes("## Tujuan"));
+    assert.ok(raw.includes("## Langkah"));
+    assert.ok(raw.includes("## Hasil"));
+    assert.ok(raw.includes("## Analisis"));
+    assert.ok(raw.includes("## Kesimpulan"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("**Hipotesis:** {{hipotesis}}"));
+    assert.ok(raw.includes("**Lingkungan:** {{lingkungan}}"));
+});
+
+test("retrospective template has required sections", () => {
+    const raw = readTemplate("retrospective");
+    assert.ok(raw.includes("## Yang Berjalan Baik"));
+    assert.ok(raw.includes("## Yang Perlu Diperbaiki"));
+    assert.ok(raw.includes("## Pembelajaran"));
+    assert.ok(raw.includes("## Tindak Lanjut"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("**Periode:** {{period}}"));
+});
+
+test("code-review template has required sections", () => {
+    const raw = readTemplate("code-review");
+    assert.ok(raw.includes("## Ringkasan Perubahan"));
+    assert.ok(raw.includes("## Yang Dilakukan dengan Baik"));
+    assert.ok(raw.includes("## Saran Perbaikan"));
+    assert.ok(raw.includes("## Kesalahan / Bug"));
+    assert.ok(raw.includes("## Catatan"));
+    assert.ok(raw.includes("**Reviewer:** {{reviewer}}"));
+    assert.ok(raw.includes("**Link Code/PR:** {{link}}"));
+});
+
+test("feature template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("feature"),
+        getTemplateData({ title: "Dark Mode", folder: "Features", date: "2026-09-14" })
+    );
+    assert.match(rendered, /^# Dark Mode\r?\n/);
+    assert.ok(rendered.includes("**Prioritas:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+    assert.ok(!rendered.includes("{{created}}"), "created replaced");
+});
+
+test("experiment template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("experiment"),
+        getTemplateData({ title: "AB Test", folder: "Experiments", date: "2026-09-14" })
+    );
+    assert.match(rendered, /^# AB Test\r?\n/);
+    assert.ok(rendered.includes("**Hipotesis:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("retrospective template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("retrospective"),
+        getTemplateData({ title: "Sprint 12 Retro", folder: "Retrospectives", date: "2026-09-14" })
+    );
+    assert.match(rendered, /^# Sprint 12 Retro\r?\n/);
+    assert.ok(rendered.includes("**Periode:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("code-review template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("code-review"),
+        getTemplateData({ title: "Review PR #42", folder: "Reviews", date: "2026-09-14" })
+    );
+    assert.match(rendered, /^# Review PR #42\r?\n/);
+    assert.ok(rendered.includes("**Reviewer:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t feature creates a note", () => {
+    const root = makeVault("obs-tpl-feature-");
+    const filePath = path.join(root, "Features", "Dark Mode.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Features", "Dark Mode", { template: "feature" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.match(content, /^# Dark Mode\r?\n/);
+    assert.ok(content.includes("## Kriteria Keberhasilan"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t experiment creates a note", () => {
+    const root = makeVault("obs-tpl-exp-");
+    const filePath = path.join(root, "Experiments", "AB Test.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Experiments", "AB Test", { template: "experiment" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.match(content, /^# AB Test\r?\n/);
+    assert.ok(content.includes("## Analisis"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t retrospective creates a note", () => {
+    const root = makeVault("obs-tpl-retro-");
+    const filePath = path.join(root, "Retrospectives", "Sprint 12 Retro.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Retrospectives", "Sprint 12 Retro", { template: "retrospective" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.match(content, /^# Sprint 12 Retro\r?\n/);
+    assert.ok(content.includes("## Yang Berjalan Baik"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t feature renders Unicode and spaced titles", () => {
+    const root = makeVault("obs-tpl-unicode-");
+    const filePath = path.join(root, "AI", "AI 实践研究.md");
+
+    withVault(root, () =>
+        capture(() => newNote("AI", "AI 实践研究", { template: "feature" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "unicode note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.match(content, /^# AI \u5b9e\u8df5\u7814\u7a76\r?\n/);
+    assert.ok(!content.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t feature handles CRLF line endings", () => {
+    const root = makeVault("obs-tpl-crlf-");
+    const filePath = path.join(root, "Notes", "Note.doc.md");
+    const templatePath = path.join(TEMPLATE_DIR, "feature.md");
+    const withCRLF = fs.readFileSync(templatePath, "utf8").replace(/\n/g, "\r\n");
+
+    fs.writeFileSync(templatePath, withCRLF);
+
+    try {
+        withVault(root, () =>
+            capture(() => newNote("Notes", "Note.doc", { template: "feature" }))
+        );
+        const content = fs.readFileSync(filePath, "utf8");
+        assert.ok(content.includes("\r\n"), "content keeps CRLF");
+        assert.match(content, /^# Note\.doc\r?\n/);
+    } finally {
+        fs.writeFileSync(templatePath, fs.readFileSync(templatePath, "utf8").replace(/\r\n/g, "\n"));
+    }
+});
+
+test("parseTemplate preserves dollar signs in values", () => {
+    const rendered = parseTemplate(
+        "# {{title}}\n\nBudget: {{title}}",
+        { title: "Dokumen $100 Report", folder: "Notes", date: "2026-09-14" }
+    );
+    assert.ok(rendered.includes("Dokumen $100 Report"), "title with $100 preserved");
+});
+
+test("fillAIBlocks preserves dollar signs in AI content", () => {
+    const raw = "Cost: {{ai:summarize costs}}";
+    const blocks = extractAIBlocks(raw);
+    const fills = blocks.map((b) => ({ placeholder: b.placeholder, content: "Total $500 & $1.25 fee" }));
+    const filled = fillAIBlocks(raw, fills);
+    assert.ok(filled.includes("Total $500 & $1.25 fee"), "AI content with $ preserved");
+});
+
+test("parseTemplate preserves regex-like special chars in values", () => {
+    const rendered = parseTemplate(
+        "## {{title}}\n\n{{title}} -> {{folder}}",
+        { title: "A&B $1 'quote'", folder: "C:\\My Folder", date: "2026-09-14" }
+    );
+    assert.ok(rendered.includes("A&B $1 'quote'"), "title preserved");
+    assert.ok(rendered.includes("C:\\My Folder"), "folder preserved");
+});
+
+test("template preview rejects path traversal names", () => {
+    const output = capture(() => templateAction({ preview: "../package.json" }));
+    assert.ok(output.includes("Template tidak ditemukan."), "path traversal rejected");
+    assert.ok(!output.includes('"name": "obskit"'), "repo files not leaked");
+});
+
+test("obs new -t rejects path traversal template names", () => {
+    const root = makeVault("obs-tpl-traversal-");
+    withVault(root, () =>
+        capture(() => newNote("Notes", "Title", { template: "../package.json" }))
+    );
+    assert.ok(!fs.existsSync(path.join(root, "Notes", "package.json.md")), "no file created");
+});
+
+test("obs new -t rejects non-existent template", () => {
+    const root = makeVault("obs-tpl-missing-");
+    const output = withVault(root, () =>
+        capture(() => newNote("Notes", "Title", { template: "nonexistent-template" }))
+    );
+    assert.ok(output.includes("Template tidak ditemukan."));
+    assert.ok(!fs.existsSync(path.join(root, "Notes", "Title.md")), "no file created");
 });

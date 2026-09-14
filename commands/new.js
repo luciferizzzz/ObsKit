@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const { parseTemplate, getTemplateData } = require("../utils/markdown");
+const { parseTemplate, getTemplateData, isValidTemplateName } = require("../utils/markdown");
 const { createFile } = require("../utils/file");
 const { getVaultPath } = require("../utils/vault");
 const { sanitizeFilename, mdFileName } = require("../utils/sanitizeFilename");
@@ -15,6 +15,11 @@ function newNote(folder, title, options) {
     let content = "";
 
     if (options.template) {
+        if (!isValidTemplateName(options.template)) {
+            error("Template tidak ditemukan.");
+            return;
+        }
+
         const templatePath = path.join(
             __dirname,
             "..",

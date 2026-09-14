@@ -10,7 +10,7 @@ const { scanMarkdownFiles } = require("../utils/scanner");
 const { error, success, warning } = require("../utils/feedback");
 const { Spinner } = require("../utils/spinner");
 const c = require("../utils/colors");
-const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData } = require("../utils/markdown");
+const { parseTemplate, extractAIBlocks, fillAIBlocks, getTemplateData, isValidTemplateName } = require("../utils/markdown");
 const { loadTomorrowTasks, importTomorrowTasks } = require("../utils/dailyWorkflow");
 const { updateMarkdown } = require("../utils/relationship/editor");
 const {
@@ -152,7 +152,7 @@ function insertUnderCatatan(content, newContent) {
 
     const placeholderRe = /(## Catatan(?:\r?\n)+)-((?:\r?\n)*)(?=(?:\r?\n)+---|(?:\r?\n)+## |$)/i;
     if (placeholderRe.test(content)) {
-        return content.replace(placeholderRe, `$1${clean}$2`);
+        return content.replace(placeholderRe, (m, g1, g2) => `${g1}${clean}${g2}`);
     }
 
     const sectionRe = /(## Catatan(?:\r?\n)+)([\s\S]*?)(?=(?:\r?\n)+---|(?:\r?\n)+## |\r?\n?$)/i;
@@ -160,9 +160,9 @@ function insertUnderCatatan(content, newContent) {
     if (m) {
         const body = m[2].trim();
         if (body && body !== "-") {
-            return content.replace(sectionRe, `${m[1]}${body}\n\n${clean}`);
+            return content.replace(sectionRe, (match, g1, g2) => `${g1}${body}\n\n${clean}`);
         } else {
-            return content.replace(sectionRe, `${m[1]}${clean}`);
+            return content.replace(sectionRe, (match, g1, g2) => `${g1}${clean}`);
         }
     }
 
@@ -176,7 +176,7 @@ function replaceSection(content, heading, newContent) {
         "i"
     );
     if (re.test(content)) {
-        return content.replace(re, `$1${newContent.trim()}`);
+        return content.replace(re, (m, g1) => `${g1}${newContent.trim()}`);
     }
     return content;
 }
@@ -244,9 +244,9 @@ function fillDailyTemplate(template, sections) {
         if (sections[key] && !found.has(key)) {
             const jamRe = /\n*Jam dibuat[^\n]*\n?$/;
             if (jamRe.test(result)) {
-                result = result.replace(jamRe, `\n\n${heading}\n\n${sections[key]}$&`);
+                result = result.replace(jamRe, (match) => `\n\n${heading}\n\n${sections[key]}${match}`);
             } else {
-                result = result.replace(/\s*$/, `\n\n${heading}\n\n${sections[key]}\n`);
+                result = result.replace(/\s*$/, () => `\n\n${heading}\n\n${sections[key]}\n`);
             }
         }
     }
@@ -367,6 +367,11 @@ async function aiWrite(prompt, options) {
                 }
             }
         } else if (options.template) {
+            if (!isValidTemplateName(options.template)) {
+                error(`Template tidak ditemukan: ${options.template}`);
+                return;
+            }
+
             const templatePath = path.join(
                 __dirname, "..", "templates", `${options.template}.md`
             );

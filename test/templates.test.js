@@ -589,7 +589,7 @@ test("obs new -t feature handles CRLF line endings", () => {
     const root = makeVault("obs-tpl-crlf-");
     const filePath = path.join(root, "Notes", "Note.doc.md");
     const templatePath = path.join(TEMPLATE_DIR, "feature.md");
-    const withCRLF = fs.readFileSync(templatePath, "utf8").replace(/\n/g, "\r\n");
+    const withCRLF = fs.readFileSync(templatePath, "utf8").replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
 
     fs.writeFileSync(templatePath, withCRLF);
 

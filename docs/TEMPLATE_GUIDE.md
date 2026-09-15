@@ -97,7 +97,9 @@ Available **data placeholders** (from `getTemplateData()`):
 
 **Custom fields** — built-in templates also use fields like `{{penulis}}`, `{{rilis}}`,
 `{{genre}}`, `{{isbn}}`, `{{status}}`, `{{tags}}`, `{{peserta}}`, `{{role}}`, `{{email}}`,
-`{{telepon}}`, `{{linkedin}}`, `{{mood}}`. These are left for you to fill manually.
+`{{telepon}}`, `{{linkedin}}`, `{{mood}}`, `{{topik}}`, `{{mata_kuliah}}`, `{{priority}}`,
+`{{hipotesis}}`, `{{lingkungan}}`, `{{period}}`, `{{reviewer}}`, `{{link}}`. These are
+left for you to fill manually.
 
 > **v1.5.1 (Better Templates):** every built-in template now shares one standard metadata
 > line — `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} ·
@@ -687,6 +689,145 @@ Ditinjau ulang pada: {{review_date}}
 
 ---
 
+## ⭐ Feature
+
+`templates/feature.md` — feature / improvement tracker for product work.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Prioritas:** {{priority}}
+
+---
+
+## Deskripsi
+{{ai:Jelaskan fitur ini secara singkat: apa yang dilakukan, mengapa dibutuhkan, dan manfaatnya bagi pengguna}}
+
+## Kriteria Keberhasilan
+{{ai:Daftar kriteria yang harus terpenuhi agar fitur ini dianggap berhasil, berupa checklist}}
+
+## Desain
+{{ai:Jelaskan pendekatan desain atau arsitektur teknis untuk fitur ini}}
+
+## Implementasi
+- [ ] Langkah pertama
+
+## Pengujian
+{{ai:Rencana pengujian untuk memastikan fitur berfungsi dengan benar}}
+
+## Catatan
+-
+```
+
+**Custom fields:** `{{priority}}`.
+
+---
+
+## 🧪 Experiment
+
+`templates/experiment.md` — science / experiment log for testing hypotheses.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Hipotesis:** {{hipotesis}} · **Lingkungan:** {{lingkungan}}
+
+---
+
+## Tujuan
+{{ai:Jelaskan tujuan dari eksperimen ini dan mengapa penting untuk dieksplorasi}}
+
+## Langkah
+1. Langkah pertama
+2. Langkah kedua
+
+## Hasil
+{{ai:Ringkasan hasil eksperimen ini berdasarkan data atau pengamatan yang tersedia}}
+
+## Analisis
+{{ai:Analisis mengapa hasilnya demikian, apa yang berhasil, dan apa yang tidak}}
+
+## Kesimpulan
+{{ai:Kesimpulan dari eksperimen ini: apakah hipotesis terbukti, dan langkah selanjutnya apa}}
+
+## Catatan
+-
+```
+
+**Custom fields:** `{{hipotesis}}`, `{{lingkungan}}`.
+
+---
+
+## 🔁 Retrospective
+
+`templates/retrospective.md` — periodic retrospective for projects or work periods.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Periode:** {{period}}
+
+---
+
+## Yang Berjalan Baik
+{{ai:Daftar hal-hal yang berjalan dengan baik selama periode ini, berupa bullet points}}
+
+## Yang Perlu Diperbaiki
+{{ai:Daftar hal-hal yang perlu diperbaiki atau kendala yang dihadapi, berupa bullet points}}
+
+## Pembelajaran
+{{ai:Pelajaran penting yang dipetik dari periode ini}}
+
+## Tindak Lanjut
+- [ ] Tindak lanjut pertama
+
+## Catatan
+-
+```
+
+**Custom fields:** `{{period}}`.
+
+---
+
+## 🧑‍💻 Code Review
+
+`templates/code-review.md` — pull-request / code review notes.
+
+```markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Reviewer:** {{reviewer}} · **Link Code/PR:** {{link}}
+
+---
+
+## Ringkasan Perubahan
+{{ai:Ringkasan singkat tentang perubahan kode yang direview: apa yang diubah dan mengapa}}
+
+## Yang Dilakukan dengan Baik
+{{ai:Bagian-bagian dari perubahan yang menurutmu sudah baik dan perlu dipertahankan}}
+
+## Saran Perbaikan
+{{ai:Saran perbaikan atau hal yang perlu disempurnakan dalam perubahan ini, berupa checklist}}
+
+## Kesalahan / Bug
+-
+
+## Catatan
+-
+```
+
+**Custom fields:** `{{reviewer}}`, `{{link}}`.
+
+---
+
 # 🛠️ Custom Templates
 
 Creating your own template takes **two steps**:
@@ -783,4 +924,12 @@ obs new Learning "React Hooks" -t learning
 # Decision log and weekly review
 obs new Decisions "Database Choice" -t decision
 obs new Planning "Week 36" -t weekly
+
+# Feature / product work
+obs new Features "Dark Mode" -t feature
+obs new Review "Sprint 12" -t retrospective
+
+# Experiments and code review
+obs new Experiments "A/B Test Landing Page" -t experiment
+obs new Review "PR #42" -t code-review
 ```

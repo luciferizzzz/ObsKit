@@ -3,17 +3,18 @@ const path = require("path");
 const { input, select, password } = require("@inquirer/prompts");
 
 const configPath = path.join(__dirname, "..", "config.json");
+const { getConfig } = require("../utils/config");
 const { error, info, success } = require("../utils/feedback");
 const c = require("../utils/colors");
+
+const CORRUPT = Symbol("corrupt");
 
 function loadConfig() {
     if (!fs.existsSync(configPath)) {
         return null;
     }
 
-    return JSON.parse(
-        fs.readFileSync(configPath, "utf8")
-    );
+    return getConfig() ?? CORRUPT;
 }
 
 function saveConfig(data) {
@@ -83,8 +84,19 @@ async function setupAI(cfg) {
 }
 
 async function config(subcommand) {
+    if (subcommand === "reset") {
+        saveConfig({ vault: "" });
+        success("Configuration reset.");
+        return;
+    }
 
     let cfg = loadConfig();
+
+    if (cfg === CORRUPT) {
+        error("config.json rusak atau tidak valid.");
+        info("Jalankan `obs config reset`, lalu `obs init` untuk konfigurasi ulang.");
+        return;
+    }
 
     if (!cfg) {
         error("No configuration found.");
@@ -126,15 +138,6 @@ async function config(subcommand) {
 
         case "ai":
             await setupAI(cfg);
-            return;
-
-        case "reset":
-
-            saveConfig({
-                vault: ""
-            });
-
-            success("Configuration reset.");
             return;
 
         default:

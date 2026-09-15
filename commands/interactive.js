@@ -376,6 +376,7 @@ async function templateMenu() {
                 choices: [
                     { name: "List Templates", value: "list" },
                     { name: "Preview Template", value: "preview" },
+                    { name: "Create Note from Template", value: "create" },
                     { name: "Back", value: "back" },
                 ],
             });
@@ -398,6 +399,9 @@ async function templateMenu() {
             case "preview":
                 await handleTemplatePreview();
                 break;
+            case "create":
+                await handleTemplateCreate();
+                break;
         }
     }
 }
@@ -412,6 +416,34 @@ async function handleTemplatePreview() {
     if (!name) return;
 
     templateAction({ preview: name });
+}
+
+async function handleTemplateCreate() {
+    let folder;
+    try {
+        folder = (await input({ message: "Folder:" })).trim();
+    } catch {
+        return;
+    }
+    if (!folder) return;
+
+    let title;
+    try {
+        title = (await input({ message: "Judul:" })).trim();
+    } catch {
+        return;
+    }
+    if (!title) return;
+
+    let name;
+    try {
+        name = (await input({ message: "Nama template:" })).trim();
+    } catch {
+        return;
+    }
+    if (!name) return;
+
+    newNote(folder, title, { template: name });
 }
 
 async function intelligenceMenu() {

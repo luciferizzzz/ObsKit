@@ -5,7 +5,7 @@ function parseTemplate(template, data) {
         if (data[key] === undefined || data[key] === null) continue;
 
         const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g");
-        result = result.replace(regex, String(data[key]));
+        result = result.replace(regex, () => String(data[key]));
     }
 
     return result;
@@ -32,7 +32,7 @@ function fillAIBlocks(template, fills) {
     for (const { placeholder, content } of fills) {
         const escaped = placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const regex = new RegExp(escaped, "g");
-        result = result.replace(regex, content || "");
+        result = result.replace(regex, () => content || "");
     }
 
     return result;
@@ -64,9 +64,23 @@ function getTemplateData(options = {}) {
     };
 }
 
+function isValidTemplateName(name) {
+    return (
+        typeof name === "string" &&
+        name.length > 0 &&
+        name.length <= 100 &&
+        !name.includes("/") &&
+        !name.includes("\\") &&
+        !name.includes("..") &&
+        !name.includes(":") &&
+        !name.includes("\x00")
+    );
+}
+
 module.exports = {
     parseTemplate,
     extractAIBlocks,
     fillAIBlocks,
     getTemplateData,
+    isValidTemplateName,
 };

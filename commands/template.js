@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const { error } = require("../utils/feedback");
+const { isValidTemplateName } = require("../utils/markdown");
 const c = require("../utils/colors");
 
 function templateList() {
@@ -25,6 +26,11 @@ function templateList() {
 }
 
 function templatePreview(name) {
+    if (!isValidTemplateName(name)) {
+        error("Template tidak ditemukan.");
+        return null;
+    }
+
     const templatePath = path.join(
         __dirname,
         "..",

@@ -89,6 +89,22 @@ test("fillDailyTemplate: replaces sections in template", () => {
     assert.ok(!result.includes("\n-\n\n## Catatan"));
 });
 
+test("fillDailyTemplate preserves dollar signs in AI section content", () => {
+    const template = "# 2026-08-17\n\n## Catatan\n\n-\n";
+    const sections = { catatan: "Total $500 spent on $1 books" };
+    const result = fillDailyTemplate(template, sections);
+    assert.ok(result.includes("Total $500 spent on $1 books"), "dollar text preserved");
+});
+
+test("fillDailyTemplate appends missing section with dollar signs intact", () => {
+    const template = "# 2026-08-17\n\n## Catatan\n\n-\n\n---\n\nJam dibuat : 10:00\n";
+    const result = fillDailyTemplate(template, {
+        syukur: "Gaji $1000 tercairkan hari ini",
+    });
+    assert.ok(result.includes("Gaji $1000 tercairkan hari ini"), "dollar text preserved");
+    assert.ok(result.includes("Jam dibuat"), "footer preserved");
+});
+
 // --- buildPromptFromAnswers (Daily) ---
 
 test("buildPromptFromAnswers: includes all structured daily questions", () => {

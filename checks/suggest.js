@@ -160,8 +160,12 @@ function buildSuggestions(index, targetRef) {
         });
     }
 
+    // bodySimilarity stays off here on purpose: link suggestions are tuned in
+    // the Smart Suggestions v2 work, and the relationship engine should not
+    // change suggestion output as a side effect.
     const related = findRelatedNotes(index, note.name, {
         limit: MAX_LINK_SUGGESTIONS,
+        bodySimilarity: false,
     });
 
     const linkedTargets = new Set(note.outgoing);

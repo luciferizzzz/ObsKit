@@ -1,6 +1,6 @@
 const { getVaultPath } = require("../utils/vault");
 const { buildVaultIndex } = require("../utils/vaultIndex");
-const { findRelatedNotes } = require("../checks/related");
+const { findRelatedNotes, REASON_ORDER } = require("../checks/related");
 const { error, info } = require("../utils/feedback");
 const c = require("../utils/colors");
 
@@ -35,14 +35,7 @@ function related(noteRef, options = {}) {
         console.log(`${i + 1}. ${c.title(result.note.name)}`);
 
         const ordered = result.reasons.slice().sort((a, b) => {
-            const rank = {
-                sharedTag: 0,
-                sharedLink: 1,
-                backlink: 2,
-                sharedBacklink: 3,
-                titleToken: 4,
-            };
-            return rank[a.type] - rank[b.type];
+            return REASON_ORDER.indexOf(a.type) - REASON_ORDER.indexOf(b.type);
         });
 
         for (const reason of ordered) {

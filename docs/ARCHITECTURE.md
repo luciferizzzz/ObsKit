@@ -236,7 +236,7 @@ analyzeVaultIndex(index, options) → {
 findRelatedNotes(index, targetRef, { limit }) → { target, results: [{ note, score, reasons }] }
 
 // checks/suggest.js
-buildSuggestions(index, targetRef) → { note, issues, opportunities }
+buildSuggestions(index, targetRef, options = {}) → { note, issues, opportunities, recommendations }
 
 // checks/review.js
 resolvePeriod(period, days) → { days, label }

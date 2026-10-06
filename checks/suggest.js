@@ -8,9 +8,18 @@ const {
     LARGE_NOTE_BYTES,
 } = require("./health");
 const { findRelatedNotes, titleTokens } = require("./related");
+const { suggestTags } = require("./suggestTags");
+const { suggestFolders } = require("./suggestFolders");
+const { suggestTemplates } = require("./suggestTemplates");
+const { getTemplateCatalog } = require("../utils/templates");
 
 const SIMILARITY_THRESHOLD = 0.5;
 const MAX_LINK_SUGGESTIONS = 3;
+
+// Recommendations read from a wider relationship scan than link suggestions
+// need, but the link block still only ever sees the top
+// MAX_LINK_SUGGESTIONS entries, so its output is unchanged.
+const RELATED_CANDIDATE_LIMIT = 12;
 
 function tokensSet(tokens) {
     return new Set(tokens);
@@ -74,11 +83,16 @@ function findSimilarNote(index, note) {
     return null;
 }
 
-function buildSuggestions(index, targetRef) {
+function buildSuggestions(index, targetRef, options = {}) {
     const note = index.byName.get(normalizeNoteRef(targetRef));
 
     if (!note) {
-        return { note: null, issues: [], opportunities: [] };
+        return {
+            note: null,
+            issues: [],
+            opportunities: [],
+            recommendations: emptyRecommendations(),
+        };
     }
 
     const issues = [];
@@ -164,14 +178,14 @@ function buildSuggestions(index, targetRef) {
     // the Smart Suggestions v2 work, and the relationship engine should not
     // change suggestion output as a side effect.
     const related = findRelatedNotes(index, note.name, {
-        limit: MAX_LINK_SUGGESTIONS,
+        limit: RELATED_CANDIDATE_LIMIT,
         bodySimilarity: false,
     });
 
     const linkedTargets = new Set(note.outgoing);
     const relatedSection = getSectionContent(note.content, "Related") || "";
 
-    for (const result of related.results) {
+    for (const result of related.results.slice(0, MAX_LINK_SUGGESTIONS)) {
         const name = result.note.name.toLowerCase();
         if (
             linkedTargets.has(name) ||
@@ -194,7 +208,21 @@ function buildSuggestions(index, targetRef) {
         }
     }
 
-    return { note, issues, opportunities };
+    // Additive: the same relationship scan, reused for the v2 recommendations.
+    // Nothing here writes to the vault.
+    const recommendations = {
+        tags: suggestTags(note, related.results),
+        folders: suggestFolders(note, related.results),
+        templates: suggestTemplates(note, {
+            catalog: getTemplateCatalog(options.templateDir),
+        }),
+    };
+
+    return { note, issues, opportunities, recommendations };
+}
+
+function emptyRecommendations() {
+    return { tags: [], folders: [], templates: [] };
 }
 
 function dayDifference(mtime, now) {
@@ -205,6 +233,7 @@ function dayDifference(mtime, now) {
 module.exports = {
     SIMILARITY_THRESHOLD,
     MAX_LINK_SUGGESTIONS,
+    RELATED_CANDIDATE_LIMIT,
     jaccard,
     findDuplicateTitle,
     findSimilarNote,

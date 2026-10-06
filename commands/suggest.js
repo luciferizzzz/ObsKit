@@ -2,13 +2,60 @@ const { getVaultPath } = require("../utils/vault");
 const { buildVaultIndex } = require("../utils/vaultIndex");
 const { buildSuggestions } = require("../checks/suggest");
 const { generate } = require("../utils/ai");
+const { displayFolder } = require("../utils/folders");
 const { error, info } = require("../utils/feedback");
 const { Spinner } = require("../utils/spinner");
 const c = require("../utils/colors");
 
 const CONTENT_EXCERPT_CHARS = 1200;
 
-function buildSuggestPrompt(note, issues, opportunities) {
+function relatedNotes(support) {
+    return `${support} related note${support === 1 ? "" : "s"}`;
+}
+
+function printList(title, items) {
+    console.log(`\n${c.heading(title)}\n`);
+
+    if (items.length === 0) {
+        console.log(c.dim("  None."));
+        return;
+    }
+
+    for (const line of items) {
+        console.log(line);
+    }
+}
+
+function tagLines(tags) {
+    return tags.map((item) => {
+        const sources = item.sources.length ? `: ${item.sources.join(", ")}` : "";
+        return `  • ${c.tag("#" + item.tag)} ${c.dim(`${relatedNotes(item.support)}${sources}`)}`;
+    });
+}
+
+function folderLines(folders) {
+    return folders.map((item) => {
+        const signals = item.signals.length ? ` · ${item.signals.join(", ")}` : "";
+        return `  • ${c.folder(displayFolder(item.folder))} ${c.dim(
+            `${relatedNotes(item.support)}${signals}`
+        )}`;
+    });
+}
+
+function templateLines(templates) {
+    return templates.map(
+        (item) =>
+            `  • ${c.note(item.name)} ${c.dim(`matches ${item.matched.join(", ")}`)}`
+    );
+}
+
+function printRecommendations(recommendations) {
+    printList("Recommended Tags", tagLines(recommendations.tags));
+    printList("Recommended Folders", folderLines(recommendations.folders));
+    printList("Recommended Templates", templateLines(recommendations.templates));
+}
+
+function buildSuggestPrompt(note, issues, opportunities, recommendations) {
     const contentSnippet = note.content.slice(0, CONTENT_EXCERPT_CHARS);
 
     const lines = [];
@@ -32,6 +79,26 @@ function buildSuggestPrompt(note, issues, opportunities) {
     } else {
         opportunities.forEach((s) => lines.push(`- ${s.message}`));
     }
+
+    // Recommendations are additive context for the model. With nothing to
+    // report the prompt stays byte-identical to the pre-v2 prompt.
+    const hasRecommendations =
+        recommendations &&
+        (recommendations.tags.length > 0 ||
+            recommendations.folders.length > 0 ||
+            recommendations.templates.length > 0);
+
+    if (hasRecommendations) {
+        const tags = recommendations.tags.map((item) => "#" + item.tag);
+        const folders = recommendations.folders.map((item) => item.folder);
+        const templates = recommendations.templates.map((item) => item.name);
+        lines.push("");
+        lines.push("Recommendations (optional, not applied automatically):");
+        lines.push(`- Tags: ${tags.join(", ") || "(none)"}`);
+        lines.push(`- Folders: ${folders.join(", ") || "(none)"}`);
+        lines.push(`- Templates: ${templates.join(", ") || "(none)"}`);
+    }
+
     lines.push("");
     lines.push("Note content excerpt:");
     lines.push("---");
@@ -96,7 +163,10 @@ async function suggest(noteRef, options = {}) {
     const vault = getVaultPath();
     const vaultIndex = buildVaultIndex(vault);
 
-    const { note, issues, opportunities } = buildSuggestions(vaultIndex, name);
+    const { note, issues, opportunities, recommendations } = buildSuggestions(
+        vaultIndex,
+        name
+    );
 
     if (!note) {
         error(`Note not found: ${name}`);
@@ -104,11 +174,12 @@ async function suggest(noteRef, options = {}) {
     }
 
     printSuggestions(note, issues, opportunities);
+    printRecommendations(recommendations);
 
     if (options.ai) {
         console.log(`\n${c.heading("🤖 AI Guidance")}\n`);
 
-        const prompt = buildSuggestPrompt(note, issues, opportunities);
+        const prompt = buildSuggestPrompt(note, issues, opportunities, recommendations);
         const spinner = new Spinner({ text: "Menganalisis catatan..." });
 
         try {
@@ -130,3 +201,4 @@ async function suggest(noteRef, options = {}) {
 module.exports = suggest;
 
 module.exports.buildSuggestPrompt = buildSuggestPrompt;
+module.exports.printRecommendations = printRecommendations;

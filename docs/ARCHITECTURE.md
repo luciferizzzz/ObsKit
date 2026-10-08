@@ -242,6 +242,7 @@ buildSuggestions(index, targetRef, options = {}) → { note, issues, opportuniti
 resolvePeriod(period, days) → { days, label }
 aggregateReview(index, { start, days }) → { created, modified, activeTags,
   pendingTasks, relationships, brokenLinks, orphansCreated, … }
+collectReviewSignals(index, { health, diagnostics }) → [ signal ]
 ```
 
 **Health-score formula** (`computeHealthScore`): start at 100 and subtract penalties per
@@ -266,6 +267,55 @@ so it is fully deterministic and testable.
 **Related-note weights** (per signal per candidate note): backlink +10, shared outgoing
 link +3 each, shared tag +2 each, shared backlink +2 each, title-token overlap +1 each.
 Results sort by score desc, then name ascending; results with 0 score are dropped.
+
+### Deeper diagnostics (v1.7.0)
+
+```js
+// checks/diagnostics.js
+collectDiagnostics(index, { health }) → [
+  { code, severity, title, message, explanation, action, count, items }
+]
+
+// checks/review.js
+collectReviewSignals(index, { health, diagnostics }) → [
+  { code, severity, message, action, count, items }
+]
+```
+
+Both are additive layers over the same `buildVaultIndex()` scan. Diagnostics never
+change the health score, the issue/warning counters, or any pre-v1.7 output section —
+`obs doctor` gains a `Diagnostics` section and a `diagnostics` array in `--json`
+(`items` only with `--verbose`); `obs review` gains a `Next Actions` section.
+
+**Severity model:** `error` = the vault is provably broken, `warning` = references or
+structure are unreliable, `info` = the note is hard to discover. Diagnostics sort by
+severity rank then code, signals by severity rank then count desc then code, and every
+item list is code-unit sorted (not `localeCompare`) so output stays byte-identical
+across machines.
+
+| Code | Severity | Detects |
+|------|----------|---------|
+| `METADATA_MALFORMED_FRONTMATTER` | error | `---` opened but never closed |
+| `METADATA_DUPLICATE_KEY` | warning | repeated top-level frontmatter key (column-0 line scan in `checks/health.js`, not a YAML parser) |
+| `RELATIONSHIP_BROKEN_LINK` | warning | wiki-link target no note resolves to |
+| `RELATIONSHIP_AMBIGUOUS_TARGET` | warning | link to a basename shared by several notes; a folder-qualified link that pins exactly one file is exempt |
+| `NOTE_BASENAME_COLLISION` | warning | same basename in different folders |
+| `NOTE_ISOLATED` | warning | no incoming links, no outgoing links, and no tags |
+| `TAG_SPELLING_VARIANT` | warning | one tag written several ways (case, `-`/`_`) |
+| `NOTE_ORPHAN` | info | no incoming links (isolated notes are partitioned out) |
+| `RELATIONSHIP_SELF_LINK` | info | plain wiki-link to the containing note; heading anchors (`[[Note#Section]]`) are excluded as intentional |
+| `TAG_SINGLE_USE` | info | tag used by exactly one note |
+
+`obs review` reuses those findings and adds readiness signals doctor deliberately omits,
+because review answers "what should I work on next" while doctor answers "what is
+wrong": `FIX_MALFORMED_METADATA`, `FIX_BROKEN_LINKS`, `RESOLVE_NAME_COLLISIONS`,
+`CONSOLIDATE_TAG_VARIANTS`, `CONNECT_ISOLATED_NOTES`, `REVIEW_ORPHAN_NOTES` come from
+the diagnostics above, plus locally computed `ADD_STRUCTURE` (no tags, headings, or
+frontmatter), `CONNECT_LOW_DENSITY_NOTES` (≤ 2 connections with at least one backlink),
+and `FILE_UNFILED_NOTES` (untagged, unlinked root note).
+
+Everything is one O(n + links) in-memory pass per command on top of the index the
+command already builds: no N² scans, no extra filesystem reads, no new dependencies.
 
 ---
 

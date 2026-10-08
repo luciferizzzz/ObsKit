@@ -4,6 +4,8 @@
 
 **Mata Kuliah:** {{mata_kuliah}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Yang Dipelajari
@@ -27,5 +29,9 @@
 -
 
 ## Related
+
+-
+
+## Catatan
 
 -

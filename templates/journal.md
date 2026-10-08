@@ -4,6 +4,8 @@
 
 **Mood:** {{mood}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Cerita Hari Ini
@@ -23,5 +25,9 @@
 {{ai:Apa pelajaran atau refleksi yang dapat dipelajari dari pengalaman hari ini}}
 
 ## Rencana Besok
+
+-
+
+## Catatan
 
 -

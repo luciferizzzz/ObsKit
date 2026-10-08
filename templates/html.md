@@ -2,6 +2,8 @@
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pengertian

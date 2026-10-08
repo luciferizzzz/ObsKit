@@ -40,6 +40,10 @@ const ALL_TEMPLATES = [
     "experiment",
     "retrospective",
     "code-review",
+    "roadmap",
+    "troubleshoot",
+    "checklist",
+    "postmortem",
 ];
 
 const CUSTOM_FIELDS = new Set([
@@ -65,6 +69,8 @@ const CUSTOM_FIELDS = new Set([
     "period",
     "reviewer",
     "link",
+    "horizon",
+    "tipe",
 ]);
 
 const DAILY_SECTIONS = [
@@ -524,6 +530,88 @@ test("code-review template renders via parseTemplate", () => {
     assert.match(rendered, /^# Review PR #42\r?\n/);
     assert.ok(rendered.includes("**Reviewer:**"));
     assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("roadmap template has required sections", () => {
+    const raw = readTemplate("roadmap");
+    for (const section of [
+        "Gambaran Umum",
+        "Inisiatif Utama",
+        "Milestone",
+        "Risiko & Ketergantungan",
+        "Status",
+        "Catatan",
+    ]) {
+        assert.ok(raw.includes(`## ${section}`), `missing: ${section}`);
+    }
+    assert.ok(raw.includes("**Horizon:** {{horizon}}"));
+});
+
+test("troubleshoot template has required sections", () => {
+    const raw = readTemplate("troubleshoot");
+    for (const section of [
+        "Gejala",
+        "Dampak",
+        "Hipotesis",
+        "Langkah Diagnosis",
+        "Akar Masalah",
+        "Perbaikan",
+        "Pencegahan",
+        "Catatan",
+    ]) {
+        assert.ok(raw.includes(`## ${section}`), `missing: ${section}`);
+    }
+    assert.ok(raw.includes("**Prioritas:** {{priority}}"));
+});
+
+test("checklist template has required sections", () => {
+    const raw = readTemplate("checklist");
+    for (const section of ["Tujuan", "Item", "Verifikasi", "Catatan"]) {
+        assert.ok(raw.includes(`## ${section}`), `missing: ${section}`);
+    }
+    assert.ok(raw.includes("**Tipe:** {{tipe}}"));
+    assert.ok(raw.includes("- [ ] Item pertama"));
+});
+
+test("postmortem template has required sections", () => {
+    const raw = readTemplate("postmortem");
+    for (const section of [
+        "Ringkasan Insiden",
+        "Linimasa",
+        "Dampak",
+        "Akar Masalah",
+        "Tindakan Perbaikan",
+        "Pencegahan Lanjutan",
+        "Catatan",
+    ]) {
+        assert.ok(raw.includes(`## ${section}`), `missing: ${section}`);
+    }
+    assert.ok(raw.includes("**Status:** {{status}}"));
+});
+
+test("roadmap template renders via parseTemplate", () => {
+    const rendered = parseTemplate(
+        readTemplate("roadmap"),
+        getTemplateData({ title: "Q4 Roadmap", folder: "Planning", date: "2026-10-08" })
+    );
+    assert.match(rendered, /^# Q4 Roadmap\r?\n/);
+    assert.ok(rendered.includes("**Horizon:**"));
+    assert.ok(!rendered.includes("{{title}}"), "title replaced");
+});
+
+test("obs new -t roadmap creates a note", () => {
+    const root = makeVault("obs-tpl-roadmap-");
+    const filePath = path.join(root, "Roadmaps", "Q4 Roadmap.md");
+
+    withVault(root, () =>
+        capture(() => newNote("Roadmaps", "Q4 Roadmap", { template: "roadmap" }))
+    );
+
+    assert.ok(fs.existsSync(filePath), "note created");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.match(content, /^# Q4 Roadmap\r?\n/);
+    assert.ok(content.includes("## Inisiatif Utama"));
+    assert.ok(!content.includes("{{title}}"), "title replaced");
 });
 
 test("obs new -t feature creates a note", () => {

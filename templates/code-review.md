@@ -4,6 +4,8 @@
 
 **Reviewer:** {{reviewer}} · **Link Code/PR:** {{link}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan Perubahan

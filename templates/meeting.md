@@ -4,6 +4,8 @@
 
 **Peserta:** {{peserta}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan

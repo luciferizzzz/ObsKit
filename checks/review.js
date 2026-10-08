@@ -1,5 +1,10 @@
-const { countPendingTasks } = require("./health");
-const { getSectionContent } = require("../utils/relationship/parser");
+const { countPendingTasks, analyzeVaultIndex, isEmptyNote } = require("./health");
+const {
+    collectDiagnostics,
+    compareStrings,
+    SEVERITY_RANK,
+} = require("./diagnostics");
+const { getSectionContent, parseHeadings } = require("../utils/relationship/parser");
 
 const PERIODS = {
     today: 1,
@@ -119,9 +124,201 @@ function aggregateReview(index, options = {}) {
     };
 }
 
+// Workflow signals answer "what should I work on next", while diagnostics
+// answer "what is wrong". They reuse the diagnostic findings for everything
+// that is already detected and only add the locally computable readiness
+// checks that doctor deliberately does not report.
+const SIGNAL_DEFINITIONS = {
+    FIX_MALFORMED_METADATA: {
+        severity: "error",
+        message: (count) =>
+            count === 1
+                ? "Close 1 unclosed frontmatter block."
+                : `Close ${count} unclosed frontmatter blocks.`,
+        action: "Add the missing --- line so the metadata can be parsed again.",
+    },
+    FIX_BROKEN_LINKS: {
+        severity: "warning",
+        message: (count) =>
+            count === 1
+                ? "Fix 1 broken wiki-link target."
+                : `Fix ${count} broken wiki-link targets.`,
+        action: "Correct the link target, or create the missing note.",
+    },
+    RESOLVE_NAME_COLLISIONS: {
+        severity: "warning",
+        message: (count) =>
+            count === 1
+                ? "Resolve 1 duplicated note name."
+                : `Resolve ${count} duplicated note names.`,
+        action: "Rename one note per collision so references resolve unambiguously.",
+    },
+    CONSOLIDATE_TAG_VARIANTS: {
+        severity: "warning",
+        message: (count) =>
+            count === 1
+                ? "Standardize 1 tag that is spelled in several ways."
+                : `Standardize ${count} tags that are spelled in several ways.`,
+        action: "Pick one spelling per tag and update the notes using the others.",
+    },
+    CONNECT_ISOLATED_NOTES: {
+        severity: "warning",
+        message: (count) =>
+            count === 1
+                ? "Connect 1 isolated note to the vault."
+                : `Connect ${count} isolated notes to the vault.`,
+        action: "Link them from an existing note and give them a tag.",
+    },
+    REVIEW_ORPHAN_NOTES: {
+        severity: "info",
+        message: (count) =>
+            count === 1
+                ? "Review 1 note that nothing links to."
+                : `Review ${count} notes that nothing links to.`,
+        action: "Add a backlink from a related note so it becomes reachable.",
+    },
+    ADD_STRUCTURE: {
+        severity: "info",
+        message: (count) =>
+            count === 1
+                ? "Add structure to 1 flat note."
+                : `Add structure to ${count} flat notes.`,
+        action: "Add a heading, a tag, or frontmatter so search and review can use it.",
+    },
+    CONNECT_LOW_DENSITY_NOTES: {
+        severity: "info",
+        message: (count) =>
+            count === 1
+                ? "Strengthen 1 note with very few connections."
+                : `Strengthen ${count} notes with very few connections.`,
+        action: "Add links to nearby notes so readers can move on from this note.",
+    },
+    FILE_UNFILED_NOTES: {
+        severity: "info",
+        message: (count) =>
+            count === 1
+                ? "File 1 untagged root note into a folder."
+                : `File ${count} untagged root notes into folders.`,
+        action: "Move them into a folder, or tag and link them from the root.",
+    },
+};
+
+function hasFrontmatterBlock(content) {
+    return /^---(?:\r?\n|$)/.test(content.replace(/^\uFEFF/, ""));
+}
+
+function findFlatNotes(index) {
+    const notes = [];
+
+    for (const note of index.notes) {
+        const isolated =
+            note.backlinks.length === 0 &&
+            note.outgoing.length === 0 &&
+            note.tags.length === 0;
+
+        if (isolated || isEmptyNote(note.content)) continue;
+        if (note.tags.length > 0) continue;
+        if (parseHeadings(note.content).length > 0) continue;
+        if (hasFrontmatterBlock(note.content)) continue;
+
+        notes.push(note.relPath);
+    }
+
+    return notes.sort((a, b) => compareStrings(a, b));
+}
+
+function findLowDensityNotes(index) {
+    const notes = [];
+
+    for (const note of index.notes) {
+        const connections = note.backlinks.length + note.outgoing.length;
+        if (note.backlinks.length === 0) continue;
+        if (connections > 2) continue;
+
+        notes.push({ file: note.relPath, connections });
+    }
+
+    return notes.sort(
+        (a, b) => a.connections - b.connections || compareStrings(a.file, b.file)
+    );
+}
+
+function findUnfiledNotes(index) {
+    const notes = [];
+
+    for (const note of index.notes) {
+        if (note.relPath.includes("/")) continue;
+        if (note.tags.length > 0 || note.outgoing.length > 0) continue;
+
+        // Fully disconnected notes are owned by CONNECT_ISOLATED_NOTES so
+        // one note never shows up under two different actions.
+        const isolated =
+            note.backlinks.length === 0 &&
+            note.outgoing.length === 0 &&
+            note.tags.length === 0;
+        if (isolated) continue;
+
+        notes.push(note.relPath);
+    }
+
+    return notes.sort((a, b) => compareStrings(a, b));
+}
+
+function collectReviewSignals(index, options = {}) {
+    const health = options.health || analyzeVaultIndex(index);
+    const diagnostics = options.diagnostics || collectDiagnostics(index, { health });
+
+    const byCode = new Map(diagnostics.map((diagnostic) => [diagnostic.code, diagnostic]));
+    const itemsFor = (code) => {
+        const diagnostic = byCode.get(code);
+        return diagnostic ? diagnostic.items : [];
+    };
+
+    const candidates = [
+        ["FIX_MALFORMED_METADATA", itemsFor("METADATA_MALFORMED_FRONTMATTER")],
+        ["FIX_BROKEN_LINKS", itemsFor("RELATIONSHIP_BROKEN_LINK")],
+        ["RESOLVE_NAME_COLLISIONS", itemsFor("NOTE_BASENAME_COLLISION")],
+        ["CONSOLIDATE_TAG_VARIANTS", itemsFor("TAG_SPELLING_VARIANT")],
+        ["CONNECT_ISOLATED_NOTES", itemsFor("NOTE_ISOLATED")],
+        ["REVIEW_ORPHAN_NOTES", itemsFor("NOTE_ORPHAN")],
+        ["ADD_STRUCTURE", findFlatNotes(index)],
+        ["CONNECT_LOW_DENSITY_NOTES", findLowDensityNotes(index)],
+        ["FILE_UNFILED_NOTES", findUnfiledNotes(index)],
+    ];
+
+    const signals = [];
+
+    // Diagnostic items and the computed lists above are already sorted by
+    // their collectors, so each signal keeps that order as-is.
+    for (const [code, items] of candidates) {
+        const definition = SIGNAL_DEFINITIONS[code];
+        if (!definition || items.length === 0) continue;
+
+        signals.push({
+            code,
+            severity: definition.severity,
+            message: definition.message(items.length),
+            action: definition.action,
+            count: items.length,
+            items,
+        });
+    }
+
+    signals.sort(
+        (a, b) =>
+            SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] ||
+            b.count - a.count ||
+            compareStrings(a.code, b.code)
+    );
+
+    return signals;
+}
+
 module.exports = {
     PERIODS,
     resolvePeriod,
     startDate,
     aggregateReview,
+    SIGNAL_DEFINITIONS,
+    collectReviewSignals,
 };

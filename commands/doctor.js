@@ -1,10 +1,37 @@
 const { getVaultPath } = require("../utils/vault");
 const { buildVaultIndex } = require("../utils/vaultIndex");
 const { analyzeVaultIndex } = require("../checks/health");
+const { collectDiagnostics } = require("../checks/diagnostics");
 const { info, success, warning } = require("../utils/feedback");
 const c = require("../utils/colors");
 
 const DETAIL_LIMIT = 15;
+
+// Diagnostics whose items are already printed by the classic verbose detail
+// sections above, so verbose mode never shows the same file twice.
+const SHARED_DETAIL_CODES = new Set([
+    "RELATIONSHIP_BROKEN_LINK",
+    "NOTE_ORPHAN",
+    "NOTE_BASENAME_COLLISION",
+    "METADATA_MALFORMED_FRONTMATTER",
+]);
+
+const DIAGNOSTIC_ITEM_FORMATTERS = {
+    RELATIONSHIP_AMBIGUOUS_TARGET: (item) =>
+        `${item.file} → [[${item.link}]] (${item.matches.join(", ")})`,
+    RELATIONSHIP_SELF_LINK: (item) => `${item.file} → [[${item.link}]]`,
+    NOTE_ISOLATED: (item) => item,
+    TAG_SPELLING_VARIANT: (item) => `${item.variants.join(" / ")} (${item.notes.join(", ")})`,
+    TAG_SINGLE_USE: (item) => `${item.tag} (${item.note})`,
+    METADATA_DUPLICATE_KEY: (item) => `${item.file} (${item.keys.join(", ")})`,
+};
+
+function severityLabel(severity) {
+    const label = severity.padEnd(9);
+    if (severity === "error") return c.error(label);
+    if (severity === "warning") return c.warning(label);
+    return c.dim(label);
+}
 
 function formatSize(bytes) {
     if (bytes < 1024) {
@@ -65,6 +92,40 @@ function printDetails(result, options) {
     }
 }
 
+function printDiagnostics(diagnostics, options) {
+    console.log(`\n${c.heading("Diagnostics")}\n`);
+
+    if (diagnostics.length === 0) {
+        console.log(c.dim("  None."));
+        return;
+    }
+
+    for (const diagnostic of diagnostics) {
+        console.log(
+            `  ${severityLabel(diagnostic.severity)} ` +
+                `${c.title(diagnostic.code.padEnd(32))} ` +
+                `${c.value(String(diagnostic.count).padStart(4))}  ` +
+                diagnostic.title
+        );
+        console.log(`  ${c.dim(diagnostic.action)}`);
+
+        if (!options.verbose || SHARED_DETAIL_CODES.has(diagnostic.code)) {
+            continue;
+        }
+
+        const format = DIAGNOSTIC_ITEM_FORMATTERS[diagnostic.code];
+        if (!format) continue;
+
+        diagnostic.items.slice(0, DETAIL_LIMIT).forEach((item) => {
+            console.log(`    ${c.path(format(item))}`);
+        });
+
+        if (diagnostic.items.length > DETAIL_LIMIT) {
+            console.log(c.dim(`    ... dan ${diagnostic.items.length - DETAIL_LIMIT} lainnya`));
+        }
+    }
+}
+
 function doctor(options = {}) {
     const vault = getVaultPath();
     const index = buildVaultIndex(vault);
@@ -75,6 +136,7 @@ function doctor(options = {}) {
     }
 
     const result = analyzeVaultIndex(index);
+    const diagnostics = collectDiagnostics(index, { health: result });
 
     if (options.json) {
         const json = {
@@ -96,6 +158,23 @@ function doctor(options = {}) {
             duplicateNames: result.duplicateNames,
             score: result.score,
             rating: result.rating,
+            diagnostics: diagnostics.map((diagnostic) => {
+                const entry = {
+                    code: diagnostic.code,
+                    severity: diagnostic.severity,
+                    title: diagnostic.title,
+                    message: diagnostic.message,
+                    explanation: diagnostic.explanation,
+                    action: diagnostic.action,
+                    count: diagnostic.count,
+                };
+
+                if (options.verbose) {
+                    entry.items = diagnostic.items;
+                }
+
+                return entry;
+            }),
         };
 
         if (options.verbose) {
@@ -125,6 +204,8 @@ function doctor(options = {}) {
     ]);
 
     printDetails(result, options);
+
+    printDiagnostics(diagnostics, options);
 
     console.log(`\n${c.heading("Health Score")}\n`);
     console.log(`  Score         : ${c.value(`${result.score}/100`)}`);

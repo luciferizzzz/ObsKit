@@ -145,6 +145,45 @@ test("context: spaced-script terms never match inside unrelated words", () => {
     }
 });
 
+test("context: spaced-script terms never match inside filenames or tags", () => {
+    const root = buildDir({
+        "Notes/Digital Tools.md": "# Digital Tools\n\nplain prose\n",
+        "Notes/Mission Control.md": "# Mission Control\n\nrevision of letters\n#vision\n",
+    });
+
+    const index = buildVaultIndex(root);
+
+    for (const query of ["git", "tal", "ion", "vis"]) {
+        const retrieval = retrieveContext(index, query, { diagnostics: [] });
+        assert.deepEqual(
+            retrieval.results,
+            [],
+            `"${query}" leaked a filename/tag substring hit`
+        );
+    }
+});
+
+test("context: reports truncation when matches exceed the retrieval limit", () => {
+    const files = {};
+    for (let i = 0; i < 8; i += 1) {
+        files[`Notes/Note${i}.md`] = `# Note ${i}\n\nshared keyword alpha content ${i}\n`;
+    }
+    const root = buildDir(files);
+
+    const retrieval = retrieveContext(buildVaultIndex(root), "shared keyword alpha", {
+        limit: 3,
+        diagnostics: [],
+    });
+    assert.equal(retrieval.results.length, 3);
+    assert.ok(retrieval.candidateCount > 3);
+
+    const context = buildContext(retrieval, { maxNotes: 3 });
+    assert.equal(context.selectedCount, 3);
+    assert.equal(context.candidateCount, retrieval.candidateCount);
+    assert.equal(context.truncated, true);
+    assert.ok(context.text.includes("Batasan"));
+});
+
 test("context: handles unicode filenames and nested paths", () => {
     const root = buildDir({
         "Catatan/日本語/メモ.md":

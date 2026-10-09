@@ -382,6 +382,16 @@ function buildContext(retrieval, options = {}) {
     const tokens = (retrieval && retrieval.tokens) || [];
     const query = (retrieval && retrieval.query) || "";
 
+    // `retrieval.results` is already capped at the retrieval limit, so the true
+    // number of matches is `retrieval.candidateCount`. Keeping it here is what
+    // lets the caller report "3 dari 8" instead of pretending it saw everything.
+    const candidateTotal = Math.max(
+        candidates.length,
+        retrieval && Number.isFinite(retrieval.candidateCount)
+            ? retrieval.candidateCount
+            : 0
+    );
+
     const selected = [];
     let usedChars = 0;
     let truncated = false;
@@ -409,7 +419,11 @@ function buildContext(retrieval, options = {}) {
         if (excerpt.truncated) truncated = true;
     }
 
-    const dropped = Math.max(0, candidates.length - selected.length);
+    if (candidateTotal > selected.length) {
+        truncated = true;
+    }
+
+    const dropped = Math.max(0, candidateTotal - selected.length);
     const text = renderContextText(query, selected, { truncated, dropped });
 
     return {
@@ -420,7 +434,7 @@ function buildContext(retrieval, options = {}) {
         usedChars,
         approxTokens: Math.ceil(usedChars / APPROX_CHARS_PER_TOKEN),
         selectedCount: selected.length,
-        candidateCount: candidates.length,
+        candidateCount: candidateTotal,
         truncated,
         hasContext: selected.length > 0,
     };

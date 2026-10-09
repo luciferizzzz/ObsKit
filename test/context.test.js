@@ -130,6 +130,21 @@ test("context: keeps duplicate basenames distinct by relPath", () => {
     assert.deepEqual(relPaths, [...new Set(relPaths)]);
 });
 
+test("context: spaced-script terms never match inside unrelated words", () => {
+    const root = buildDir({
+        "Notes/Car.md": "# Car\n\nstart the engine and part ways\n",
+        "Notes/Tech.md": "# Tech\n\ndigital tools and legit login pages\n",
+        "Notes/Word.md": "# Word\n\nnational mission vision\n",
+    });
+
+    const index = buildVaultIndex(root);
+
+    for (const query of ["art", "git", "ion"]) {
+        const retrieval = retrieveContext(index, query, { diagnostics: [] });
+        assert.deepEqual(retrieval.results, [], `"${query}" leaked a substring hit`);
+    }
+});
+
 test("context: handles unicode filenames and nested paths", () => {
     const root = buildDir({
         "Catatan/日本語/メモ.md":

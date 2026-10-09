@@ -30,6 +30,15 @@ const APPROX_CHARS_PER_TOKEN = 4;
 const MIN_TOKEN_LENGTH = 2;
 const MAX_POSITIONS_PER_TOKEN = 20;
 
+// Scripts written without spaces or case. tokenizeBody expands their runs into
+// overlapping bigrams, so a 3+ character term from such a script can never match
+// a bigram token directly and needs a raw substring test. Latin/Cyrillic/etc.
+// tokens are word-delimited, so bodySet already matches them exactly and a
+// substring test would only create false hits inside unrelated words
+// (e.g. "art" inside "start").
+const UNSPACED_SCRIPT =
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
 // Relevance weights. Title/tag signals are author-declared, content terms are
 // implicit, so they are weighted below them. `phrase` fires only when every
 // word of a note title is present in the question.
@@ -191,13 +200,18 @@ function retrieveContext(index, question, options = {}) {
         const tagSet = new Set((note.tags || []).map((tag) => String(tag).toLowerCase()));
         const tagHits = tokens.filter((token) => tagSet.has(token)).sort(compareStrings);
 
-        // Token match is the fast path; the raw substring fallback keeps CJK
-        // questions working, because tokenizeBody expands CJK runs into bigrams
-        // that a 3+ character query term would never match.
+        // Token match is the fast path and is exact for spaced scripts. The raw
+        // substring fallback is restricted to unspaced scripts, whose bigram
+        // tokenization a 3+ character term would otherwise never match; applying
+        // it to spaced scripts would leak hits from unrelated words.
         const bodySet = new Set(tokenizeBody(note.content));
         const bodyLower = String(note.content || "").toLowerCase();
         const contentHits = tokens
-            .filter((token) => bodySet.has(token) || bodyLower.includes(token))
+            .filter(
+                (token) =>
+                    bodySet.has(token) ||
+                    (UNSPACED_SCRIPT.test(token) && bodyLower.includes(token))
+            )
             .sort(compareStrings);
 
         let score = 0;

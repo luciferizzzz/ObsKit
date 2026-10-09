@@ -1507,6 +1507,71 @@ Recently Modified
 
 ---
 
+## `obs ask`
+
+Answer a question about the vault using the most relevant notes as context.
+
+**Description**
+
+Retrieves the most relevant notes for a question deterministically (title, tags,
+and body terms), builds a bounded context block, then asks the configured AI to
+answer **grounded in those notes only**. The sources used are printed with their
+vault paths. Retrieval and context building are local and never touch the network;
+only the final answer goes through the AI client, and only when a provider is
+available.
+
+**Syntax**
+
+```
+obs ask <question> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<question>` | Question about the vault (free text) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `-n, --limit <n>` | Max number of source notes (default 5, max 12) |
+| `-p, --persona <name>` | AI persona to use (default persona otherwise) |
+
+**Example**
+
+```bash
+obs ask "bagaimana cara kerja rust ownership"
+```
+
+```text
+❓ Ask
+
+  Question   : bagaimana cara kerja rust ownership
+
+Sources
+
+  1. Notes/Rust Ownership.md (score 14)
+  2. Notes/Borrowing.md (score 6)
+
+🤖 Answer
+
+  Rust memakai ownership buat ngatur memori...
+
+Berdasarkan 2 sumber di atas. Jawaban bisa kurang lengkap kalau konteks terbatas.
+```
+
+**Notes**
+
+- If no note is relevant, the command reports that context is insufficient and
+  does **not** call the AI.
+- The context is capped by note count, characters per note, and total size, and
+  the output states when only a subset of sources was included.
+- `obs ask` never modifies notes, folders, or metadata.
+
+---
+
 # 👥 People Management
 
 ## `obs people list`

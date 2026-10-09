@@ -257,6 +257,31 @@ obs ai "Explain JavaScript closures"
 
 - The command dispatches to dedicated workflows for `tomorrow`, `update`, `weekly`, and `people`.
 
+### `obs ask <question>`
+
+Answer a question about the vault using relevant notes as grounded context.
+
+```bash
+obs ask "bagaimana cara kerja rust ownership"
+```
+
+**Options**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-n, --limit <n>` | Max number of source notes | `5` (max `12`) |
+| `-p, --persona <name>` | AI persona to use | `default` |
+
+**Notes**
+
+- Retrieval and context construction are deterministic and local — no network
+  request happens until the final `generate()` call.
+- Only notes that are lexically relevant are sent, bounded by note count,
+  characters per note, and total context size; the printed **Sources** list shows
+  the exact paths used.
+- With no relevant note the command reports insufficient context and skips the AI.
+- OpenAI requires an API key; Ollama is used as-is. The key is never printed.
+
 ---
 
 ## 📖 Daily journal

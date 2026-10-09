@@ -317,6 +317,39 @@ and `FILE_UNFILED_NOTES` (untagged, unlinked root note).
 Everything is one O(n + links) in-memory pass per command on top of the index the
 command already builds: no N² scans, no extra filesystem reads, no new dependencies.
 
+### AI Vault Context (v1.7.0)
+
+```js
+// checks/context.js
+retrieveContext(index, question, { limit, diagnostics }) → {
+  query, tokens, results: [{ note, score, reasons, diagnostics }], candidateCount
+}
+buildContext(retrieval, { maxNotes, maxCharsPerNote, maxTotalChars }) → {
+  query, tokens, notes, text, usedChars, approxTokens,
+  selectedCount, candidateCount, truncated, hasContext
+}
+```
+
+`obs ask` retrieval is deterministic and local: it tokenizes the question
+(Unicode-aware, English + Indonesian stopwords) and scores every note already in
+the single `buildVaultIndex()` scan. Ranking weights are title phrase +8, title
+term +5, tag match +4, body term +2; ties break on `relPath` with a code-unit
+compare so output is byte-identical across machines. Body matching reuses
+`tokenizeBody()` from the relationship similarity module and falls back to a raw
+substring check so CJK questions still match. Relationships (the index itself),
+tags (through the index), search normalization (`normalizeQuery`) and
+`checks/diagnostics.js` findings (surfaced as per-source warnings) are all reused
+— nothing is re-read from disk and no network request happens during retrieval.
+
+`buildContext` bounds the prompt by note count, characters per note, and total
+characters, extracts the densest matching window per note, keeps `relPath` as the
+source identity (duplicate basenames stay distinct), and flags `truncated` when
+only a subset of relevant notes was included. When nothing is relevant the text
+states that context is insufficient, and `obs ask` returns without calling the AI.
+The AI call itself goes through the existing `utils/ai.js` client and
+`resolvePersona()`; the command refuses OpenAI without an API key and never prints
+secrets.
+
 ---
 
 ## 💾 Vault access
@@ -483,7 +516,7 @@ obskit/
 │   ├── list.js / tree.js / recent.js / random.js / stats.js
 │   ├── dashboard.js / report.js
 │   ├── deadlinks.js / backlinks.js / orphan.js / graph.js / tags.js
-│   ├── doctor.js / related.js / suggest.js / review.js
+│   ├── doctor.js / related.js / suggest.js / review.js / ask.js
 │   ├── archive.js / attachments.js / backup.js / cleanup.js / todo.js
 │   ├── relate.js / unrelate.js / relations.js
 │   └── template.js
@@ -495,7 +528,8 @@ obskit/
 │   ├── health.js            # doctor analysis + health score
 │   ├── related.js           # weighted related-note ranking
 │   ├── suggest.js           # per-note recommendations
-│   └── review.js            # period activity digest
+│   ├── review.js            # period activity digest
+│   └── context.js           # AI vault context retrieval + builder (obs ask)
 ├── utils/                   # shared helpers
 │   ├── ai.js  colors.js  config.js  feedback.js  file.js  markdown.js
 │   ├── noteIndex.js  persona.js  progress.js  sanitizeFilename.js  scanner.js

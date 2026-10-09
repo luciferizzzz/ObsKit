@@ -672,8 +672,9 @@ test("suggest templates: repeated runs and repeated catalog reads are stable", (
 test("template catalog: reads every built-in template with its sections", () => {
     clearTemplateCache();
     const catalog = getTemplateCatalog(TEMPLATE_DIR);
+    const templateFiles = fs.readdirSync(TEMPLATE_DIR).filter((file) => file.endsWith(".md"));
 
-    assert.equal(catalog.length, 19);
+    assert.equal(catalog.length, templateFiles.length);
     assert.deepEqual(catalog.map((item) => item.name), loadTemplates(TEMPLATE_DIR).map((i) => i.name));
     for (const template of catalog) {
         assert.ok(template.sections.length >= 2, `${template.name} needs sections`);

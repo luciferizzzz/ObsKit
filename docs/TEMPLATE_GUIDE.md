@@ -59,6 +59,11 @@ obs template --list
 obs template --preview project
 ```
 
+`--list` groups every template by category (from `templates/manifest.json`) with a one-line
+description and ends with usage hints; custom templates you add yourself appear under
+**Lainnya (custom)**. `--preview` shows the category, description, custom fields, and AI block
+count above the raw template content.
+
 ---
 
 ## 🔑 Placeholder system
@@ -98,12 +103,15 @@ Available **data placeholders** (from `getTemplateData()`):
 **Custom fields** — built-in templates also use fields like `{{penulis}}`, `{{rilis}}`,
 `{{genre}}`, `{{isbn}}`, `{{status}}`, `{{tags}}`, `{{peserta}}`, `{{role}}`, `{{email}}`,
 `{{telepon}}`, `{{linkedin}}`, `{{mood}}`, `{{topik}}`, `{{mata_kuliah}}`, `{{priority}}`,
-`{{hipotesis}}`, `{{lingkungan}}`, `{{period}}`, `{{reviewer}}`, `{{link}}`. These are
-left for you to fill manually.
+`{{hipotesis}}`, `{{lingkungan}}`, `{{period}}`, `{{reviewer}}`, `{{link}}`, `{{keputusan}}`,
+`{{review_date}}`, `{{horizon}}`, `{{tipe}}`. These are left for you to fill manually.
 
 > **v1.5.1 (Better Templates):** every built-in template now shares one standard metadata
 > line — `**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} ·
 > **Diperbarui:** {{updated}}` — plus a consistent heading structure.
+
+> Every built-in template except `daily` also has a `**Tags:** {{tags}}` line, and every
+> template closes with a final section so notes never end mid-structure.
 
 ---
 
@@ -146,7 +154,7 @@ Project ini bertujuan untuk membangun aplikasi catatan berbasis terminal yang ri
 
 `templates/daily.md` — daily journal with the six standard sections used by the AI daily workflow.
 
-```markdown
+````markdown
 # {{date}}
 
 **Hari:** {{day}} · **Tanggal:** {{date}} · **Folder:** Daily Notes · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
@@ -154,22 +162,33 @@ Project ini bertujuan untuk membangun aplikasi catatan berbasis terminal yang ri
 ---
 
 ## Target Hari Ini
+
 -
+
 ## Catatan
+
 -
+
 ## Selesai
+
 -
+
 ## Mood
+
 -
+
 ## Syukur
+
 -
+
 ## Refleksi
+
 -
 
 ---
 
 Jam dibuat : {{time}}
-```
+````
 
 **Used by:** `obs today`, `obs ai --daily`, `obs ai --ask --daily`, `obs ai update`.
 
@@ -179,33 +198,41 @@ Jam dibuat : {{time}}
 
 `templates/book.md` — book review / reading notes with AI summaries.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Penulis:** {{penulis}} · **Rilis:** {{rilis}} · **Genre:** {{genre}} · **ISBN/URL:** {{isbn}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan
+
 {{ai:Ringkasan singkat tentang isi dan pesan utama buku ini tanpa spoiler besar}}
 
 ## Kutipan
+
 {{ai:Kutipan kata-kata yang kuat atau inspiratif dan kenapa kutipan itu berkesan}}
 
 ## Poin Penting
+
 {{ai:Pelajaran atau ide kunci yang dipetik dari buku ini, berupa bullet points}}
 
 ## Kata Kunci
-- 
+
+-
 
 ## Review
+
 {{ai:Pendapat pribadi tentang buku ini: kelebihan, kekurangan, dan untuk siapa buku ini cocok}}
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{penulis}}`, `{{rilis}}`, `{{genre}}`, `{{isbn}}`.
 
@@ -215,32 +242,41 @@ Jam dibuat : {{time}}
 
 `templates/js.md` — programming note for JavaScript topics.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pengertian
+
 {{ai:Jelaskan konsep JavaScript {{title}} secara sederhana dan mudah dipahami}}
 
 ## Sintaks
+
 ```js
 
 ```
 
 ## Komponen
-- 
+
+-
 
 ## Contoh
+
 ```js
 
 ```
 
 ## Catatan
+
 -
-```
+````
+
+**Custom fields:** `{{tags}}`.
 
 ---
 
@@ -248,32 +284,41 @@ Jam dibuat : {{time}}
 
 `templates/html.md` — programming note for HTML topics.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pengertian
+
 {{ai:Jelaskan konsep HTML {{title}} secara sederhana dan mudah dipahami}}
 
 ## Sintaks
+
 ```html
 
 ```
 
 ## Elemen / Atribut
-- 
+
+-
 
 ## Contoh
+
 ```html
 
 ```
 
 ## Catatan
+
 -
-```
+````
+
+**Custom fields:** `{{tags}}`.
 
 ---
 
@@ -281,32 +326,41 @@ Jam dibuat : {{time}}
 
 `templates/css.md` — programming note for CSS topics.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pengertian
+
 {{ai:Jelaskan konsep CSS {{title}} secara sederhana dan mudah dipahami}}
 
 ## Sintaks
+
 ```css
 
 ```
 
 ## Properti
-- 
+
+-
 
 ## Contoh
+
 ```css
 
 ```
 
 ## Catatan
+
 -
-```
+````
+
+**Custom fields:** `{{tags}}`.
 
 ---
 
@@ -314,30 +368,37 @@ Jam dibuat : {{time}}
 
 `templates/meeting.md` — meeting notes with agenda, decisions, and action items.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Peserta:** {{peserta}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan
+
 {{ai:Ringkasan singkat jalannya meeting}}
 
 ## Agenda
+
 {{ai:Daftar agenda yang dibahas selama meeting ini}}
 
 ## Keputusan
+
 {{ai:Keputusan penting yang diambil selama meeting ini}}
 
 ## Tindak Lanjut
+
 {{ai:Daftar tindak lanjut yang harus dikerjakan, lengkap dengan penanggung jawab masing-masing}}
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{peserta}}`.
 
@@ -347,38 +408,47 @@ Jam dibuat : {{time}}
 
 `templates/project.md` — project tracker with description, goals, scope, risks, and timeline.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Status:** {{status}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Deskripsi
+
 {{ai:Deskripsi singkat tentang project ini, tujuan utamanya, dan masalah yang diselesaikan}}
 
 ## Tujuan
+
 {{ai:Daftar tujuan spesifik yang ingin dicapai dengan project ini, berupa bullet points}}
 
 ## Ruang Lingkup
+
 {{ai:Ruang lingkup (in scope) dan apa yang tidak termasuk (out of scope) dari project ini}}
 
 ## Risiko
+
 {{ai:Identifikasi risiko yang berpotensi menghambat project ini beserta dampaknya}}
 
 ## Timeline
 
 ### Milestone
+
 - [ ] Milestone awal
 
 ### Task
+
 - [ ] Task pertama
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{status}}`.
 
@@ -388,53 +458,65 @@ Jam dibuat : {{time}}
 
 `templates/people.md` — people profile tuned for the `obs ai people` workflow.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Role:** {{role}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Informasi Dasar
-- **Nama:** 
-- **Panggilan:** 
-- **Pertama Bertemu:** 
-- **Interaksi Terakhir:** 
+
+- **Nama:**
+- **Panggilan:**
+- **Pertama Bertemu:**
+- **Interaksi Terakhir:**
 
 ## Kontak
+
 - **Email:** {{email}}
 - **Telepon:** {{telepon}}
-- **Discord:** 
-- **GitHub:** 
-- **Website:** 
+- **Discord:**
+- **GitHub:**
+- **Website:**
 - **LinkedIn:** {{linkedin}}
 
 ## Kepribadian
+
 {{ai:Deskripsi singkat karakter dan kepribadian orang ini}}
 
 ## Minat
-- 
+
+-
 
 ## Fakta Penting
-- 
+
+-
 
 ## Topik Percakapan
-- 
+
+-
 
 ## Hubungan
-- 
+
+-
 
 ## Related
-- 
+
+-
 
 ## Pertemuan
-- 
+
+-
 
 ## Catatan Interaksi
+
 -
-```
+````
 
 **Custom fields:** `{{role}}`, `{{email}}`, `{{telepon}}`, `{{linkedin}}`.
 
@@ -447,7 +529,7 @@ Jam dibuat : {{time}}
 
 `templates/article.md` — article writing template.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
@@ -457,25 +539,35 @@ Jam dibuat : {{time}}
 ---
 
 ## Ide Utama
+
 {{ai:Poin utama yang ingin disampaikan dalam artikel ini}}
 
 ## Pendahuluan
+
 {{ai:Paragraf pembuka yang menarik untuk memancing minat pembaca tentang topik ini}}
 
 ## Isi
 
 ### Bagian 1
+
 {{ai:Konten bagian pertama}}
 
 ### Bagian 2
+
 {{ai:Konten bagian kedua}}
 
 ## Kesimpulan
+
 {{ai:Kesimpulan dan pesan penutup yang jelas}}
 
 ## Referensi
+
 -
-```
+
+## Catatan
+
+-
+````
 
 **Custom fields:** `{{tags}}`.
 
@@ -485,30 +577,41 @@ Jam dibuat : {{time}}
 
 `templates/journal.md` — daily journal with story, gratitude, reflection, and plans.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Mood:** {{mood}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Cerita Hari Ini
+
 {{ai:Ceritakan kejadian atau momen yang paling berkesan dari hari ini}}
 
 ## Apa yang Dilakukan
-- 
+
+-
 
 ## Syukur
+
 -
 
 ## Refleksi
+
 {{ai:Apa pelajaran atau refleksi yang dapat dipelajari dari pengalaman hari ini}}
 
 ## Rencana Besok
+
 -
-```
+
+## Catatan
+
+-
+````
 
 **Custom fields:** `{{mood}}`.
 
@@ -518,7 +621,7 @@ Jam dibuat : {{time}}
 
 `templates/idea.md` — quick idea capture.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
@@ -528,20 +631,25 @@ Jam dibuat : {{time}}
 ---
 
 ## Ide
+
 {{ai:Jelaskan ide secara singkat dan jelas, apa yang sedang dipikirkan}}
 
 ## Kenapa Menarik
+
 {{ai:Alasan kenapa ide ini menarik, berguna, atau layak dieksplorasi}}
 
 ## Tantangan
+
 {{ai:Kendala atau tantangan yang mungkin dihadapi saat mencoba mengembangkan ide ini}}
 
 ## Langkah Berikutnya
+
 - [ ] Langkah pertama
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{tags}}`.
 
@@ -551,33 +659,41 @@ Jam dibuat : {{time}}
 
 `templates/research.md` — research and investigation notes for gathering information.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Topik:** {{topik}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pertanyaan Penelitian
+
 {{ai:Rumuskan pertanyaan utama yang ingin dijawab melalui penelitian ini}}
 
 ## Temuan
+
 {{ai:Bagikan temuan-temuan kunci dari penelitian ini, beserta bukti atau data pendukungnya}}
 
 ## Sumber
+
 -
 
 ## Catatan
+
 -
 
 ## Pertanyaan Terbuka
+
 - [ ]
 
 ## Related
+
 -
-```
+````
 
 **Custom fields:** `{{topik}}`.
 
@@ -587,33 +703,45 @@ Jam dibuat : {{time}}
 
 `templates/learning.md` — learning and study notes for educational content.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Mata Kuliah:** {{mata_kuliah}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Yang Dipelajari
+
 {{ai:Jelaskan topik atau konsep yang sedang dipelajari secara ringkas}}
 
 ## Konsep Kunci
+
 {{ai:Daftar konsep-konsep penting beserta penjelasan singkatnya}}
 
 ## Contoh
+
 -
 
 ## Pertanyaan
+
 - [ ]
 
 ## Takeaways
+
 -
 
 ## Related
+
 -
-```
+
+## Catatan
+
+-
+````
 
 **Custom fields:** `{{mata_kuliah}}`.
 
@@ -623,38 +751,47 @@ Jam dibuat : {{time}}
 
 `templates/decision.md` — decision log for tracking important choices and their rationale.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Status:** {{status}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Konteks
+
 {{ai:Jelaskan situasi atau masalah yang membutuhkan keputusan}}
 
 ## Opsi
+
 1. Opsi A
 2. Opsi B
 3. Opsi C
 
 ## Keputusan
+
 {{keputusan}}
 
 ## Alasan
+
 {{ai:Jelaskan alasan pemilihan opsi ini berdasarkan pertimbangan yang ada}}
 
 ## Konsekuensi
+
 {{ai:Apa yang berubah atau dampak dari keputusan ini}}
 
 ## Review
+
 Ditinjau ulang pada: {{review_date}}
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{status}}`, `{{keputusan}}`, `{{review_date}}`.
 
@@ -664,28 +801,37 @@ Ditinjau ulang pada: {{review_date}}
 
 `templates/weekly.md` — weekly review and planning note.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pencapaian
+
 {{ai:Ringkasan pencapaian dan kemajuan minggu ini}}
 
 ## Refleksi
+
 {{ai:Pelajaran atau refleksi dari minggu ini}}
 
 ## Goals Minggu Depan
+
 - [ ]
 
 ## Prioritas
+
 -
 
 ## Catatan
+
 -
-```
+````
+
+**Custom fields:** `{{tags}}`.
 
 ---
 
@@ -693,33 +839,41 @@ Ditinjau ulang pada: {{review_date}}
 
 `templates/feature.md` — feature / improvement tracker for product work.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Prioritas:** {{priority}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Deskripsi
+
 {{ai:Jelaskan fitur ini secara singkat: apa yang dilakukan, mengapa dibutuhkan, dan manfaatnya bagi pengguna}}
 
 ## Kriteria Keberhasilan
+
 {{ai:Daftar kriteria yang harus terpenuhi agar fitur ini dianggap berhasil, berupa checklist}}
 
 ## Desain
+
 {{ai:Jelaskan pendekatan desain atau arsitektur teknis untuk fitur ini}}
 
 ## Implementasi
+
 - [ ] Langkah pertama
 
 ## Pengujian
+
 {{ai:Rencana pengujian untuk memastikan fitur berfungsi dengan benar}}
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{priority}}`.
 
@@ -729,34 +883,42 @@ Ditinjau ulang pada: {{review_date}}
 
 `templates/experiment.md` — science / experiment log for testing hypotheses.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Hipotesis:** {{hipotesis}} · **Lingkungan:** {{lingkungan}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Tujuan
+
 {{ai:Jelaskan tujuan dari eksperimen ini dan mengapa penting untuk dieksplorasi}}
 
 ## Langkah
+
 1. Langkah pertama
 2. Langkah kedua
 
 ## Hasil
+
 {{ai:Ringkasan hasil eksperimen ini berdasarkan data atau pengamatan yang tersedia}}
 
 ## Analisis
+
 {{ai:Analisis mengapa hasilnya demikian, apa yang berhasil, dan apa yang tidak}}
 
 ## Kesimpulan
+
 {{ai:Kesimpulan dari eksperimen ini: apakah hipotesis terbukti, dan langkah selanjutnya apa}}
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{hipotesis}}`, `{{lingkungan}}`.
 
@@ -766,30 +928,37 @@ Ditinjau ulang pada: {{review_date}}
 
 `templates/retrospective.md` — periodic retrospective for projects or work periods.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Periode:** {{period}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Yang Berjalan Baik
+
 {{ai:Daftar hal-hal yang berjalan dengan baik selama periode ini, berupa bullet points}}
 
 ## Yang Perlu Diperbaiki
+
 {{ai:Daftar hal-hal yang perlu diperbaiki atau kendala yang dihadapi, berupa bullet points}}
 
 ## Pembelajaran
+
 {{ai:Pelajaran penting yang dipetik dari periode ini}}
 
 ## Tindak Lanjut
+
 - [ ] Tindak lanjut pertama
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{period}}`.
 
@@ -799,32 +968,221 @@ Ditinjau ulang pada: {{review_date}}
 
 `templates/code-review.md` — pull-request / code review notes.
 
-```markdown
+````markdown
 # {{title}}
 
 **Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
 
 **Reviewer:** {{reviewer}} · **Link Code/PR:** {{link}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan Perubahan
+
 {{ai:Ringkasan singkat tentang perubahan kode yang direview: apa yang diubah dan mengapa}}
 
 ## Yang Dilakukan dengan Baik
+
 {{ai:Bagian-bagian dari perubahan yang menurutmu sudah baik dan perlu dipertahankan}}
 
 ## Saran Perbaikan
+
 {{ai:Saran perbaikan atau hal yang perlu disempurnakan dalam perubahan ini, berupa checklist}}
 
 ## Kesalahan / Bug
+
 -
 
 ## Catatan
+
 -
-```
+````
 
 **Custom fields:** `{{reviewer}}`, `{{link}}`.
+
+---
+
+## 🗺️ Roadmap
+
+`templates/roadmap.md` — roadmap with initiatives, milestones, and a time horizon.
+
+````markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Horizon:** {{horizon}}
+
+**Tags:** {{tags}}
+
+---
+
+## Gambaran Umum
+
+{{ai:Jelaskan arah besar dari roadmap ini dan hasil akhir yang ingin dicapai}}
+
+## Inisiatif Utama
+
+{{ai:Daftar inisiatif utama beserta alasannya, berupa bullet points}}
+
+## Milestone
+
+- [ ] Milestone pertama
+
+## Risiko & Ketergantungan
+
+{{ai:Identifikasi risiko dan ketergantungan yang dapat menghambat roadmap ini}}
+
+## Status
+
+{{ai:Ringkas status roadmap saat ini: apa yang sudah berjalan dan apa yang tertunda}}
+
+## Catatan
+
+-
+````
+
+**Custom fields:** `{{horizon}}`, `{{tags}}`.
+
+---
+
+## 🛠️ Troubleshoot
+
+`templates/troubleshoot.md` — debugging log from symptom to prevention.
+
+````markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Prioritas:** {{priority}}
+
+**Tags:** {{tags}}
+
+---
+
+## Gejala
+
+{{ai:Deskripsikan gejala masalah secara spesifik: apa yang terlihat, kapan terjadi, dan pesan errornya}}
+
+## Dampak
+
+{{ai:Jelaskan siapa atau apa yang terdampak dan seberapa luas dampaknya}}
+
+## Hipotesis
+
+{{ai:Daftar dugaan penyebab masalah dari yang paling mungkin, berupa bullet points}}
+
+## Langkah Diagnosis
+
+1. Langkah pertama
+2. Langkah kedua
+
+## Akar Masalah
+
+{{ai:Jelaskan akar masalah yang terbukti setelah diagnosis}}
+
+## Perbaikan
+
+{{ai:Jelaskan perbaikan yang dilakukan dan mengapa perbaikan itu menyelesaikan masalah}}
+
+## Pencegahan
+
+{{ai:Langkah pencegahan agar masalah yang sama tidak terulang, berupa checklist}}
+
+## Catatan
+
+-
+````
+
+**Custom fields:** `{{priority}}`, `{{tags}}`.
+
+---
+
+## ✅ Checklist
+
+`templates/checklist.md` — a general-purpose checklist with a goal and verification step.
+
+````markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Tipe:** {{tipe}}
+
+**Tags:** {{tags}}
+
+---
+
+## Tujuan
+
+{{ai:Jelaskan tujuan singkat dari checklist ini}}
+
+## Item
+
+- [ ] Item pertama
+- [ ] Item kedua
+
+## Verifikasi
+
+{{ai:Daftar kriteria verifikasi untuk memastikan semua item benar-benar selesai, berupa checklist}}
+
+## Catatan
+
+-
+````
+
+**Custom fields:** `{{tipe}}`, `{{tags}}`.
+
+---
+
+## 🔥 Postmortem
+
+`templates/postmortem.md` — incident postmortem with timeline, impact, and prevention.
+
+````markdown
+# {{title}}
+
+**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} · **Diperbarui:** {{updated}}
+
+**Status:** {{status}}
+
+**Tags:** {{tags}}
+
+---
+
+## Ringkasan Insiden
+
+{{ai:Ringkas insiden: apa yang terjadi, kapan, dan dalam satu paragraf}}
+
+## Linimasa
+
+{{ai:Daftar linimasa kejadian dari awal hingga selesai, dengan waktu per peristiwa}}
+
+## Dampak
+
+{{ai:Jelaskan dampak insiden terhadap pengguna, layanan, atau data}}
+
+## Akar Masalah
+
+{{ai:Jelaskan akar masalah utama dan faktor pendukung yang menyebabkan insiden ini}}
+
+## Tindakan Perbaikan
+
+- [ ] Tindakan perbaikan pertama
+
+## Pencegahan Lanjutan
+
+{{ai:Langkah lanjutan agar risiko kejadian serupa berkurang, berupa checklist}}
+
+## Catatan
+
+-
+````
+
+**Custom fields:** `{{status}}`, `{{tags}}`.
 
 ---
 
@@ -834,6 +1192,11 @@ Creating your own template takes **two steps**:
 
 1. Add a file to `templates/` — e.g. `templates/recipe.md`.
 2. Use it with `-t recipe`.
+
+> Custom templates work immediately. They appear under **Lainnya (custom)** in
+> `obs template --list`; to give a template a category and description, add an entry to
+> `templates/manifest.json` (see below) — `test/templateCatalog.test.js` validates that
+> every shipped template is registered there.
 
 ```bash
 obs new Food "Nasi Goreng" -t recipe
@@ -895,6 +1258,11 @@ obs ai "Resep nasi goreng" --template recipe -t "Nasi Goreng Spesial"
 - **Reference `{{title}}` in AI instructions** — the AI then knows the topic.
 - **Leave sections blank with `-`** — easy to fill later in Obsidian.
 - **Name templates with lowercase words** — `meeting`, `project`, `recipe`.
+- **Register built-in templates in `templates/manifest.json`** — category + description drive
+  the grouped `obs template --list` output.
+- **Keep the skeleton uniform** — title heading, standard metadata line, optional custom
+  field + `Tags` lines, `---`, then `##` sections ending in `## Catatan` (enforced by
+  `test/templateCatalog.test.js`).
 - **Test both modes** — `obs new -t` (data only) and `obs ai --template` (AI-filled).
 
 ---
@@ -927,9 +1295,15 @@ obs new Planning "Week 36" -t weekly
 
 # Feature / product work
 obs new Features "Dark Mode" -t feature
+obs new Planning "Q4 Roadmap" -t roadmap
 obs new Review "Sprint 12" -t retrospective
 
 # Experiments and code review
 obs new Experiments "A/B Test Landing Page" -t experiment
 obs new Review "PR #42" -t code-review
+
+# Operations
+obs new Ops "Login 502" -t troubleshoot
+obs new Ops "Payment Incident" -t postmortem
+obs new Errands "Trip Packing" -t checklist
 ```

@@ -4,6 +4,8 @@
 
 **Status:** {{status}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Deskripsi

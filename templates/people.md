@@ -4,22 +4,24 @@
 
 **Role:** {{role}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Informasi Dasar
 
-- **Nama:** 
-- **Panggilan:** 
-- **Pertama Bertemu:** 
-- **Interaksi Terakhir:** 
+- **Nama:**
+- **Panggilan:**
+- **Pertama Bertemu:**
+- **Interaksi Terakhir:**
 
 ## Kontak
 
 - **Email:** {{email}}
 - **Telepon:** {{telepon}}
-- **Discord:** 
-- **GitHub:** 
-- **Website:** 
+- **Discord:**
+- **GitHub:**
+- **Website:**
 - **LinkedIn:** {{linkedin}}
 
 ## Kepribadian

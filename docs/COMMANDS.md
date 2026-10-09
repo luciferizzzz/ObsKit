@@ -1853,8 +1853,8 @@ Manage templates.
 
 | Option | Description |
 |--------|-------------|
-| `--list` | List available templates |
-| `--preview <name>` | Preview a template's content |
+| `--list` | List available templates, grouped by category with a one-line description each |
+| `--preview <name>` | Preview a template, preceded by its category, description, custom fields, and AI block count |
 
 ```bash
 obs template --list
@@ -1863,10 +1863,18 @@ obs template --preview project
 
 **Notes**
 
+- `--list` groups the built-in templates using `templates/manifest.json`; custom templates you
+  add yourself appear under **Lainnya (custom)**. The footer shows the common
+  `obs new -t <name>` / `obs template --preview <name>` usage.
+- `--preview` prints a metadata header (category, description, `{{...}}` custom fields, number
+  of `{{ai:...}}` blocks, and usage hints) followed by the raw template content.
 - Since **v1.5.1 (Better Templates)** every built-in template uses a standardized metadata
   line (`**Tanggal:** {{date}} · **Folder:** {{folder}} · **Dibuat:** {{created}} ·
   **Diperbarui:** {{updated}}`) and consistent heading structure; the People template gained
   sections for the `obs ai people` workflow.
+- Every built-in template except `daily` also carries a `**Tags:** {{tags}}` line, and all
+  built-in templates close with a final section (`## Catatan`, `## Related`, or — for People —
+  `## Catatan Interaksi`), enforced by `test/templateCatalog.test.js`.
 
 See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for the full template reference.
 

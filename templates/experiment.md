@@ -4,6 +4,8 @@
 
 **Hipotesis:** {{hipotesis}} · **Lingkungan:** {{lingkungan}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Tujuan

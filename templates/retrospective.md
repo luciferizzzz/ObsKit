@@ -4,6 +4,8 @@
 
 **Periode:** {{period}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Yang Berjalan Baik

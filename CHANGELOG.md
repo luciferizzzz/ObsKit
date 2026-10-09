@@ -4,6 +4,62 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.6.2] - 2026-10-08
+
+### Template Expansion
+
+#### Added
+
+- `roadmap` — initiative & milestone map per time horizon (Gambaran Umum, Inisiatif
+  Utama, Milestone, Risiko & Ketergantungan) with a `{{horizon}}` field
+- `troubleshoot` — structured debugging log (Gejala, Dampak, Hipotesis, Langkah
+  Diagnosis, Akar Masalah, Perbaikan) with `{{priority}}`
+- `checklist` — general-purpose checklist (Tujuan, Item, Verifikasi, Catatan) with
+  `{{tipe}}`
+- `postmortem` — incident analysis (Ringkasan Insiden, Linimasa, Dampak, Akar
+  Masalah, Pencegahan) with `{{status}}`
+- `templates/manifest.json` — template manifest with 4 categories (Harian &
+  Refleksi, Pengetahuan & Belajar, Produktivitas & Proyek, Kolaborasi & Orang)
+  covering all 23 built-in templates; consumed by `obs template --list` for grouped
+  output. Custom templates still appear under `Lainnya (custom)`, and a missing or
+  unreadable manifest falls back to the previous flat listing.
+
+#### Changed
+
+- `obs template --list` is now grouped by category, with a description per template
+  and a usage footer.
+- `obs template --preview <name>` now prints a header (Kategori, Deskripsi, Field,
+  Blok AI, usage); the preview content itself is unchanged.
+- Template skeleton standardized across all 22 non-daily built-in templates: the
+  `**Tags:**` metadata line was added to the 16 templates that lacked it, a trailing
+  `## Catatan` section was added to `article`/`journal`/`learning`, and whitespace
+  plus final newlines were normalized. `daily` intentionally keeps no tags line;
+  `idea.md` is the only legacy template left byte-identical.
+- Documentation regenerated: template sections in `docs/COMMANDS.md` rewritten,
+  `docs/TEMPLATE_GUIDE.md` rebuilt for 23 templates (4-backtick fences fix rendering
+  of the `js`/`html`/`css` copies), and the `docs/FAQ.md` template list updated
+  11 → 23.
+
+### Tests
+
+- `test/templateCatalog.test.js` (new, 10 tests): manifest↔file bijection, skeleton
+  contracts, whitespace/CRLF rules, and CLI output shape.
+- Full suite: **484 tests, all passing** (baseline 468 → +16).
+- E2E: byte-identical `--list` across runs, 4 previews, path-traversal rejection,
+  `obs new -t` for all four new templates (title/date substituted, `{{ai:...}}`
+  blocks intact), and `today`/`feature`/`people` regression; SHA-256 of the entire
+  `templates/` directory unchanged after every run.
+
+#### Backward Compatible
+
+- The `{{ai:...}}` placeholder system, custom fields, and `obs new` / `obs today` /
+  `obs ai` behavior for existing templates are unchanged.
+- `obs template --list` still ends with `Lainnya (custom)` when custom templates
+  exist; a missing manifest reproduces the previous listing.
+- No configuration changes required.
+
+---
+
 ## [1.6.1] - 2026-09-14
 
 ### Template Expansion

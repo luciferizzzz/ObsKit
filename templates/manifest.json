@@ -1,0 +1,33 @@
+{
+  "categories": [
+    { "id": "harian", "label": "📅 Harian & Refleksi" },
+    { "id": "pengetahuan", "label": "📚 Pengetahuan & Belajar" },
+    { "id": "produktivitas", "label": "🛠️ Produktivitas & Proyek" },
+    { "id": "kolaborasi", "label": "🤝 Kolaborasi & Orang" }
+  ],
+  "templates": [
+    { "name": "daily", "category": "harian", "description": "Catatan harian untuk obs today, enam bagian rutin" },
+    { "name": "weekly", "category": "harian", "description": "Review pencapaian dan planning minggu depan" },
+    { "name": "journal", "category": "harian", "description": "Jurnal pribadi: cerita, syukur, refleksi" },
+    { "name": "idea", "category": "harian", "description": "Tangkap ide cepat beserta langkah berikutnya" },
+    { "name": "checklist", "category": "harian", "description": "Checklist serbaguna dengan tujuan dan verifikasi" },
+    { "name": "book", "category": "pengetahuan", "description": "Ringkasan, kutipan, dan review buku" },
+    { "name": "article", "category": "pengetahuan", "description": "Kerangka menulis artikel dari ide hingga kesimpulan" },
+    { "name": "research", "category": "pengetahuan", "description": "Catatan penelitian: pertanyaan, temuan, sumber" },
+    { "name": "learning", "category": "pengetahuan", "description": "Catatan belajar dengan konsep kunci dan takeaways" },
+    { "name": "js", "category": "pengetahuan", "description": "Catatan konsep JavaScript dengan contoh kode" },
+    { "name": "html", "category": "pengetahuan", "description": "Catatan konsep HTML dengan contoh kode" },
+    { "name": "css", "category": "pengetahuan", "description": "Catatan konsep CSS dengan contoh kode" },
+    { "name": "project", "category": "produktivitas", "description": "Spesifikasi project: tujuan, lingkup, risiko, timeline" },
+    { "name": "feature", "category": "produktivitas", "description": "Rencana fitur: kriteria, desain, implementasi, pengujian" },
+    { "name": "roadmap", "category": "produktivitas", "description": "Peta jalan: inisiatif, milestone, dan horizon waktu" },
+    { "name": "experiment", "category": "produktivitas", "description": "Log eksperimen: hipotesis, langkah, hasil, analisis" },
+    { "name": "retrospective", "category": "produktivitas", "description": "Retro periode: yang baik, perbaikan, tindak lanjut" },
+    { "name": "decision", "category": "produktivitas", "description": "Log keputusan: konteks, opsi, alasan, konsekuensi" },
+    { "name": "code-review", "category": "produktivitas", "description": "Review PR/kode: saran perbaikan dan daftar bug" },
+    { "name": "troubleshoot", "category": "produktivitas", "description": "Log debugging: gejala, diagnosis, akar masalah, perbaikan" },
+    { "name": "postmortem", "category": "produktivitas", "description": "Analisis insiden: linimasa, dampak, akar masalah, pencegahan" },
+    { "name": "meeting", "category": "kolaborasi", "description": "Notulen meeting: agenda, keputusan, tindak lanjut" },
+    { "name": "people", "category": "kolaborasi", "description": "Profil orang: kontak, kepribadian, riwayat interaksi" }
+  ]
+}

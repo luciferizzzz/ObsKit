@@ -4,6 +4,8 @@
 
 **Penulis:** {{penulis}} · **Rilis:** {{rilis}} · **Genre:** {{genre}} · **ISBN/URL:** {{isbn}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Ringkasan

@@ -4,6 +4,8 @@
 
 **Topik:** {{topik}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Pertanyaan Penelitian

@@ -174,12 +174,18 @@ obs ai "Q3 goals" --template project -t "Q3 Planning"
 
 ### What templates are built in?
 
-`daily`, `book`, `meeting`, `project`, `article`, `idea`, `people`, `journal`, `html`, `css`, `js`.
+23 templates: `daily`, `weekly`, `journal`, `idea`, `checklist`, `book`, `article`,
+`research`, `learning`, `js`, `html`, `css`, `project`, `feature`, `roadmap`, `experiment`,
+`retrospective`, `decision`, `code-review`, `troubleshoot`, `postmortem`, `meeting`,
+`people`.
 
 ```bash
-obs template --list
+obs template --list        # grouped by category, with descriptions
 obs template --preview project
 ```
+
+Custom templates you add under `templates/` work the same way and show up under
+**Lainnya (custom)**.
 
 ### Can the AI fill templates?
 

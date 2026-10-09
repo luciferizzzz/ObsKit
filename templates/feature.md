@@ -4,6 +4,8 @@
 
 **Prioritas:** {{priority}}
 
+**Tags:** {{tags}}
+
 ---
 
 ## Deskripsi

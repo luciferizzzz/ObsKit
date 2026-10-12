@@ -198,9 +198,10 @@ program
 
 program
   .command("doctor")
-  .description("Analyze vault health")
+  .description("Analyze vault health and vault integrity")
   .option("--verbose", "Show detailed issue lists")
   .option("--json", "Output health report as JSON")
+  .option("--note <path>", "Limit the integrity report to one note or path")
   .action((options) => doctor(options));
 
 program

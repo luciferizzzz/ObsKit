@@ -1,10 +1,20 @@
 const { getVaultPath } = require("../utils/vault");
 const { buildVaultIndex } = require("../utils/vaultIndex");
 const { analyzeVaultIndex } = require("../checks/health");
+const { buildIntegrityReport } = require("../checks/integrity");
 const { info, success, warning } = require("../utils/feedback");
 const c = require("../utils/colors");
 
 const DETAIL_LIMIT = 15;
+
+const INTEGRITY_CATEGORY_LABELS = [
+    ["links", "Broken wiki-links"],
+    ["references", "Ambiguous references"],
+    ["basenames", "Duplicate basenames"],
+    ["attachments", "Missing attachments"],
+    ["metadata", "Metadata issues"],
+    ["tags", "Tag issues"],
+];
 
 function formatSize(bytes) {
     if (bytes < 1024) {
@@ -65,6 +75,75 @@ function printDetails(result, options) {
     }
 }
 
+function printIntegritySummary(integrity, options) {
+    console.log(`\n${c.heading("Vault Integrity")}\n`);
+
+    const summary = integrity.summary;
+    console.log(`  ${"Errors".padEnd(20)} ${c.value(summary.errors)}`);
+    console.log(`  ${"Warnings".padEnd(20)} ${c.value(summary.warnings)}`);
+    console.log(`  ${"Info".padEnd(20)} ${c.value(summary.info)}`);
+    console.log(`  ${"Affected notes".padEnd(20)} ${c.value(summary.affectedNotes)}`);
+
+    const categories = INTEGRITY_CATEGORY_LABELS.filter(
+        ([key]) => summary.categories[key] > 0
+    );
+
+    if (categories.length > 0) {
+        console.log("");
+        for (const [key, label] of categories) {
+            console.log(`  ${label.padEnd(20)} ${c.value(summary.categories[key])}`);
+        }
+    }
+
+    if (options.note) {
+        const suffix = integrity.filterMatched ? "" : " (no matching note)";
+        console.log(c.dim(`\n  Filter: ${options.note}${suffix}`));
+    }
+
+    if (summary.total === 0) {
+        console.log("");
+        console.log(
+            "  " +
+                (options.note
+                    ? "No integrity issues found for this note."
+                    : "No integrity issues found.")
+        );
+    } else if (!options.verbose) {
+        console.log("");
+        console.log(c.dim("  Use `obs doctor --verbose` to inspect individual issues."));
+    }
+}
+
+function printIntegrityDetails(integrity) {
+    if (integrity.diagnostics.length === 0) {
+        return;
+    }
+
+    console.log(`\n${c.heading("Integrity Issues")}\n`);
+
+    for (const item of integrity.diagnostics) {
+        console.log(`[${item.severity.toUpperCase()}] ${item.code}`);
+        console.log(`File: ${item.path || "(vault)"}`);
+
+        if (item.line !== null && item.line !== undefined) {
+            console.log(`Line: ${item.line}`);
+        }
+
+        if (item.target) {
+            console.log(`Target: ${item.target}`);
+        }
+
+        console.log(`Reason: ${item.message}`);
+        console.log(`Action: ${item.action}`);
+
+        if (item.related && item.related.length > 0) {
+            console.log(`Related: ${item.related.join(", ")}`);
+        }
+
+        console.log("");
+    }
+}
+
 function doctor(options = {}) {
     const vault = getVaultPath();
     const index = buildVaultIndex(vault);
@@ -75,6 +154,7 @@ function doctor(options = {}) {
     }
 
     const result = analyzeVaultIndex(index);
+    const integrity = buildIntegrityReport(index, { note: options.note });
 
     if (options.json) {
         const json = {
@@ -96,7 +176,18 @@ function doctor(options = {}) {
             duplicateNames: result.duplicateNames,
             score: result.score,
             rating: result.rating,
+            integrity: {
+                summary: integrity.summary,
+                diagnostics: integrity.diagnostics,
+            },
         };
+
+        if (options.note) {
+            json.integrity.filter = {
+                note: options.note,
+                matched: integrity.filterMatched,
+            };
+        }
 
         if (options.verbose) {
             json.details = result.details;
@@ -129,6 +220,12 @@ function doctor(options = {}) {
     console.log(`\n${c.heading("Health Score")}\n`);
     console.log(`  Score         : ${c.value(`${result.score}/100`)}`);
     console.log(`  Rating        : ${c.value(result.rating)}`);
+
+    printIntegritySummary(integrity, options);
+
+    if (options.verbose) {
+        printIntegrityDetails(integrity);
+    }
 
     const totalIssues =
         result.brokenLinks +

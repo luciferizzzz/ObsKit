@@ -1,7 +1,42 @@
-function parseWikiLinks(content) {
+// Byte offsets of each line start, so offset -> line/column lookups stay
+// exact and independent of how the content was split.
+function buildLineStarts(content) {
+    const starts = [0];
+
+    for (let i = 0; i < content.length; i++) {
+        if (content.charCodeAt(i) === 10) {
+            starts.push(i + 1);
+        }
+    }
+
+    return starts;
+}
+
+// 1-based line number for a byte offset. Binary search keeps large notes cheap.
+function lineAtOffset(lineStarts, offset) {
+    let low = 0;
+    let high = lineStarts.length - 1;
+    let result = 0;
+
+    while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (lineStarts[mid] <= offset) {
+            result = mid;
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    return result + 1;
+}
+
+function parseWikiLinks(content, options = {}) {
     const regex = /\[\[([^\]]+)\]\]/g;
     const links = [];
     let match;
+    const withLines = Boolean(options && options.withLines);
+    const lineStarts = withLines ? buildLineStarts(content) : null;
 
     while ((match = regex.exec(content)) !== null) {
         let rest = match[1].trim();
@@ -32,12 +67,19 @@ function parseWikiLinks(content) {
             continue;
         }
 
-        links.push({
+        const link = {
             target,
             alias,
             heading,
             raw: match[1],
-        });
+        };
+
+        if (withLines) {
+            link.line = lineAtOffset(lineStarts, match.index);
+            link.offset = match.index;
+        }
+
+        links.push(link);
     }
 
     return links;
@@ -106,4 +148,6 @@ module.exports = {
     normalizeLink,
     parseHeadings,
     getSectionContent,
+    buildLineStarts,
+    lineAtOffset,
 };

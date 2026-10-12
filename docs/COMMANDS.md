@@ -1202,12 +1202,14 @@ Tags
 
 ## `obs doctor`
 
-Analyze vault health.
+Analyze vault health and vault integrity.
 
 **Description**
 
 Full vault health analysis built on a single vault scan. Reports issues, warnings,
-a deterministic **Health Score** (0–100), and an overall rating.
+a deterministic **Health Score** (0–100), an overall rating, and a read-only
+**Vault Integrity** report that locates broken references, ambiguous links,
+missing attachments, and metadata/tag issues.
 
 **Syntax**
 
@@ -1221,8 +1223,9 @@ obs doctor [options]
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | List the offending files under each issue/warning category |
+| `--verbose` | List the offending files under each issue/warning category, and each integrity issue with its location |
 | `--json` | Output a structured machine-readable report |
+| `--note <path>` | Limit the integrity report to one note (accepts a file name or vault-relative path) |
 
 **Checks**
 
@@ -1237,6 +1240,26 @@ obs doctor [options]
 | Malformed Frontmatter | Issue | `---` opened but never closed |
 | Stale Notes | Warning | Not modified in 30 days |
 | Large Notes | Warning | Larger than 200 KB |
+
+**Integrity checks**
+
+Each integrity finding includes the source path, line number (when available), the
+affected target, a reason, and a suggested action.
+
+| Code | Severity | Condition |
+|------|----------|-----------|
+| `BROKEN_WIKI_LINK` | warning | `[[Target]]` does not resolve to any note |
+| `AMBIGUOUS_REFERENCE` | warning | A bare link matches more than one note with the same basename |
+| `DUPLICATE_BASENAME` | info | Two or more notes share a basename (informational) |
+| `MISSING_ATTACHMENT` | warning | A local attachment/file reference cannot be resolved |
+| `MALFORMED_FRONTMATTER` | error | `---` opened but never closed |
+| `DUPLICATE_FRONTMATTER_KEY` | warning | A frontmatter key is declared more than once |
+| `MISSING_REQUIRED_FIELD` | warning | A field in `integrity.requiredFrontmatter` is absent |
+| `TAG_SPELLING_VARIANT` | warning | The same tag is written in more than one way |
+| `UNRECOGNIZED_TAG` | warning | A tag is not in `integrity.tagCatalog` |
+
+`MISSING_REQUIRED_FIELD` and `UNRECOGNIZED_TAG` only run when the corresponding
+`integrity` configuration is set. See [CONFIGURATION.md](CONFIGURATION.md).
 
 **Rating**
 
@@ -1272,7 +1295,40 @@ Health Score
   Score         : 48/100
   Rating        : Needs Attention
 
+Vault Integrity
+
+  Errors               0
+  Warnings             10
+  Info                 3
+  Affected notes       7
+
+  Broken wiki-links    2
+  Ambiguous references 1
+  Duplicate basenames  3
+  Missing attachments  2
+  Metadata issues      3
+  Tag issues           2
+
+  Use `obs doctor --verbose` to inspect individual issues.
+
 ⚠️  Beberapa masalah ditemukan. Cek verbose untuk detail.
+```
+
+**Example — `--verbose` (integrity section)**
+
+```text
+[WARNING] BROKEN_WIKI_LINK
+File: Projects/ObsKit/Architecture.md
+Line: 42
+Target: [[Vault Index]]
+Reason: [[Vault Index]] does not resolve to any note in the vault.
+Action: Check the target name, rename or move the referenced note, or update the wiki-link.
+```
+
+**Example — `--note`**
+
+```bash
+obs doctor --note "Projects/ObsKit/Architecture.md"
 ```
 
 **Example — `--json`**
@@ -1288,7 +1344,38 @@ obs doctor --json
   "issues": { "brokenLinks": 1, "orphanNotes": 2, "emptyNotes": 0 },
   "warnings": { "staleNotes": 3, "largeNotes": 0 },
   "score": 48,
-  "rating": "Needs Attention"
+  "rating": "Needs Attention",
+  "integrity": {
+    "summary": {
+      "total": 13,
+      "errors": 0,
+      "warnings": 10,
+      "info": 3,
+      "affectedNotes": 7,
+      "categories": {
+        "links": 2,
+        "references": 1,
+        "basenames": 3,
+        "attachments": 2,
+        "metadata": 3,
+        "tags": 2
+      }
+    },
+    "diagnostics": [
+      {
+        "code": "BROKEN_WIKI_LINK",
+        "severity": "warning",
+        "category": "links",
+        "title": "Broken wiki-link",
+        "path": "Projects/ObsKit/Architecture.md",
+        "line": 42,
+        "target": "Vault Index",
+        "message": "[[Vault Index]] does not resolve to any note in the vault.",
+        "explanation": "The wiki-link points at a note that does not exist in this vault, so navigation and backlinks stop there.",
+        "action": "Check the target name, rename or move the referenced note, or update the wiki-link."
+      }
+    ]
+  }
 }
 ```
 
@@ -1296,6 +1383,9 @@ obs doctor --json
 
 - The health score formula is deterministic and documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 - `--json --verbose` includes the per-file `details` object.
+- The integrity report is read-only: it never renames, moves, links, tags, or
+  edits any note. The new `integrity` JSON field is additive; existing fields are
+  unchanged.
 
 ---
 

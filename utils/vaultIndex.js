@@ -52,7 +52,7 @@ function buildVaultIndex(vault) {
 
         const name = path.basename(file, ".md");
         const relPath = path.relative(vault, file).split(path.sep).join("/");
-        const outgoingDetails = parseWikiLinks(content);
+        const outgoingDetails = parseWikiLinks(content, { withLines: true });
         const outgoing = uniqueSorted(
             outgoingDetails.map((link) => normalizeNoteRef(link.target))
         );

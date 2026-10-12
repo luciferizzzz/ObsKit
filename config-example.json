@@ -1,5 +1,9 @@
 {
   "vault": "D:\\Your\\Obsidian\\Vault",
+  "integrity": {
+    "requiredFrontmatter": [],
+    "tagCatalog": []
+  },
   "ai": {
     "provider": "ollama",
     "ollama": {

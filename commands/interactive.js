@@ -1,4 +1,4 @@
-const { select, input } = require("@inquirer/prompts");
+const { select, input, confirm } = require("@inquirer/prompts");
 const c = require("../utils/colors");
 
 const newNote = require("./new");
@@ -19,8 +19,66 @@ const suggestCmd = require("./suggest");
 const reviewCmd = require("./review");
 const { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople } = require("./ai");
 const templateAction = require("./template");
+const askCmd = require("./ask");
+const { getPersonas, findPersona, resolvePersona } = require("../utils/persona");
+const { error } = require("../utils/feedback");
 
 const VERSION = require("../package.json").version;
+
+// Session-level persona selection. Kept in memory only — Interactive Mode must
+// never persist configuration changes the user did not explicitly ask for.
+let activePersona = null;
+
+function setActivePersona(id) {
+    activePersona = id || null;
+}
+
+function getActivePersona() {
+    return activePersona;
+}
+
+function resolveActivePersona() {
+    return findPersona(activePersona) || resolvePersona();
+}
+
+function isPromptCancel(err) {
+    return Boolean(
+        err &&
+            (err.name === "ExitPromptError" ||
+                err.message === "User force closed the prompt with 0 null")
+    );
+}
+
+async function promptText(message) {
+    try {
+        return (await input({ message })).trim();
+    } catch (err) {
+        if (isPromptCancel(err)) return null;
+        throw err;
+    }
+}
+
+async function promptConfirm(message) {
+    try {
+        return await confirm({ message, default: false });
+    } catch (err) {
+        if (isPromptCancel(err)) return null;
+        throw err;
+    }
+}
+
+// Runs a dispatched command defensively: a failing command (e.g. an
+// unconfigured vault) reports the problem and returns to the menu instead of
+// ending the interactive session.
+async function runCommand(action) {
+    try {
+        return await action();
+    } catch (err) {
+        if (isPromptCancel(err)) return undefined;
+        error((err && err.message) || "Terjadi kesalahan.");
+        return undefined;
+    }
+}
 
 function printHeader() {
     console.log("");
@@ -55,10 +113,7 @@ async function mainMenu() {
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -66,7 +121,7 @@ async function mainMenu() {
 
         if (choice === "exit") return;
 
-        await dispatch(choice);
+        await runCommand(() => dispatch(choice));
     }
 }
 
@@ -115,32 +170,17 @@ async function dispatch(choice) {
 }
 
 async function handleNew() {
-    let folder;
-    try {
-        folder = (await input({ message: "Folder:" })).trim();
-    } catch {
-        return;
-    }
+    const folder = await promptText("Folder:");
     if (!folder) return;
 
-    let title;
-    try {
-        title = (await input({ message: "Judul:" })).trim();
-    } catch {
-        return;
-    }
+    const title = await promptText("Judul:");
     if (!title) return;
 
     newNote(folder, title, {});
 }
 
 async function handleFind() {
-    let query;
-    try {
-        query = (await input({ message: "Cari note:" })).trim();
-    } catch {
-        return;
-    }
+    const query = await promptText("Cari note:");
     if (!query) return;
 
     await find(query, { pick: true });
@@ -165,10 +205,7 @@ async function peopleMenu() {
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -209,10 +246,7 @@ async function relationsMenu() {
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -235,52 +269,27 @@ async function relationsMenu() {
 }
 
 async function handleRelations() {
-    let note;
-    try {
-        note = (await input({ message: "Nama note:" })).trim();
-    } catch {
-        return;
-    }
+    const note = await promptText("Nama note:");
     if (!note) return;
 
     relations(note);
 }
 
 async function handleRelate() {
-    let note;
-    try {
-        note = (await input({ message: "Note:" })).trim();
-    } catch {
-        return;
-    }
+    const note = await promptText("Note:");
     if (!note) return;
 
-    let related;
-    try {
-        related = (await input({ message: "Related note:" })).trim();
-    } catch {
-        return;
-    }
+    const related = await promptText("Related note:");
     if (!related) return;
 
     relate(note, related);
 }
 
 async function handleUnrelate() {
-    let note;
-    try {
-        note = (await input({ message: "Note:" })).trim();
-    } catch {
-        return;
-    }
+    const note = await promptText("Note:");
     if (!note) return;
 
-    let related;
-    try {
-        related = (await input({ message: "Related note:" })).trim();
-    } catch {
-        return;
-    }
+    const related = await promptText("Related note:");
     if (!related) return;
 
     unrelate(note, related);
@@ -291,6 +300,7 @@ async function aiMenu() {
         console.log("");
         console.log(c.heading("AI"));
         console.log(c.divider("─────────────────────────────────"));
+        console.log(`  ${c.dim("Persona:")} ${c.title(resolveActivePersona().name)}`);
         console.log("");
 
         let choice;
@@ -298,19 +308,18 @@ async function aiMenu() {
             choice = await select({
                 message: "Pilih aksi:",
                 choices: [
+                    { name: "Ask Vault", value: "ask" },
                     { name: "Write Note", value: "write" },
                     { name: "Tomorrow Plan", value: "tomorrow" },
                     { name: "Update", value: "update" },
                     { name: "Weekly Review", value: "weekly" },
                     { name: "People Note", value: "people" },
+                    { name: "Persona", value: "persona" },
                     { name: "Back", value: "back" },
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -319,47 +328,87 @@ async function aiMenu() {
         if (choice === "back") return;
 
         switch (choice) {
+            case "ask":
+                await handleAiAsk();
+                break;
             case "write":
                 await handleAiWrite();
                 break;
             case "tomorrow":
-                await aiTomorrow({});
+                await runCommand(() => aiTomorrow({ persona: activePersona }));
                 break;
             case "update":
-                await aiUpdate({});
+                await runCommand(() => aiUpdate({ persona: activePersona }));
                 break;
             case "weekly":
-                await aiWeekly({});
+                await runCommand(() => aiWeekly({ persona: activePersona }));
                 break;
             case "people":
                 await handleAiPeople();
+                break;
+            case "persona":
+                await personaMenu();
                 break;
         }
     }
 }
 
-async function handleAiWrite() {
-    let prompt;
+async function personaMenu() {
+    const current = resolveActivePersona();
+
+    console.log("");
+    console.log(c.heading("Persona"));
+    console.log(c.divider("─────────────────────────────────"));
+    console.log(`  ${c.dim("Active:")} ${c.title(current.name)}`);
+    console.log("");
+
+    let choice;
     try {
-        prompt = (await input({ message: "Prompt:" })).trim();
-    } catch {
-        return;
+        choice = await select({
+            message: "Pilih persona:",
+            choices: [
+                ...getPersonas().map((persona) => ({
+                    name: persona.name,
+                    value: persona.id,
+                    description: persona.description,
+                })),
+                { name: "Back", value: "back" },
+            ],
+        });
+    } catch (err) {
+        if (isPromptCancel(err)) {
+            return;
+        }
+        throw err;
     }
+
+    if (choice === "back") return;
+
+    const selected = findPersona(choice);
+    if (!selected) return;
+
+    setActivePersona(selected.id);
+}
+
+async function handleAiAsk() {
+    const question = await promptText("Pertanyaan:");
+    if (!question) return;
+
+    await runCommand(() => askCmd(question, { persona: activePersona }));
+}
+
+async function handleAiWrite() {
+    const prompt = await promptText("Prompt:");
     if (!prompt) return;
 
-    await aiWrite(prompt, {});
+    await runCommand(() => aiWrite(prompt, { persona: activePersona }));
 }
 
 async function handleAiPeople() {
-    let name;
-    try {
-        name = (await input({ message: "Nama orang:" })).trim();
-    } catch {
-        return;
-    }
+    const name = await promptText("Nama orang:");
     if (!name) return;
 
-    await aiPeople(name, {});
+    await runCommand(() => aiPeople(name, { persona: activePersona }));
 }
 
 async function templateMenu() {
@@ -381,10 +430,7 @@ async function templateMenu() {
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -407,40 +453,20 @@ async function templateMenu() {
 }
 
 async function handleTemplatePreview() {
-    let name;
-    try {
-        name = (await input({ message: "Nama template:" })).trim();
-    } catch {
-        return;
-    }
+    const name = await promptText("Nama template:");
     if (!name) return;
 
     templateAction({ preview: name });
 }
 
 async function handleTemplateCreate() {
-    let folder;
-    try {
-        folder = (await input({ message: "Folder:" })).trim();
-    } catch {
-        return;
-    }
+    const folder = await promptText("Folder:");
     if (!folder) return;
 
-    let title;
-    try {
-        title = (await input({ message: "Judul:" })).trim();
-    } catch {
-        return;
-    }
+    const title = await promptText("Judul:");
     if (!title) return;
 
-    let name;
-    try {
-        name = (await input({ message: "Nama template:" })).trim();
-    } catch {
-        return;
-    }
+    const name = await promptText("Nama template:");
     if (!name) return;
 
     newNote(folder, title, { template: name });
@@ -466,10 +492,7 @@ async function intelligenceMenu() {
                 ],
             });
         } catch (err) {
-            if (
-                err.name === "ExitPromptError" ||
-                err.message === "User force closed the prompt with 0 null"
-            ) {
+            if (isPromptCancel(err)) {
                 return;
             }
             throw err;
@@ -495,51 +518,56 @@ async function intelligenceMenu() {
 }
 
 async function handleIntelligenceRelated() {
-    let note;
-    try {
-        note = (await input({ message: "Nama note:" })).trim();
-    } catch {
-        return;
-    }
+    const note = await promptText("Nama note:");
     if (!note) return;
 
     relatedCmd(note, {});
 }
 
 async function handleIntelligenceSuggest() {
-    let note;
-    try {
-        note = (await input({ message: "Nama note:" })).trim();
-    } catch {
-        return;
-    }
+    const note = await promptText("Nama note:");
     if (!note) return;
 
-    await suggestCmd(note, {});
+    const useAi = await promptConfirm(
+        "Tambahkan AI guidance? (butuh provider AI aktif)"
+    );
+    if (useAi === null) return;
+
+    await runCommand(() => suggestCmd(note, { ai: useAi }));
 }
 
 async function handleIntelligenceReview() {
-    let period;
-    try {
-        period = (await input({ message: "Periode (today/week/month):" }))
-            .trim() || "week";
-    } catch {
-        return;
-    }
+    const raw = await promptText("Periode (today/week/month):");
+    if (raw === null) return;
+    const period = raw || "week";
 
-    await reviewCmd(period, {});
+    const useAi = await promptConfirm(
+        "Tambahkan AI summary? (butuh provider AI aktif)"
+    );
+    if (useAi === null) return;
+
+    await runCommand(() => reviewCmd(period, { ai: useAi }));
 }
 
 module.exports = interactive;
+
+// Exposed for tests: the menu handlers are plain functions that always return
+// to the caller (never exit the process), so they can be driven directly.
+module.exports.isPromptCancel = isPromptCancel;
+module.exports.getActivePersona = getActivePersona;
+module.exports.setActivePersona = setActivePersona;
+module.exports.resolveActivePersona = resolveActivePersona;
+module.exports.aiMenu = aiMenu;
+module.exports.personaMenu = personaMenu;
+module.exports.handleAiAsk = handleAiAsk;
+module.exports.handleIntelligenceSuggest = handleIntelligenceSuggest;
+module.exports.handleIntelligenceReview = handleIntelligenceReview;
 
 async function interactive() {
     try {
         await mainMenu();
     } catch (err) {
-        if (
-            err.name === "ExitPromptError" ||
-            err.message === "User force closed the prompt with 0 null"
-        ) {
+        if (isPromptCancel(err)) {
             return;
         }
         throw err;

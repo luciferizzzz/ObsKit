@@ -164,6 +164,10 @@ obs ai people "John Doe" --persona Default
 
 Running `obs ai` without `--persona` always uses the **Default** persona.
 
+Interactive Mode (`obs` with no arguments) exposes the same selection under
+**AI → Persona**. The choice applies to the session and is never persisted to
+configuration.
+
 ### Adding a persona
 
 Personas are defined as plain data in `utils/persona.js` (or registered at runtime via `registerPersona`). Each persona needs:

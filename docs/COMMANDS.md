@@ -90,8 +90,13 @@ Running `obs` without any arguments launches Interactive Mode, which presents a 
 - **People**: List People, Recent People, People Stats
 - **Intelligence**: Vault Doctor, Related Notes, Suggestions, Review
 - **Relationships**: View Relations, Add Relation, Remove Relation
-- **AI**: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
-- **Template**: List Templates, Preview Template
+- **AI**: Ask Vault, Write Note, Tomorrow Plan, Update, Weekly Review, People Note, Persona
+- **Template**: List Templates, Preview Template, Create Note from Template
+
+The **AI** submenu reuses the existing `obs ask` command for **Ask Vault** and the
+`--ai` option of `obs suggest` / `obs review` when AI guidance is confirmed. The
+**Persona** entry selects an AI persona for the rest of the session (in memory only —
+no configuration is written).
 
 **Behavior**
 

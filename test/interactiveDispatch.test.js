@@ -216,16 +216,42 @@ test("dispatch: tags with blank input lists all tags", async () => {
     }
 });
 
-test("dispatch: review defaults to the weekly period", async () => {
+test("dispatch: review defaults to the weekly period and asks for AI opt-in", async () => {
+    // v1.7.0: review (and suggest) are AI opt-in workflows. The dispatch
+    // confirms whether the user wants AI output and forwards `{ ai }` to the
+    // command, which is the intended interactive AI behavior.
     const calls = [];
     const { interactive, restore } = loadInteractive({
-        prompts: scripted({ select: ["intel", "review", "back", "exit"], input: [""] }),
+        prompts: scripted({
+            select: ["intel", "review", "back", "exit"],
+            input: [""],
+            confirm: [true],
+        }),
         commands: { "../commands/review": (...args) => calls.push(args) },
     });
 
     try {
         await captureAsync(() => interactive());
-        assert.deepEqual(calls, [["week", {}]]);
+        assert.deepEqual(calls, [["week", { ai: true }]]);
+    } finally {
+        restore();
+    }
+});
+
+test("dispatch: review with AI opt-in declined passes ai:false to the command", async () => {
+    const calls = [];
+    const { interactive, restore } = loadInteractive({
+        prompts: scripted({
+            select: ["intel", "review", "back", "exit"],
+            input: ["month"],
+            confirm: [false],
+        }),
+        commands: { "../commands/review": (...args) => calls.push(args) },
+    });
+
+    try {
+        await captureAsync(() => interactive());
+        assert.deepEqual(calls, [["month", { ai: false }]]);
     } finally {
         restore();
     }

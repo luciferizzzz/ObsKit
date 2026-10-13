@@ -4,6 +4,76 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [Unreleased] — v1.7.0
+
+### Intelligence Workflow
+
+v1.7.0 upgrades the intelligence and AI workflows on top of v1.6.x: deeper
+diagnostics, smarter relationships and suggestions, groundable vault context
+for the AI, and full AI access inside Interactive Mode.
+
+#### Added
+
+- **Deeper Diagnostics** (`obs doctor` + `obs review`):
+  - `obs doctor` gains a **Diagnostics** section and a `diagnostics` array in
+    `--json` output (`items` only with `--verbose`). The v1.6.3 `integrity`
+    report and the health score are untouched.
+  - Three-severity model (`error` / `warning` / `info`) covering 10
+    diagnostics: malformed frontmatter, duplicate frontmatter keys, broken
+    links, ambiguous link targets, basename collisions, isolated notes, tag
+    spelling variants, orphan notes, self links, and single-use tags.
+  - `obs review` gains a **Next Actions** section with readiness signals:
+    fix malformed metadata, fix broken links, resolve name collisions,
+    consolidate tag variants, connect isolated notes, review orphan notes,
+    add structure, connect low-density notes, and file unfiled notes.
+- **Smart Suggestions v2** (`obs suggest`): a per-note recommendations engine
+  that derives structure, folder, tag, and template suggestions from the single
+  vault-index scan.
+- **Smart Relationships v2** (`obs related`): backlinks resolved by note
+  identity (duplicate backlinks and self-references filtered out),
+  body-similarity scoring, and human-readable explanations for every ranked
+  relationship.
+- **AI Vault Context** (`obs ask`): answer questions about the vault with
+  grounded context. Retrieval is deterministic and local — Unicode-aware
+  tokenization with English/Indonesian stopwords, byte-stable ranking, and a
+  raw-substring fallback so CJK questions still match. The prompt is bounded by
+  note count, characters per note, and total context size; the exact
+  **Sources** are printed; `-n, --limit` (default `5`, max `12`) and
+  `-p, --persona` are supported. Nothing relevant → the command reports
+  insufficient context and skips the AI.
+- **Interactive AI** (`obs` no-argument menu):
+  - **AI** submenu gains **Ask Vault** and **Persona** alongside Write Note,
+    Tomorrow Plan, Update, Weekly Review, and People Note.
+  - **Persona** is chosen for the session and forwarded to every AI action
+    (`{ persona: activePersona }`); it is never persisted to configuration.
+  - **Suggest** and **Review** confirm AI opt-in per run and forward `{ ai }`
+    to the command.
+  - Interactive Mode keeps the v1.6.4 cancel-safe / error-safe prompts
+    (`promptMenu` / `promptText` / `promptConfirm` / `safeRun`) and the full
+    data-driven menu structure (Notes, Browse, Knowledge, Intelligence,
+    Relationships, AI, People, Template, Utilities, Config).
+
+#### Changed
+
+- `obs doctor --json` output now includes `diagnostics` alongside the v1.6.x
+  `health` and v1.6.3 `integrity` + `filter` sections.
+- `obs suggest` output carries the v2 recommendation fields; v1 fields remain
+  for script compatibility.
+- Interactive Mode forwards the active persona and AI opt-in flags to the
+  underlying commands.
+
+#### Fixed
+
+- Backlinks resolve by note identity: one file linked from several places is
+  not duplicated, and a note linking itself is filtered out.
+- `obs ask` content substring matching is restricted to unspaced scripts
+  (CJK), and truncation is reported once the retrieval limit is exceeded.
+
+#### Tests
+
+- Full suite: **720 tests, all passing** over three consecutive runs (v1.6.4
+  baseline: 533).
+
 ## [1.6.4] - 2026-10-13
 
 ### Complete Interactive Mode

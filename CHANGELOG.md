@@ -4,6 +4,84 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.6.4] - 2026-10-13
+
+### Complete Interactive Mode
+
+The interactive menu (`obs`) now exposes every user-facing command, grouped into
+focused submenus so nothing is left to the CLI only.
+
+#### Added
+
+- **Notes** submenu: New Note, Today, Find Note, Rename Note, Move Note, Open
+  Note, Note Info (`obs rename`, `obs move`, `obs open`, `obs info`).
+- **Browse** submenu: List Notes, Folder Tree, Recent Notes, Random Note, Random
+  & Open, Vault Stats, Dashboard, Report (`obs list`, `obs tree`, `obs report`,
+  `obs random --open`).
+- **Knowledge** submenu: Dead Links, Backlinks, Orphan Notes, Graph, Tags
+  (`obs deadlinks`, `obs backlinks`, `obs orphan`, `obs graph`, `obs tags`).
+- **Utilities** submenu: Todo List, Attachments, Backup Vault, Archive Notes,
+  Cleanup Vault (`obs todo`, `obs attachments`, `obs backup`, `obs archive`,
+  `obs cleanup`).
+- **Config** submenu: Show Configuration, Set Vault Path, AI Setup, Reset
+  Configuration (`obs config`, `obs config set`, `obs config ai`,
+  `obs config reset`).
+- **Create Note from Template** entry in the Template submenu.
+
+#### Changed
+
+- Interactive Mode main menu reorganised into groups: Notes, Browse, Knowledge,
+  Intelligence, Relationships, AI, People, Template, Utilities, Config.
+- Cancelling a prompt (Ctrl+C) now returns to the previous menu instead of
+  ending the session; a failing command reports the error and returns to the
+  menu.
+- Menu definitions in `commands/interactive.js` are kept as data and covered by
+  `test/interactiveMenu.test.js`.
+
+#### Notes
+
+- Interactive Mode reuses the existing command implementations. No command
+  behaviour changed and all non-interactive CLI usage is unaffected.
+
+## [1.6.3] - 2026-10-12
+
+### Vault Integrity & Missing References
+
+A read-only audit release. `obs doctor` now reports vault integrity issues at the
+exact location where they occur, without modifying any vault file.
+
+#### Added
+
+- **Vault Integrity report** in `obs doctor`: a unified, read-only section that
+  surfaces broken wiki-links, ambiguous references, duplicate basenames, missing
+  attachments, and metadata/tag issues, each with source path, line number,
+  target, reason, and suggested action.
+- `checks/integrity.js` — diagnostic engine built on the existing single-scan
+  `buildVaultIndex()` index and `parseWikiLinks()` parser. Diagnostic codes:
+  `BROKEN_WIKI_LINK`, `AMBIGUOUS_REFERENCE`, `DUPLICATE_BASENAME`,
+  `MISSING_ATTACHMENT`, `MALFORMED_FRONTMATTER`, `DUPLICATE_FRONTMATTER_KEY`,
+  `MISSING_REQUIRED_FIELD`, `TAG_SPELLING_VARIANT`, `UNRECOGNIZED_TAG`.
+- Exact line/column numbers for link and attachment findings, derived from the
+  parser's byte offsets (never guessed).
+- Optional, explicit configuration rules (no catalog is assumed by default):
+  `integrity.requiredFrontmatter` enables `MISSING_REQUIRED_FIELD`, and
+  `integrity.tagCatalog` enables `UNRECOGNIZED_TAG`.
+- `obs doctor --note <path>` filters the integrity report to a single note.
+- `integrity.summary` and `integrity.diagnostics` are added to `obs doctor --json`.
+
+#### Changed
+
+- `parseWikiLinks()` accepts an opt-in `{ withLines: true }` option; the default
+  return shape is unchanged.
+- `buildVaultIndex()` now records a line number on each `outgoingDetails` entry.
+
+#### Notes
+
+- This is an audit and reporting release: no automatic link repair, tag
+  insertion, note rename/move, or metadata mutation is performed.
+- Existing `obs doctor` output and JSON fields are preserved; the integrity
+  report is additive.
+
 ## [1.6.2] - 2026-10-08
 
 ### Template Expansion

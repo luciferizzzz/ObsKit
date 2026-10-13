@@ -64,34 +64,36 @@ Launch an interactive terminal menu for quick access to ObsKit features.
 
 **Description**
 
-Running `obs` without any arguments launches Interactive Mode, which presents a menu-driven interface for navigating ObsKit's most common operations.
+Running `obs` without any arguments launches Interactive Mode, which presents a menu-driven interface for navigating ObsKit's most common operations. Every user-facing command is reachable from the main menu.
 
-**Menu Options**
+**Main Menu**
 
-| # | Action | Dispatches |
-|---|--------|------------|
-| 1 | New Note | `obs new` (prompts for folder and title) |
-| 2 | Today | `obs today` |
-| 3 | Find Note | `obs find` (prompts for query, picks interactively) |
-| 4 | Recent Notes | `obs recent` |
-| 5 | Random Note | `obs random` |
-| 6 | Todo | `obs todo` |
-| 7 | Dashboard | `obs dashboard` |
-| 8 | Vault Stats | `obs stats` |
-| 9 | Intelligence | Intelligence submenu |
-| 10 | People | People submenu |
-| 11 | Relationships | Relationships submenu |
-| 12 | AI | AI submenu |
-| 13 | Template | Template submenu |
-| 0 | Exit | Exit Interactive Mode |
+| Action | Opens |
+|--------|-------|
+| Notes | Notes submenu |
+| Browse | Browse submenu |
+| Knowledge | Knowledge submenu |
+| Intelligence | Intelligence submenu |
+| Relationships | Relationships submenu |
+| AI | AI submenu |
+| People | People submenu |
+| Template | Template submenu |
+| Utilities | Utilities submenu |
+| Config | Config submenu |
+| Exit | Exit Interactive Mode |
 
 **Submenus**
 
-- **People**: List People, Recent People, People Stats
+- **Notes**: New Note (`obs new`), Today (`obs today`), Find Note (`obs find`), Rename Note (`obs rename`), Move Note (`obs move`), Open Note (`obs open`), Note Info (`obs info`)
+- **Browse**: List Notes (`obs list`), Folder Tree (`obs tree`), Recent Notes (`obs recent`), Random Note (`obs random`), Random & Open (`obs random --open`), Vault Stats (`obs stats`), Dashboard (`obs dashboard`), Report (`obs report`)
+- **Knowledge**: Dead Links (`obs deadlinks`), Backlinks (`obs backlinks`), Orphan Notes (`obs orphan`), Graph (`obs graph`), Tags (`obs tags`)
 - **Intelligence**: Vault Doctor, Related Notes, Suggestions, Review
 - **Relationships**: View Relations, Add Relation, Remove Relation
 - **AI**: Ask Vault, Write Note, Tomorrow Plan, Update, Weekly Review, People Note, Persona
+- **People**: List People, Recent People, People Stats
 - **Template**: List Templates, Preview Template, Create Note from Template
+- **Utilities**: Todo List (`obs todo`), Attachments (`obs attachments`), Backup Vault (`obs backup`), Archive Notes (`obs archive`), Cleanup Vault (`obs cleanup`)
+- **Config**: Show Configuration (`obs config`), Set Vault Path (`obs config set`), AI Setup (`obs config ai`), Reset Configuration (`obs config reset`)
 
 The **AI** submenu reuses the existing `obs ask` command for **Ask Vault** and the
 `--ai` option of `obs suggest` / `obs review` when AI guidance is confirmed. The
@@ -104,12 +106,14 @@ no configuration is written).
 - `obs --help` → Normal help output
 - `obs --version` → Version output
 - All explicit subcommands continue to work normally
-- Ctrl+C exits cleanly without a stack trace
+- Ctrl+C at any prompt returns to the previous menu (or exits the main menu) without a stack trace
+- Interactive-only commands (Backup, Archive, Cleanup) prompt for their own inputs and confirmations
 
 **Notes**
 
-- Interactive Mode reuses existing command implementations directly
+- Interactive Mode reuses existing command implementations directly — no logic is duplicated
 - No vault scanning occurs until a menu option is selected
+- A failing command (for example an unconfigured vault) reports the error and returns to the menu instead of ending the session
 - All existing commands remain fully functional
 
 ---
@@ -1207,12 +1211,14 @@ Tags
 
 ## `obs doctor`
 
-Analyze vault health.
+Analyze vault health and vault integrity.
 
 **Description**
 
 Full vault health analysis built on a single vault scan. Reports issues, warnings,
-a deterministic **Health Score** (0–100), and an overall rating.
+a deterministic **Health Score** (0–100), an overall rating, and a read-only
+**Vault Integrity** report that locates broken references, ambiguous links,
+missing attachments, and metadata/tag issues.
 
 **Syntax**
 
@@ -1226,8 +1232,9 @@ obs doctor [options]
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | List the offending files under each issue/warning category |
+| `--verbose` | List the offending files under each issue/warning category, and each integrity issue with its location |
 | `--json` | Output a structured machine-readable report |
+| `--note <path>` | Limit the integrity report to one note (accepts a file name or vault-relative path) |
 
 **Checks**
 
@@ -1242,6 +1249,26 @@ obs doctor [options]
 | Malformed Frontmatter | Issue | `---` opened but never closed |
 | Stale Notes | Warning | Not modified in 30 days |
 | Large Notes | Warning | Larger than 200 KB |
+
+**Integrity checks**
+
+Each integrity finding includes the source path, line number (when available), the
+affected target, a reason, and a suggested action.
+
+| Code | Severity | Condition |
+|------|----------|-----------|
+| `BROKEN_WIKI_LINK` | warning | `[[Target]]` does not resolve to any note |
+| `AMBIGUOUS_REFERENCE` | warning | A bare link matches more than one note with the same basename |
+| `DUPLICATE_BASENAME` | info | Two or more notes share a basename (informational) |
+| `MISSING_ATTACHMENT` | warning | A local attachment/file reference cannot be resolved |
+| `MALFORMED_FRONTMATTER` | error | `---` opened but never closed |
+| `DUPLICATE_FRONTMATTER_KEY` | warning | A frontmatter key is declared more than once |
+| `MISSING_REQUIRED_FIELD` | warning | A field in `integrity.requiredFrontmatter` is absent |
+| `TAG_SPELLING_VARIANT` | warning | The same tag is written in more than one way |
+| `UNRECOGNIZED_TAG` | warning | A tag is not in `integrity.tagCatalog` |
+
+`MISSING_REQUIRED_FIELD` and `UNRECOGNIZED_TAG` only run when the corresponding
+`integrity` configuration is set. See [CONFIGURATION.md](CONFIGURATION.md).
 
 **Rating**
 
@@ -1277,7 +1304,40 @@ Health Score
   Score         : 48/100
   Rating        : Needs Attention
 
+Vault Integrity
+
+  Errors               0
+  Warnings             10
+  Info                 3
+  Affected notes       7
+
+  Broken wiki-links    2
+  Ambiguous references 1
+  Duplicate basenames  3
+  Missing attachments  2
+  Metadata issues      3
+  Tag issues           2
+
+  Use `obs doctor --verbose` to inspect individual issues.
+
 ⚠️  Beberapa masalah ditemukan. Cek verbose untuk detail.
+```
+
+**Example — `--verbose` (integrity section)**
+
+```text
+[WARNING] BROKEN_WIKI_LINK
+File: Projects/ObsKit/Architecture.md
+Line: 42
+Target: [[Vault Index]]
+Reason: [[Vault Index]] does not resolve to any note in the vault.
+Action: Check the target name, rename or move the referenced note, or update the wiki-link.
+```
+
+**Example — `--note`**
+
+```bash
+obs doctor --note "Projects/ObsKit/Architecture.md"
 ```
 
 **Example — `--json`**
@@ -1293,7 +1353,38 @@ obs doctor --json
   "issues": { "brokenLinks": 1, "orphanNotes": 2, "emptyNotes": 0 },
   "warnings": { "staleNotes": 3, "largeNotes": 0 },
   "score": 48,
-  "rating": "Needs Attention"
+  "rating": "Needs Attention",
+  "integrity": {
+    "summary": {
+      "total": 13,
+      "errors": 0,
+      "warnings": 10,
+      "info": 3,
+      "affectedNotes": 7,
+      "categories": {
+        "links": 2,
+        "references": 1,
+        "basenames": 3,
+        "attachments": 2,
+        "metadata": 3,
+        "tags": 2
+      }
+    },
+    "diagnostics": [
+      {
+        "code": "BROKEN_WIKI_LINK",
+        "severity": "warning",
+        "category": "links",
+        "title": "Broken wiki-link",
+        "path": "Projects/ObsKit/Architecture.md",
+        "line": 42,
+        "target": "Vault Index",
+        "message": "[[Vault Index]] does not resolve to any note in the vault.",
+        "explanation": "The wiki-link points at a note that does not exist in this vault, so navigation and backlinks stop there.",
+        "action": "Check the target name, rename or move the referenced note, or update the wiki-link."
+      }
+    ]
+  }
 }
 ```
 
@@ -1301,6 +1392,9 @@ obs doctor --json
 
 - The health score formula is deterministic and documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 - `--json --verbose` includes the per-file `details` object.
+- The integrity report is read-only: it never renames, moves, links, tags, or
+  edits any note. The new `integrity` JSON field is additive; existing fields are
+  unchanged.
 
 ---
 

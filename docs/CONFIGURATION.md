@@ -55,6 +55,9 @@ A complete example:
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `vault` | `string` | ✅ | — | Absolute path to the Obsidian vault |
+| `integrity` | `object` | ❌ | — | Optional vault-integrity rules for `obs doctor` |
+| `integrity.requiredFrontmatter` | `string[]` | ❌ | `[]` | Frontmatter keys every note must define |
+| `integrity.tagCatalog` | `string[]` | ❌ | `[]` | Canonical tags; tags outside the list are reported |
 | `ai` | `object` | ❌ | — | AI provider settings |
 | `ai.provider` | `string` | ❌ | `"ollama"` | `"ollama"` or `"openai"` |
 | `ai.ollama.url` | `string` | if Ollama | `http://127.0.0.1:11434` | Ollama server URL |
@@ -89,6 +92,38 @@ obs init
 # or
 obs config set
 ```
+
+---
+
+# 🩺 `integrity` (optional)
+
+Controls the config-gated rules used by the `obs doctor` **Vault Integrity**
+report. Both fields are empty by default, so no tag catalog or required-field
+schema is assumed unless you define one.
+
+```json
+{
+  "vault": "D:\\Vault",
+  "integrity": {
+    "requiredFrontmatter": ["title", "status"],
+    "tagCatalog": ["project", "reference", "daily"]
+  }
+}
+```
+
+**Rules**
+
+- `requiredFrontmatter` — every note is checked for these frontmatter keys
+  (case-insensitive). Missing keys produce `MISSING_REQUIRED_FIELD` warnings.
+  Notes with malformed frontmatter are skipped to avoid cascading noise.
+- `tagCatalog` — inline tags are compared case-insensitively, and `-`/`_` are
+  treated as equivalent. Tags outside the catalog produce `UNRECOGNIZED_TAG`
+  warnings.
+- Detection rules that do not need configuration (broken links, ambiguous
+  references, duplicate basenames, missing attachments, malformed/duplicate
+  frontmatter, tag spelling variants) always run.
+
+See [`obs doctor`](COMMANDS.md#obs-doctor) for the full report.
 
 ---
 

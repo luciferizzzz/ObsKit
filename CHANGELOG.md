@@ -4,7 +4,7 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
-## [1.6.4] - Unreleased
+## [1.6.4] - 2026-10-13
 
 ### Complete Interactive Mode
 

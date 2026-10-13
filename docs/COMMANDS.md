@@ -64,34 +64,36 @@ Launch an interactive terminal menu for quick access to ObsKit features.
 
 **Description**
 
-Running `obs` without any arguments launches Interactive Mode, which presents a menu-driven interface for navigating ObsKit's most common operations.
+Running `obs` without any arguments launches Interactive Mode, which presents a menu-driven interface for navigating ObsKit's most common operations. Every user-facing command is reachable from the main menu.
 
-**Menu Options**
+**Main Menu**
 
-| # | Action | Dispatches |
-|---|--------|------------|
-| 1 | New Note | `obs new` (prompts for folder and title) |
-| 2 | Today | `obs today` |
-| 3 | Find Note | `obs find` (prompts for query, picks interactively) |
-| 4 | Recent Notes | `obs recent` |
-| 5 | Random Note | `obs random` |
-| 6 | Todo | `obs todo` |
-| 7 | Dashboard | `obs dashboard` |
-| 8 | Vault Stats | `obs stats` |
-| 9 | Intelligence | Intelligence submenu |
-| 10 | People | People submenu |
-| 11 | Relationships | Relationships submenu |
-| 12 | AI | AI submenu |
-| 13 | Template | Template submenu |
-| 0 | Exit | Exit Interactive Mode |
+| Action | Opens |
+|--------|-------|
+| Notes | Notes submenu |
+| Browse | Browse submenu |
+| Knowledge | Knowledge submenu |
+| Intelligence | Intelligence submenu |
+| Relationships | Relationships submenu |
+| AI | AI submenu |
+| People | People submenu |
+| Template | Template submenu |
+| Utilities | Utilities submenu |
+| Config | Config submenu |
+| Exit | Exit Interactive Mode |
 
 **Submenus**
 
-- **People**: List People, Recent People, People Stats
+- **Notes**: New Note (`obs new`), Today (`obs today`), Find Note (`obs find`), Rename Note (`obs rename`), Move Note (`obs move`), Open Note (`obs open`), Note Info (`obs info`)
+- **Browse**: List Notes (`obs list`), Folder Tree (`obs tree`), Recent Notes (`obs recent`), Random Note (`obs random`), Random & Open (`obs random --open`), Vault Stats (`obs stats`), Dashboard (`obs dashboard`), Report (`obs report`)
+- **Knowledge**: Dead Links (`obs deadlinks`), Backlinks (`obs backlinks`), Orphan Notes (`obs orphan`), Graph (`obs graph`), Tags (`obs tags`)
 - **Intelligence**: Vault Doctor, Related Notes, Suggestions, Review
 - **Relationships**: View Relations, Add Relation, Remove Relation
 - **AI**: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
-- **Template**: List Templates, Preview Template
+- **People**: List People, Recent People, People Stats
+- **Template**: List Templates, Preview Template, Create Note from Template
+- **Utilities**: Todo List (`obs todo`), Attachments (`obs attachments`), Backup Vault (`obs backup`), Archive Notes (`obs archive`), Cleanup Vault (`obs cleanup`)
+- **Config**: Show Configuration (`obs config`), Set Vault Path (`obs config set`), AI Setup (`obs config ai`), Reset Configuration (`obs config reset`)
 
 **Behavior**
 
@@ -99,12 +101,14 @@ Running `obs` without any arguments launches Interactive Mode, which presents a 
 - `obs --help` → Normal help output
 - `obs --version` → Version output
 - All explicit subcommands continue to work normally
-- Ctrl+C exits cleanly without a stack trace
+- Ctrl+C at any prompt returns to the previous menu (or exits the main menu) without a stack trace
+- Interactive-only commands (Backup, Archive, Cleanup) prompt for their own inputs and confirmations
 
 **Notes**
 
-- Interactive Mode reuses existing command implementations directly
+- Interactive Mode reuses existing command implementations directly — no logic is duplicated
 - No vault scanning occurs until a menu option is selected
+- A failing command (for example an unconfigured vault) reports the error and returns to the menu instead of ending the session
 - All existing commands remain fully functional
 
 ---

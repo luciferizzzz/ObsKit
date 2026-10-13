@@ -4,6 +4,45 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.6.4] - 2026-10-13
+
+### Complete Interactive Mode
+
+The interactive menu (`obs`) now exposes every user-facing command, grouped into
+focused submenus so nothing is left to the CLI only.
+
+#### Added
+
+- **Notes** submenu: New Note, Today, Find Note, Rename Note, Move Note, Open
+  Note, Note Info (`obs rename`, `obs move`, `obs open`, `obs info`).
+- **Browse** submenu: List Notes, Folder Tree, Recent Notes, Random Note, Random
+  & Open, Vault Stats, Dashboard, Report (`obs list`, `obs tree`, `obs report`,
+  `obs random --open`).
+- **Knowledge** submenu: Dead Links, Backlinks, Orphan Notes, Graph, Tags
+  (`obs deadlinks`, `obs backlinks`, `obs orphan`, `obs graph`, `obs tags`).
+- **Utilities** submenu: Todo List, Attachments, Backup Vault, Archive Notes,
+  Cleanup Vault (`obs todo`, `obs attachments`, `obs backup`, `obs archive`,
+  `obs cleanup`).
+- **Config** submenu: Show Configuration, Set Vault Path, AI Setup, Reset
+  Configuration (`obs config`, `obs config set`, `obs config ai`,
+  `obs config reset`).
+- **Create Note from Template** entry in the Template submenu.
+
+#### Changed
+
+- Interactive Mode main menu reorganised into groups: Notes, Browse, Knowledge,
+  Intelligence, Relationships, AI, People, Template, Utilities, Config.
+- Cancelling a prompt (Ctrl+C) now returns to the previous menu instead of
+  ending the session; a failing command reports the error and returns to the
+  menu.
+- Menu definitions in `commands/interactive.js` are kept as data and covered by
+  `test/interactiveMenu.test.js`.
+
+#### Notes
+
+- Interactive Mode reuses the existing command implementations. No command
+  behaviour changed and all non-interactive CLI usage is unaffected.
+
 ## [1.6.3] - 2026-10-12
 
 ### Vault Integrity & Missing References

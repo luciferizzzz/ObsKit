@@ -1,4 +1,4 @@
-﻿const { select, input, confirm } = require("@inquirer/prompts");
+const { select, input, confirm } = require("@inquirer/prompts");
 const c = require("../utils/colors");
 
 const newNote = require("./new");

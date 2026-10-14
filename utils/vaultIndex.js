@@ -82,24 +82,39 @@ function buildVaultIndex(vault) {
         byName.set(note.name.toLowerCase(), note);
     }
 
-    const backlinksMap = new Map();
+    // Backlinks are resolved by file identity (relPath), not by lowercased
+    // basename. Matching on the basename makes two notes that differ only in
+    // casing ("Sub1/Note.md" vs "Sub2/note.md") steal each other's backlinks,
+    // and the previous name-based self-filter then hid a real cross-folder
+    // link. Sets also collapse repeated "[[Note B]]" references and drop
+    // self-references by construction.
+    const backlinkSources = new Map();
     const referenced = new Set();
 
     for (const note of notes) {
         for (const target of note.outgoing) {
             referenced.add(target);
-            if (!backlinksMap.has(target)) {
-                backlinksMap.set(target, []);
+
+            const resolved = byName.get(target);
+            if (!resolved || resolved.relPath === note.relPath) {
+                continue;
             }
-            backlinksMap.get(target).push(note.name);
+
+            if (!backlinkSources.has(resolved.relPath)) {
+                backlinkSources.set(resolved.relPath, new Set());
+            }
+            backlinkSources.get(resolved.relPath).add(note.relPath);
         }
     }
 
+    const nameByRelPath = new Map(notes.map((note) => [note.relPath, note.name]));
+
     for (const note of notes) {
-        const incoming = (backlinksMap.get(note.name.toLowerCase()) || [])
-            .filter((name) => name.toLowerCase() !== note.name.toLowerCase())
+        const sources = backlinkSources.get(note.relPath) || new Set();
+        note.backlinks = [...sources]
+            .map((relPath) => nameByRelPath.get(relPath))
+            .filter((name) => typeof name === "string")
             .sort((a, b) => a.localeCompare(b));
-        note.backlinks = incoming;
     }
 
     return {

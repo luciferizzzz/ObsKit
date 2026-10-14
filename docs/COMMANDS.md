@@ -89,11 +89,16 @@ Running `obs` without any arguments launches Interactive Mode, which presents a 
 - **Knowledge**: Dead Links (`obs deadlinks`), Backlinks (`obs backlinks`), Orphan Notes (`obs orphan`), Graph (`obs graph`), Tags (`obs tags`)
 - **Intelligence**: Vault Doctor, Related Notes, Suggestions, Review
 - **Relationships**: View Relations, Add Relation, Remove Relation
-- **AI**: Write Note, Tomorrow Plan, Update, Weekly Review, People Note
+- **AI**: Ask Vault, Write Note, Tomorrow Plan, Update, Weekly Review, People Note, Persona
 - **People**: List People, Recent People, People Stats
 - **Template**: List Templates, Preview Template, Create Note from Template
 - **Utilities**: Todo List (`obs todo`), Attachments (`obs attachments`), Backup Vault (`obs backup`), Archive Notes (`obs archive`), Cleanup Vault (`obs cleanup`)
 - **Config**: Show Configuration (`obs config`), Set Vault Path (`obs config set`), AI Setup (`obs config ai`), Reset Configuration (`obs config reset`)
+
+The **AI** submenu reuses the existing `obs ask` command for **Ask Vault** and the
+`--ai` option of `obs suggest` / `obs review` when AI guidance is confirmed. The
+**Persona** entry selects an AI persona for the rest of the session (in memory only —
+no configuration is written).
 
 **Behavior**
 
@@ -1598,6 +1603,71 @@ Recently Modified
 - "Notes created" uses the file creation time (`birthtime`) — notes must have been
   created within the period to count.
 - The `--ai` summary is built from the digest only (capped name lists) — never the whole vault.
+
+---
+
+## `obs ask`
+
+Answer a question about the vault using the most relevant notes as context.
+
+**Description**
+
+Retrieves the most relevant notes for a question deterministically (title, tags,
+and body terms), builds a bounded context block, then asks the configured AI to
+answer **grounded in those notes only**. The sources used are printed with their
+vault paths. Retrieval and context building are local and never touch the network;
+only the final answer goes through the AI client, and only when a provider is
+available.
+
+**Syntax**
+
+```
+obs ask <question> [options]
+```
+
+**Arguments**
+
+| Argument | Description |
+|----------|-------------|
+| `<question>` | Question about the vault (free text) |
+
+**Options**
+
+| Option | Description |
+|--------|-------------|
+| `-n, --limit <n>` | Max number of source notes (default 5, max 12) |
+| `-p, --persona <name>` | AI persona to use (default persona otherwise) |
+
+**Example**
+
+```bash
+obs ask "bagaimana cara kerja rust ownership"
+```
+
+```text
+❓ Ask
+
+  Question   : bagaimana cara kerja rust ownership
+
+Sources
+
+  1. Notes/Rust Ownership.md (score 14)
+  2. Notes/Borrowing.md (score 6)
+
+🤖 Answer
+
+  Rust memakai ownership buat ngatur memori...
+
+Berdasarkan 2 sumber di atas. Jawaban bisa kurang lengkap kalau konteks terbatas.
+```
+
+**Notes**
+
+- If no note is relevant, the command reports that context is insufficient and
+  does **not** call the AI.
+- The context is capped by note count, characters per note, and total size, and
+  the output states when only a subset of sources was included.
+- `obs ask` never modifies notes, folders, or metadata.
 
 ---
 

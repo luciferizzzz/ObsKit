@@ -16,6 +16,8 @@ const suggestCmd = require("../commands/suggest");
 
 const reviewCmd = require("../commands/review");
 
+const askCmd = require("../commands/ask");
+
 const deadlinks = require("../commands/deadlinks");
 
 const move = require("../commands/move");
@@ -222,6 +224,13 @@ program
   .option("--days <n>", "Review the last N days")
   .option("--ai", "Add an AI summary (requires configured provider)")
   .action((period, options) => reviewCmd(period, options));
+
+program
+  .command("ask <question>")
+  .description("Jawab pertanyaan tentang isi vault dari catatan relevan")
+  .option("-n, --limit <n>", "Max jumlah catatan sumber (default 5)")
+  .option("-p, --persona <name>", "Persona AI yang dipakai")
+  .action((question, options) => askCmd(question, options));
 
 program
   .command("tree")

@@ -4,6 +4,7 @@ const {
     resolvePeriod,
     startDate,
     aggregateReview,
+    collectReviewSignals,
 } = require("../checks/review");
 const { generate } = require("../utils/ai");
 const { error, info } = require("../utils/feedback");
@@ -11,6 +12,55 @@ const { Spinner } = require("../utils/spinner");
 const c = require("../utils/colors");
 
 const NAME_LIST_LIMIT = 15;
+const SIGNAL_ITEM_LIMIT = 5;
+
+const SIGNAL_ITEM_FORMATTERS = {
+    FIX_MALFORMED_METADATA: (item) => item,
+    FIX_BROKEN_LINKS: (item) => `${item.file} → [[${item.link}]]`,
+    RESOLVE_NAME_COLLISIONS: (item) => `${item.name}: ${item.files.join(", ")}`,
+    CONSOLIDATE_TAG_VARIANTS: (item) =>
+        `${item.variants.join(" / ")} in ${item.notes.join(", ")}`,
+    CONNECT_ISOLATED_NOTES: (item) => item,
+    REVIEW_ORPHAN_NOTES: (item) => item,
+    ADD_STRUCTURE: (item) => item,
+    CONNECT_LOW_DENSITY_NOTES: (item) =>
+        `${item.file} (${item.connections} link${item.connections === 1 ? "" : "s"})`,
+    FILE_UNFILED_NOTES: (item) => item,
+};
+
+function signalSeverity(severity) {
+    const label = `[${severity}]`;
+    if (severity === "error") return c.error(label);
+    if (severity === "warning") return c.warning(label);
+    return c.dim(label);
+}
+
+function printNextActions(signals) {
+    console.log(`\n${c.heading("Next Actions")}\n`);
+
+    if (signals.length === 0) {
+        console.log(c.dim("  None."));
+        return;
+    }
+
+    signals.forEach((signal, index) => {
+        console.log(`  ${index + 1}. ${signalSeverity(signal.severity)} ${signal.message}`);
+        console.log(`     ${c.dim(signal.action)}`);
+
+        const format = SIGNAL_ITEM_FORMATTERS[signal.code];
+        if (!format) return;
+
+        signal.items.slice(0, SIGNAL_ITEM_LIMIT).forEach((item) => {
+            console.log(`       ${c.path(format(item))}`);
+        });
+
+        if (signal.items.length > SIGNAL_ITEM_LIMIT) {
+            console.log(
+                c.dim(`       ... dan ${signal.items.length - SIGNAL_ITEM_LIMIT} lainnya`)
+            );
+        }
+    });
+}
 
 function formatDateKey(date) {
     return (
@@ -118,6 +168,8 @@ async function review(period, options = {}) {
     console.log(`  ${"Relationships".padEnd(24)}= ${c.value(data.relationships)}`);
     console.log(`  ${"Broken Links".padEnd(24)}= ${c.value(data.brokenLinks)}`);
     console.log(`  ${"Orphan Notes Created".padEnd(24)}= ${c.value(data.orphansCreatedCount)}`);
+
+    printNextActions(collectReviewSignals(vaultIndex));
 
     if (data.activeTags.length > 0) {
         console.log(`\n${c.heading("Most Active Tags")}\n`);

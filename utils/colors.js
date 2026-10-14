@@ -42,6 +42,14 @@ function tag(text) {
     return chalk.green(text);
 }
 
+function error(text) {
+    return chalk.red(text);
+}
+
+function warning(text) {
+    return chalk.yellow(text);
+}
+
 module.exports = {
     ANSI_RE,
     stripAnsi,
@@ -54,4 +62,6 @@ module.exports = {
     dim,
     divider,
     tag,
+    error,
+    warning,
 };

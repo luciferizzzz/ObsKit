@@ -36,9 +36,27 @@ const suggestCmd = require("./suggest");
 const reviewCmd = require("./review");
 const { aiWrite, aiTomorrow, aiUpdate, aiWeekly, aiPeople } = require("./ai");
 const templateAction = require("./template");
+const askCmd = require("./ask");
+const { getPersonas, findPersona, resolvePersona } = require("../utils/persona");
 const { error } = require("../utils/feedback");
 
 const VERSION = require("../package.json").version;
+
+// Session-level persona selection. Kept in memory only — Interactive Mode must
+// never persist configuration changes the user did not explicitly ask for.
+let activePersona = null;
+
+function setActivePersona(id) {
+    activePersona = id || null;
+}
+
+function getActivePersona() {
+    return activePersona;
+}
+
+function resolveActivePersona() {
+    return findPersona(activePersona) || resolvePersona();
+}
 
 // Menu definitions kept as data so they stay in one place and can be asserted
 // by tests. Every user-facing command is reachable from one of these menus.
@@ -113,11 +131,13 @@ const MENUS = {
         { name: "Back", value: "back" },
     ],
     ai: [
+        { name: "Ask Vault", value: "ask" },
         { name: "Write Note", value: "write" },
         { name: "Tomorrow Plan", value: "tomorrow" },
         { name: "Update", value: "update" },
         { name: "Weekly Review", value: "weekly" },
         { name: "People Note", value: "people" },
+        { name: "Persona", value: "persona" },
         { name: "Back", value: "back" },
     ],
     template: [
@@ -535,25 +555,37 @@ async function handleUnrelate() {
 
 async function aiMenu() {
     while (true) {
-        const choice = await promptMenu("AI", MENUS.ai);
+        console.log("");
+        console.log(c.heading("AI"));
+        console.log(c.divider("─────────────────────────────────"));
+        console.log(`  ${c.dim("Persona:")} ${c.title(resolveActivePersona().name)}`);
+        console.log("");
+
+        const choice = await promptMenu(null, MENUS.ai);
 
         if (choice === null || choice === "back") return;
 
         switch (choice) {
+            case "ask":
+                await safeRun(handleAiAsk);
+                break;
             case "write":
                 await safeRun(handleAiWrite);
                 break;
             case "tomorrow":
-                await safeRun(() => aiTomorrow({}));
+                await safeRun(() => aiTomorrow({ persona: activePersona }));
                 break;
             case "update":
-                await safeRun(() => aiUpdate({}));
+                await safeRun(() => aiUpdate({ persona: activePersona }));
                 break;
             case "weekly":
-                await safeRun(() => aiWeekly({}));
+                await safeRun(() => aiWeekly({ persona: activePersona }));
                 break;
             case "people":
                 await safeRun(handleAiPeople);
+                break;
+            case "persona":
+                await personaMenu();
                 break;
         }
     }
@@ -563,14 +595,58 @@ async function handleAiWrite() {
     const prompt = await promptText("Prompt:");
     if (!prompt) return;
 
-    await aiWrite(prompt, {});
+    await safeRun(() => aiWrite(prompt, { persona: activePersona }));
 }
 
 async function handleAiPeople() {
     const name = await promptText("Nama orang:");
     if (!name) return;
 
-    await aiPeople(name, {});
+    await safeRun(() => aiPeople(name, { persona: activePersona }));
+}
+
+async function personaMenu() {
+    const current = resolveActivePersona();
+
+    console.log("");
+    console.log(c.heading("Persona"));
+    console.log(c.divider("─────────────────────────────────"));
+    console.log(`  ${c.dim("Active:")} ${c.title(current.name)}`);
+    console.log("");
+
+    let choice;
+    try {
+        choice = await select({
+            message: "Pilih persona:",
+            choices: [
+                ...getPersonas().map((persona) => ({
+                    name: persona.name,
+                    value: persona.id,
+                    description: persona.description,
+                })),
+                { name: "Back", value: "back" },
+            ],
+        });
+    } catch (err) {
+        if (isPromptCancel(err)) {
+            return;
+        }
+        throw err;
+    }
+
+    if (choice === "back") return;
+
+    const selected = findPersona(choice);
+    if (!selected) return;
+
+    setActivePersona(selected.id);
+}
+
+async function handleAiAsk() {
+    const question = await promptText("Pertanyaan:");
+    if (!question) return;
+
+    await safeRun(() => askCmd(question, { persona: activePersona }));
 }
 
 async function templateMenu() {
@@ -647,20 +723,43 @@ async function handleIntelligenceSuggest() {
     const note = await promptText("Nama note:");
     if (!note) return;
 
-    await suggestCmd(note, {});
+    const useAi = await promptConfirm(
+        "Tambahkan AI guidance? (butuh provider AI aktif)"
+    );
+    if (useAi === null) return;
+
+    await safeRun(() => suggestCmd(note, { ai: useAi }));
 }
 
 async function handleIntelligenceReview() {
-    const period = await promptText("Periode (today/week/month):");
-    if (period === null) return;
+    const raw = await promptText("Periode (today/week/month):");
+    if (raw === null) return;
+    const period = raw || "week";
 
-    await reviewCmd(period || "week", {});
+    const useAi = await promptConfirm(
+        "Tambahkan AI summary? (butuh provider AI aktif)"
+    );
+    if (useAi === null) return;
+
+    await safeRun(() => reviewCmd(period, { ai: useAi }));
 }
 
 module.exports = interactive;
 
 // Test-only hook: menu structure exposed so tests can assert completeness.
 module.exports._menus = MENUS;
+
+// Exposed for tests: the menu handlers are plain functions that always return
+// to the caller (never exit the process), so they can be driven directly.
+module.exports.isPromptCancel = isPromptCancel;
+module.exports.getActivePersona = getActivePersona;
+module.exports.setActivePersona = setActivePersona;
+module.exports.resolveActivePersona = resolveActivePersona;
+module.exports.aiMenu = aiMenu;
+module.exports.personaMenu = personaMenu;
+module.exports.handleAiAsk = handleAiAsk;
+module.exports.handleIntelligenceSuggest = handleIntelligenceSuggest;
+module.exports.handleIntelligenceReview = handleIntelligenceReview;
 
 async function interactive() {
     try {

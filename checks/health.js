@@ -82,6 +82,44 @@ function hasMalformedFrontmatter(content) {
     return !/^---(?:\r?\n|$)/m.test(rest);
 }
 
+// Duplicate top-level frontmatter keys are detected with a line scan of the
+// closed frontmatter block, not a YAML parser: only `key:` lines at column 0
+// are considered, so indented multi-line values (lists, folded scalars) can
+// never produce a false positive. Unclosed blocks are reported by
+// hasMalformedFrontmatter instead and yield no keys here.
+function findDuplicateFrontmatterKeys(content) {
+    const text = content.replace(/^\uFEFF/, "");
+
+    if (!/^---(?:\r?\n|$)/.test(text)) {
+        return [];
+    }
+
+    const rest = text.replace(/^---(?:\r?\n|$)/, "");
+    const closing = rest.match(/^---[ \t]*(?:\r?\n|$)/m);
+    if (!closing) {
+        return [];
+    }
+
+    const block = rest.slice(0, closing.index);
+    const seen = new Set();
+    const duplicates = new Set();
+
+    for (const line of block.split(/\r?\n/)) {
+        const match = line.match(/^([A-Za-z0-9_][A-Za-z0-9_-]*):(?:[ \t]|$)/);
+        if (!match) continue;
+
+        const key = match[1];
+        if (seen.has(key)) {
+            duplicates.add(key);
+        }
+        seen.add(key);
+    }
+
+    // Default sort = UTF-16 code-unit order, deliberately not localeCompare,
+    // so duplicate-key lists are byte-identical across machines.
+    return [...duplicates].sort();
+}
+
 function countPendingTasks(content) {
     let count = 0;
     const lines = content.split(/\r?\n/);
@@ -240,6 +278,7 @@ module.exports = {
     healthRating,
     isEmptyNote,
     hasMalformedFrontmatter,
+    findDuplicateFrontmatterKeys,
     countPendingTasks,
     analyzeVaultIndex,
 };

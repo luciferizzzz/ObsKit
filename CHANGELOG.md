@@ -4,7 +4,7 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
-## [Unreleased] — v1.7.0
+## [1.7.0] - 2026-10-14
 
 ### Intelligence Workflow
 

@@ -1,6 +1,6 @@
 # ObsKit v1.7.0 — Intelligence Workflow
 
-**Release date:** _unreleased_ (feature branch `feature/intelligence-workflow-v1.7.0`)
+**Release date:** 2026-10-14
 **Type:** Feature release (SemVer-compatible with v1.6.4)
 
 ---

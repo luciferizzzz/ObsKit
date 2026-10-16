@@ -72,7 +72,7 @@ test("find: content mode searches inside notes", async () => {
         capture(() => find("cargo", { content: true }))
     );
     assert.ok(output.includes("Learning Rust.md"));
-    assert.ok(output.includes(path.join("Notes", "Cargo.md")));
+    assert.ok(output.includes("Notes/Cargo.md"));
     assert.ok(!output.includes("Cargo.txt"));
 });
 
@@ -81,7 +81,7 @@ test("find: type filter restricts extensions", async () => {
     const md = await withVault(root, () =>
         capture(() => find("cargo", { type: "md" }))
     );
-    assert.ok(md.includes(path.join("Notes", "Cargo.md")));
+    assert.ok(md.includes("Notes/Cargo.md"));
     assert.ok(!md.includes("Cargo.txt"));
 
     const txt = await withVault(root, () =>

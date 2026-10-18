@@ -78,7 +78,7 @@ test("searchFiles: finds nested files with relative paths", () => {
     const root = makeVault();
     const { results } = searchFiles(root, "cargo");
     assert.equal(results.length, 1);
-    assert.equal(results[0].relativePath, path.join("Sub", "Cargo.md"));
+    assert.equal(results[0].relativePath, "Sub/Cargo.md");
 });
 
 test("searchFiles: matches any file type by default (find compatibility)", () => {
@@ -92,7 +92,7 @@ test("searchFiles: default includes hidden directories (find compatibility)", ()
     const root = makeVault();
     const { results } = searchFiles(root, "workspace");
     assert.equal(results.length, 1);
-    assert.equal(results[0].relativePath, path.join(".obsidian", "workspace.md"));
+    assert.equal(results[0].relativePath, ".obsidian/workspace.md");
 });
 
 test("searchFiles: supports excluding directories", () => {
@@ -206,7 +206,7 @@ test("searchByContent: finds matching content in notes", () => {
     const root = makeContentVault();
     const { results } = searchByContent(root, "cargo");
     assert.equal(results.length, 1);
-    assert.equal(results[0].relativePath, path.join("Notes", "Alpha.md"));
+    assert.equal(results[0].relativePath, "Notes/Alpha.md");
     assert.equal(results[0].line, 3);
     assert.ok(results[0].snippet.includes("cargo"));
     assert.ok(results[0].matches >= 1);
@@ -216,7 +216,7 @@ test("searchByContent: skips hidden directories by default", () => {
     const root = makeContentVault();
     const { results } = searchByContent(root, "rust");
     const paths = results.map((r) => r.relativePath);
-    assert.ok(paths.includes(path.join("Notes", "Alpha.md")));
+    assert.ok(paths.includes("Notes/Alpha.md"));
     assert.ok(!paths.some((p) => p.includes(".obsidian")));
 });
 
@@ -224,7 +224,7 @@ test("searchByContent: only markdown by default", () => {
     const root = makeContentVault();
     const { results } = searchByContent(root, "rust");
     const paths = results.map((r) => r.relativePath);
-    assert.ok(paths.includes(path.join("Notes", "Alpha.md")));
+    assert.ok(paths.includes("Notes/Alpha.md"));
     assert.ok(!paths.includes("Log.txt"));
 });
 

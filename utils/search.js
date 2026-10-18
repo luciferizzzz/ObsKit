@@ -7,6 +7,13 @@ function normalizeQuery(query) {
     return String(query || "").trim().toLowerCase();
 }
 
+// Convert a vault-relative path to forward-slash form so results look the
+// same on every platform. Only the platform separator is replaced, never
+// every backslash: a backslash can be a valid filename character on POSIX.
+function normalizeRelativePath(relativePath) {
+    return relativePath.split(path.sep).join("/");
+}
+
 function fileNameMatches(name, query) {
     const q = normalizeQuery(query);
     if (!q) return false;
@@ -62,7 +69,7 @@ function searchFiles(root, query, options = {}) {
             results.push({
                 name,
                 path: file,
-                relativePath: path.relative(root, file),
+                relativePath: normalizeRelativePath(path.relative(root, file)),
             });
         }
     }
@@ -145,7 +152,7 @@ function fuzzySearchFiles(root, query, options = {}) {
             results.push({
                 name,
                 path: file,
-                relativePath: path.relative(root, file),
+                relativePath: normalizeRelativePath(path.relative(root, file)),
                 score,
             });
         }
@@ -181,6 +188,71 @@ function rankResults(results, query) {
         );
 }
 
+// Position-preserving case-insensitive match.
+//
+// The previous implementation searched `content.toLowerCase()` and used the
+// resulting index to slice the *original* `content`. Those indices only line
+// up while toLowerCase() preserves string length; e.g. "İ" (U+0130) folds to
+// two code units, shifting every later offset by one (wrong line numbers and
+// truncated snippets).
+//
+// This scan instead folds one code point at a time starting from each
+// candidate position of the original string. The accumulated fold must stay
+// a prefix of the query (so most positions bail out after one character) and
+// a match is only confirmed when the fold length equals the query length
+// exactly. Because `index` and `end` are produced while advancing through
+// `content` itself, they are indices into the original text by construction
+// and remain valid for slicing it. `toLowerCase()` is still the folding
+// primitive, so case-insensitive matching behaves as before.
+//
+// Returns `{ index, end }` for the first match at or after `fromIndex`, or
+// null. `end` is strictly greater than `index` for any match, so callers can
+// resume at `end` without rescanning matched positions.
+function findFoldMatch(content, query, fromIndex) {
+    if (!query) return null;
+
+    for (let i = Math.max(0, fromIndex); i < content.length; i++) {
+        let folded = "";
+        let j = i;
+        let viable = true;
+
+        while (folded.length < query.length) {
+            if (j >= content.length) {
+                viable = false;
+                break;
+            }
+
+            // Consume a whole code point so the folds of characters outside
+            // the BMP (mapped across a surrogate pair) stay aligned.
+            let next = j + 1;
+            const code = content.charCodeAt(j);
+            if (
+                code >= 0xd800 &&
+                code <= 0xdbff &&
+                next < content.length &&
+                content.charCodeAt(next) >= 0xdc00 &&
+                content.charCodeAt(next) <= 0xdfff
+            ) {
+                next++;
+            }
+
+            folded += content.slice(j, next).toLowerCase();
+            j = next;
+
+            if (!query.startsWith(folded)) {
+                viable = false;
+                break;
+            }
+        }
+
+        if (viable && folded.length === query.length) {
+            return { index: i, end: j };
+        }
+    }
+
+    return null;
+}
+
 function searchByContent(root, query, options = {}) {
     const normalized = normalizeQuery(query);
 
@@ -207,19 +279,18 @@ function searchByContent(root, query, options = {}) {
             continue;
         }
 
-        const lower = content.toLowerCase();
         const snippets = [];
-        let idx = lower.indexOf(normalized);
+        let match = findFoldMatch(content, normalized, 0);
         let line = 1;
         let matches = 0;
 
-        while (idx !== -1 && snippets.length < maxSnippets) {
-            line = 1 + (content.slice(0, idx).match(/\n/g) || []).length;
-            const start = Math.max(0, idx - contextRadius);
-            const end = Math.min(content.length, idx + normalized.length + contextRadius);
+        while (match && snippets.length < maxSnippets) {
+            line = 1 + (content.slice(0, match.index).match(/\n/g) || []).length;
+            const start = Math.max(0, match.index - contextRadius);
+            const end = Math.min(content.length, match.end + contextRadius);
             snippets.push(content.slice(start, end).replace(/\r?\n/g, " ").trim());
             matches++;
-            idx = lower.indexOf(normalized, idx + normalized.length);
+            match = findFoldMatch(content, normalized, match.end);
         }
 
         if (matches === 0) continue;
@@ -227,7 +298,7 @@ function searchByContent(root, query, options = {}) {
         results.push({
             name: path.basename(file),
             path: file,
-            relativePath: path.relative(root, file),
+            relativePath: normalizeRelativePath(path.relative(root, file)),
             line,
             matches,
             snippet: snippets[0] || "",

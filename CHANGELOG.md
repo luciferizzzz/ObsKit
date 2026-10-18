@@ -4,6 +4,30 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.7.1] - 2026-10-18
+
+### Search Foundation Hotfix
+
+v1.7.1 is a patch release on top of v1.7.0 that fixes two search
+correctness bugs surfaced by the Search Foundation architecture audit:
+inconsistent relative-path separators on Windows, and Unicode-unsafe
+match offsets in `searchByContent()`. No new features, commands, flags,
+dependencies, or result fields.
+
+#### Fixed
+
+- **Forward-slash relative paths in search results** (`searchFiles`,
+  `fuzzySearchFiles`, `searchByContent`): `relativePath` was built from a
+  raw `path.relative()`, producing `\` on Windows while `list` / `recent` /
+  `tags` / `completion` already normalize to `/`. Search results now always
+  use `/` on every platform; absolute `path` values remain platform-native.
+- **Unicode-safe content-search offsets** (`searchByContent`): match
+  indices were taken from a `content.toLowerCase()` copy and used to slice
+  the original content. When lowercasing changes string length (e.g. `İ`,
+  U+0130, folds to two code units), line numbers and snippets shifted.
+  Matching now locates matches against the original text, so line numbers
+  and snippets stay correct; matching remains case-insensitive.
+
 ## [1.7.0] - 2026-10-14
 
 ### Intelligence Workflow

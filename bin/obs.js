@@ -145,6 +145,7 @@ program
   .option("--content", "Cari di dalam isi note (bukan nama file)")
   .option("--folder <path>", "Batasi pencarian ke folder tertentu")
   .option("--type <ext>", "Batasi ke ekstensi file (contoh: md, txt)")
+  .option("-n, --limit <n>", "Batasi jumlah hasil (bilangan bulat positif)")
   .option("--pick", "Pilih hasil secara interaktif")
   .action((keywords, options) => find(keywords, options));
 

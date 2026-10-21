@@ -306,6 +306,7 @@ obs find <keywords> [options]
 | `--content` | Search inside note contents instead of filenames |
 | `--folder <path>` | Restrict search to a specific folder (absolute or vault-relative) |
 | `--type <ext>` | Restrict to a file extension (e.g. `md`, `txt`) |
+| `-n, --limit <n>` | Limit the displayed results to `n` (a positive integer) |
 | `--pick` | Select a result interactively with the keyboard |
 
 **Example**
@@ -334,6 +335,7 @@ obs find cargo --content --folder Notes
 - Default mode matches filenames only (not file contents).
 - `--content` searches note contents and shows the matching line and snippet.
 - Results are ranked so exact and prefix matches appear first.
+- Without `-n/--limit`, all results are shown; with it, only the top `n` results of the displayed order are kept (with `--pick`, the picker offers exactly those results). Values other than a positive integer are rejected with an error.
 
 
 ---

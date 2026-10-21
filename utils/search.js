@@ -20,6 +20,23 @@ function fileNameMatches(name, query) {
     return String(name).toLowerCase().includes(q);
 }
 
+// Validates the optional `limit` option shared by the search functions.
+//
+// Only an absent option means "unlimited". A valid value must be a positive
+// integer *number*: invalid values (0, negatives, non-integers, numeric
+// strings, NaN, non-number types) are rejected with a clear error instead of
+// being silently coerced or ignored, so a caller never gets a subtly
+// different result set than the one they asked for.
+function resolveLimit(limit) {
+    if (limit === undefined) return Infinity;
+    if (typeof limit !== "number" || !Number.isInteger(limit) || limit < 1) {
+        throw new Error(
+            `Invalid limit: must be a positive integer (received ${String(limit)})`
+        );
+    }
+    return limit;
+}
+
 function walkFiles(root, options = {}) {
     const excludeDirs = options.excludeDirs;
     const extensions = options.extensions;
@@ -55,6 +72,7 @@ function walkFiles(root, options = {}) {
 
 function searchFiles(root, query, options = {}) {
     const normalized = normalizeQuery(query);
+    const limit = resolveLimit(options.limit);
 
     if (!normalized) {
         return { query: normalized, results: [] };
@@ -72,6 +90,12 @@ function searchFiles(root, query, options = {}) {
                 relativePath: normalizeRelativePath(path.relative(root, file)),
             });
         }
+    }
+
+    // Applied after the established traversal order is built; the order
+    // itself is never changed to apply a limit.
+    if (results.length > limit) {
+        results.length = limit;
     }
 
     return { query: normalized, results };
@@ -136,6 +160,7 @@ function fuzzyMatches(query, text) {
 
 function fuzzySearchFiles(root, query, options = {}) {
     const normalized = normalizeQuery(query);
+    const limit = resolveLimit(options.limit);
 
     if (!normalized) {
         return { query: normalized, results: [] };
@@ -163,6 +188,11 @@ function fuzzySearchFiles(root, query, options = {}) {
             b.score - a.score ||
             a.relativePath.length - b.relativePath.length
     );
+
+    // Applied only after the established score ordering is determined.
+    if (results.length > limit) {
+        results.length = limit;
+    }
 
     return { query: normalized, results };
 }
@@ -255,6 +285,7 @@ function findFoldMatch(content, query, fromIndex) {
 
 function searchByContent(root, query, options = {}) {
     const normalized = normalizeQuery(query);
+    const limit = resolveLimit(options.limit);
 
     if (!normalized) {
         return { query: normalized, results: [] };
@@ -284,11 +315,20 @@ function searchByContent(root, query, options = {}) {
         let line = 1;
         let matches = 0;
 
-        while (match && snippets.length < maxSnippets) {
-            line = 1 + (content.slice(0, match.index).match(/\n/g) || []).length;
-            const start = Math.max(0, match.index - contextRadius);
-            const end = Math.min(content.length, match.end + contextRadius);
-            snippets.push(content.slice(start, end).replace(/\r?\n/g, " ").trim());
+        // Scan every occurrence in the file: `matches` must count all of
+        // them, while `maxSnippets` only caps how many snippets are kept
+        // (further matches are counted without allocating more snippets).
+        // `line` is captured once, from the FIRST match, so it always
+        // describes the same occurrence as `snippet` / `snippets[0]`.
+        while (match) {
+            if (matches === 0) {
+                line = 1 + (content.slice(0, match.index).match(/\n/g) || []).length;
+            }
+            if (snippets.length < maxSnippets) {
+                const start = Math.max(0, match.index - contextRadius);
+                const end = Math.min(content.length, match.end + contextRadius);
+                snippets.push(content.slice(start, end).replace(/\r?\n/g, " ").trim());
+            }
             matches++;
             match = findFoldMatch(content, normalized, match.end);
         }
@@ -311,6 +351,11 @@ function searchByContent(root, query, options = {}) {
             b.matches - a.matches ||
             a.relativePath.localeCompare(b.relativePath)
     );
+
+    // Applied only after the established content ordering is determined.
+    if (results.length > limit) {
+        results.length = limit;
+    }
 
     return { query: normalized, results };
 }

@@ -459,6 +459,12 @@ Ditemukan beberapa note:
 **Notes**
 
 - Uses `start` on Windows.
+- Leading and trailing whitespace in the keyword is trimmed before searching,
+  so `obs open " rust "` searches for `rust`.
+- An empty or whitespace-only keyword lists every file returned by the same
+  traversal the command already used — all file types, hidden folders
+  included.
+- Displayed relative paths use `/` on every platform.
 
 ---
 

@@ -4,6 +4,59 @@ All notable changes to **ObsKit** (OBS = Organized Knowledge System) are documen
 
 The format is inspired by **Keep a Changelog** and follows **Semantic Versioning (SemVer)**.
 
+## [1.8.0] - 2026-10-22
+
+### Search Foundation v2
+
+v1.8.0 extends the Search Foundation with validated result limits for
+`obs find`, corrected content-search match reporting, and a shared search
+implementation behind `obs open`. No new dependencies, no changed ranking
+formulas, and no changed public exports.
+
+#### Added
+
+- **Result limits for `obs find`** (`-n, --limit <n>`): the number of
+  displayed results can be capped. The limit is applied to the order the
+  command already displays — filename ranking in default mode, fuzzy score
+  in `--fuzzy` mode, and match count in `--content` mode — so the results
+  that remain are the top-ranked ones, and `--pick` offers exactly those
+  results. Without the flag, all results are shown. Values other than a
+  positive integer are rejected with an error instead of being coerced.
+- **Optional limit option for the search functions** (`searchFiles`,
+  `fuzzySearchFiles`, `searchByContent`): a `limit` option caps the
+  returned results after each function's established ordering. Omitting it
+  keeps the previous unlimited behavior; invalid values are rejected with
+  an error.
+- **Optional empty-query matching** (`searchFiles`): a `matchAllWhenEmpty`
+  option makes an empty query match every file instead of none. The option
+  is opt-in and defaults to off, so the default empty-query behavior of
+  every other caller is unchanged.
+
+#### Fixed
+
+- **Content-search match counts** (`searchByContent`): `matches` was
+  capped by `maxSnippets`, so a file with more occurrences than snippets
+  reported a smaller count than it actually had. `matches` now counts every
+  occurrence; `maxSnippets` only caps how many snippets are kept.
+- **Content-search line numbers** (`searchByContent`): `line` was
+  recomputed while collecting snippets and therefore pointed at the last
+  retained snippet. `line`, `snippet`, and `snippets[0]` now all refer to
+  the first content match.
+
+#### Changed
+
+- **`obs open` now delegates to the shared search implementation**
+  (`searchFiles`): the command's own traversal and matching were replaced
+  by the shared one, keeping the same case-insensitive filename matching,
+  the same filesystem traversal order, all file types, and hidden folders.
+  Displayed relative paths use `/` consistently on every platform, where
+  Windows previously showed `\`.
+- **`obs open` trims its keyword**: leading and trailing whitespace is
+  removed before searching, so `obs open " rust "` searches for `rust`. An
+  empty or whitespace-only keyword lists the files returned by the existing
+  traversal. An empty keyword already behaved this way; a whitespace-only
+  keyword previously matched nothing and now lists the same files.
+
 ## [1.7.1] - 2026-10-18
 
 ### Search Foundation Hotfix

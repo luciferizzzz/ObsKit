@@ -73,8 +73,13 @@ function walkFiles(root, options = {}) {
 function searchFiles(root, query, options = {}) {
     const normalized = normalizeQuery(query);
     const limit = resolveLimit(options.limit);
+    // Opt-in: an empty query matches every file instead of nothing. The
+    // default stays unchanged (an empty query matches nothing); callers that
+    // need the "match all" behavior — `obs open ""` — ask for it explicitly
+    // so the traversal, ordering, and path normalization stay shared here.
+    const matchAllWhenEmpty = options.matchAllWhenEmpty === true;
 
-    if (!normalized) {
+    if (!normalized && !matchAllWhenEmpty) {
         return { query: normalized, results: [] };
     }
 
@@ -83,7 +88,11 @@ function searchFiles(root, query, options = {}) {
 
     for (const file of files) {
         const name = path.basename(file);
-        if (fileNameMatches(name, normalized)) {
+        const matched = normalized
+            ? fileNameMatches(name, normalized)
+            : matchAllWhenEmpty;
+
+        if (matched) {
             results.push({
                 name,
                 path: file,

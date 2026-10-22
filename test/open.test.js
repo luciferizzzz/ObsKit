@@ -11,6 +11,9 @@
 //   - reports "Note tidak ditemukan." when nothing matches,
 //   - displays normalized relative paths with `/` separators.
 //
+// The keyword is trimmed before searching, and an empty (or whitespace-only)
+// keyword keeps the original behavior of matching every file in the vault.
+//
 // Mocking conventions: `exec` is captured from child_process at module load
 // time, so the stub is installed in require.cache BEFORE commands/open.js is
 // first required — the same require.cache-stubbing convention used by
@@ -26,6 +29,8 @@ const path = require("node:path");
 
 const CHILD_PROCESS = require.resolve("child_process");
 const OPEN_PATH = require.resolve("../commands/open");
+
+const { walkFiles } = require("../utils/search");
 
 const execCalls = [];
 
@@ -223,4 +228,214 @@ test("open: listing order matches the readdir traversal order (no sorting)", () 
         [...listed].sort(),
         "fixture must distinguish traversal order from sorted order"
     );
+});
+
+// ─── Empty / whitespace-only keyword ─────────────────────────────────────────
+//
+// The original implementation matched a file name with
+// `file.name.toLowerCase().includes(keyword.toLowerCase())`, so an empty
+// string matched every file name. That observable behavior is preserved:
+// an empty (or whitespace-only) keyword lists every file of the vault
+// instead of reporting "Note tidak ditemukan.".
+
+test("open: an empty keyword lists every file of the vault", () => {
+    const root = makeVault({
+        "Alpha.md": "# alpha\n",
+        "Notes/Beta.txt": "beta\n",
+        ".private/Gamma Rust.md": "# gamma\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    assert.equal(execCalls.length, 0);
+    assert.ok(output.includes("Ditemukan beberapa note:"));
+
+    // searchFiles() includes every file it traverses: all extensions, hidden
+    // folders included, and no excluded directories.
+    const expected = walkFiles(root).map((file) =>
+        normalize(path.relative(root, file))
+    );
+    const listed = listedPaths(output);
+    assert.deepEqual(listed, expected);
+    assert.equal(listed.length, 3);
+});
+
+test("open: a whitespace-only keyword lists the same files as an empty one", () => {
+    const root = makeVault({
+        "Alpha.md": "# alpha\n",
+        "Notes/Beta.txt": "beta\n",
+        ".private/Gamma Rust.md": "# gamma\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("   ")));
+
+    assert.equal(execCalls.length, 0);
+    assert.ok(output.includes("Ditemukan beberapa note:"));
+
+    const expected = walkFiles(root).map((file) =>
+        normalize(path.relative(root, file))
+    );
+    assert.deepEqual(listedPaths(output), expected);
+    assert.equal(listedPaths(output).length, 3);
+});
+
+test("open: an empty keyword does not open anything when several files match", () => {
+    const root = makeVault({
+        "Alpha.md": "# alpha\n",
+        "Beta.md": "# beta\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    assert.equal(execCalls.length, 0);
+    assert.ok(output.includes("Ditemukan beberapa note:"));
+    assert.ok(!output.includes("Membuka note"));
+});
+
+test("open: an empty keyword opens the single file of a one-file vault", () => {
+    const root = makeVault({ "Only Note.md": "# only\n" });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    assert.equal(execCalls.length, 1);
+    assert.equal(
+        execCalls[0],
+        `start "" "${path.join(root, "Only Note.md")}"`
+    );
+    assert.ok(output.includes("Membuka note..."));
+});
+
+test("open: an empty keyword reports an error for an empty vault", () => {
+    const root = makeVault({});
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    assert.equal(execCalls.length, 0);
+    assert.ok(output.includes("Note tidak ditemukan."));
+});
+
+test("open: the empty keyword listing uses forward-slash relative paths", () => {
+    const root = makeVault({
+        "Notes/Sub/Deep.md": "# deep\n",
+        "Top.md": "# top\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    const listed = listedPaths(output);
+    assert.ok(listed.includes("Notes/Sub/Deep.md"));
+    assert.ok(
+        !output.includes("Notes\\Sub"),
+        `expected normalized forward-slash paths, got: ${output}`
+    );
+});
+
+test("open: the empty keyword listing preserves the readdir traversal order", () => {
+    const root = makeVault({
+        "Rust Zulu.md": "# zulu\n",
+        "rust apple.md": "# apple\n",
+        "Rust Banana.md": "# banana\n",
+        "Notes/Rust Nested.md": "# nested\n",
+        "Cargo.md": "# no match\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("")));
+
+    assert.equal(execCalls.length, 0);
+    const listed = listedPaths(output);
+    const expected = traversalOrder(root).map((file) =>
+        normalize(path.relative(root, file))
+    );
+    assert.deepEqual(listed, expected);
+    assert.equal(listed.length, 5);
+
+    // Fixture sanity: the expected order must differ from a lexicographic
+    // sort, otherwise this test could not detect an introduced sort.
+    assert.notDeepEqual(
+        listed,
+        [...listed].sort(),
+        "fixture must distinguish traversal order from sorted order"
+    );
+});
+
+// ─── Keyword trimming ────────────────────────────────────────────────────────
+
+test("open: a keyword with leading whitespace is trimmed before searching", () => {
+    const root = makeVault({
+        "Alpha Rust.md": "# alpha\n",
+        "Beta.md": "# beta\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("  rust")));
+
+    assert.equal(execCalls.length, 1);
+    assert.equal(
+        execCalls[0],
+        `start "" "${path.join(root, "Alpha Rust.md")}"`
+    );
+    assert.ok(output.includes("Membuka note..."));
+});
+
+test("open: a keyword with trailing whitespace is trimmed before searching", () => {
+    const root = makeVault({
+        "Alpha Rust.md": "# alpha\n",
+        "Beta.md": "# beta\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("rust  ")));
+
+    assert.equal(execCalls.length, 1);
+    assert.equal(
+        execCalls[0],
+        `start "" "${path.join(root, "Alpha Rust.md")}"`
+    );
+    assert.ok(output.includes("Membuka note..."));
+});
+
+test("open: a keyword with whitespace on both sides is trimmed before searching", () => {
+    const root = makeVault({
+        "Alpha Rust.md": "# alpha\n",
+        "Beta.md": "# beta\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("  Alpha Rust  ")));
+
+    assert.equal(execCalls.length, 1);
+    assert.equal(
+        execCalls[0],
+        `start "" "${path.join(root, "Alpha Rust.md")}"`
+    );
+    assert.ok(output.includes("Membuka note..."));
+});
+
+test("open: a nonempty keyword still matches only the files containing it", () => {
+    const root = makeVault({
+        "Alpha Rust.md": "# alpha\n",
+        "Beta Rust.txt": "rust\n",
+        "Notes/Gamma Rust.md": "# gamma\n",
+        "Cargo.md": "# no match\n",
+    });
+    execCalls.length = 0;
+
+    const output = withVault(root, () => capture(() => open("rust")));
+
+    assert.equal(execCalls.length, 0);
+    assert.ok(output.includes("Ditemukan beberapa note:"));
+
+    const listed = listedPaths(output);
+    assert.equal(listed.length, 3);
+    assert.ok(listed.includes("Alpha Rust.md"));
+    assert.ok(listed.includes("Beta Rust.txt"));
+    assert.ok(listed.includes("Notes/Gamma Rust.md"));
+    assert.ok(!listed.includes("Cargo.md"));
 });
